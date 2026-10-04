@@ -1,0 +1,312 @@
+/* ==========================================================================
+   ROOMIX ABANCAY - DESIGN SYSTEM & GLOBAL STYLES
+   Estética Moderna: Blanco Puro y Azul Eléctrico (#0052FF)
+   Animaciones de Olas de Mar, Alto Contraste y 100% Responsivo
+   ========================================================================== */
+
+:root {
+  /* Color Palette - Blanco y Azul Eléctrico */
+  --bg-main: #f8fafc;
+  --bg-secondary: #ffffff;
+  --bg-tertiary: #f0f7ff;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f8faff;
+  --bg-glass: rgba(255, 255, 255, 0.92);
+
+  --text-main: #0f172a;
+  --text-muted: #475569;
+  --text-dim: #64748b;
+  --text-inverse: #ffffff;
+
+  /* Azul Eléctrico & Acentos */
+  --primary: #0052ff;
+  --primary-light: #2563eb;
+  --primary-dark: #0038b8;
+  --primary-glow: rgba(0, 82, 255, 0.35);
+
+  --secondary: #06b6d4;
+  --secondary-glow: rgba(6, 182, 212, 0.35);
+
+  --accent-pink: #ec4899;
+  --accent-emerald: #10b981;
+  --accent-amber: #f59e0b;
+  --accent-rose: #f43f5e;
+
+  --gradient-brand: linear-gradient(135deg, #0052ff 0%, #2563eb 50%, #06b6d4 100%);
+  --gradient-secondary: linear-gradient(135deg, #0052ff 0%, #38bdf8 100%);
+  --gradient-ocean: linear-gradient(180deg, rgba(0, 82, 255, 0.08) 0%, rgba(6, 182, 212, 0.04) 100%);
+  --gradient-card: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  --gradient-accent: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%);
+
+  /* Borders & Shadows */
+  --border-subtle: rgba(0, 82, 255, 0.12);
+  --border-glow: rgba(0, 82, 255, 0.4);
+  --shadow-sm: 0 2px 10px rgba(0, 82, 255, 0.06);
+  --shadow-md: 0 8px 30px -4px rgba(0, 82, 255, 0.12);
+  --shadow-lg: 0 16px 40px -6px rgba(15, 23, 42, 0.15);
+  --shadow-glow: 0 0 25px var(--primary-glow);
+
+  /* Typography */
+  --font-heading: 'Outfit', sans-serif;
+  --font-body: 'Plus Jakarta Sans', sans-serif;
+
+  /* Layout */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-full: 9999px;
+  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-bounce: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ==========================================================================
+   RESET & BASE
+   ========================================================================== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-family: var(--font-body);
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  min-height: 100vh;
+  overflow-x: hidden;
+  background: 
+    radial-gradient(circle at 10% 10%, rgba(0, 82, 255, 0.06) 0%, transparent 40%),
+    radial-gradient(circle at 90% 20%, rgba(6, 182, 212, 0.07) 0%, transparent 45%),
+    radial-gradient(circle at 50% 90%, rgba(0, 82, 255, 0.04) 0%, transparent 50%),
+    var(--bg-main);
+  background-attachment: fixed;
+  color: var(--text-main);
+  line-height: 1.6;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+  font-weight: 800;
+  line-height: 1.2;
+  color: #0f172a;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+/* ==========================================================================
+   ANIMATIONS & KEYFRAMES (OLAS DE MAR & FLOTACIÓN)
+   ========================================================================== */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slideUpFade {
+  from { opacity: 0; transform: translateY(22px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+@keyframes pulseGlow {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 0.9; transform: scale(1.05); }
+}
+
+/* Animación de Olas de Mar */
+@keyframes waveFlow {
+  0% { transform: translateX(0) translateZ(0) scaleY(1); }
+  50% { transform: translateX(-25%) translateZ(0) scaleY(1.05); }
+  100% { transform: translateX(-50%) translateZ(0) scaleY(1); }
+}
+
+@keyframes waveParallax1 {
+  0% { transform: translate3d(-90px, 0, 0); }
+  100% { transform: translate3d(85px, 0, 0); }
+}
+
+@keyframes waveParallax2 {
+  0% { transform: translate3d(-60px, 0, 0); }
+  100% { transform: translate3d(60px, 0, 0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+.animate-slide-up {
+  animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.animate-float {
+  animation: float 4s ease-in-out infinite;
+}
+
+.animate-pulse {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+/* ==========================================================================
+   SURFACES & GLASSMORPHISM (BLANCO & AZUL ELÉCTRICO)
+   ========================================================================== */
+.glass-panel {
+  background: var(--bg-glass);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid rgba(0, 82, 255, 0.14);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 32px rgba(0, 82, 255, 0.08);
+}
+
+.glass-card {
+  background: var(--bg-card);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 82, 255, 0.12);
+  border-radius: var(--radius-md);
+  box-shadow: 0 6px 20px rgba(0, 82, 255, 0.06);
+}
+
+/* ==========================================================================
+   BUTTONS (BLANCO Y AZUL ELÉCTRICO - TOUCH OPTIMIZED)
+   ========================================================================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  padding: 0.75rem 1.45rem;
+  font-weight: 700;
+  font-size: 0.95rem;
+  border-radius: var(--radius-full);
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  min-height: 44px; /* Touch target móvil */
+  user-select: none;
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #0052ff 0%, #1e40af 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 18px rgba(0, 82, 255, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #0044d4 0%, #1e3a8a 100%);
+  box-shadow: 0 6px 24px rgba(0, 82, 255, 0.5);
+  transform: translateY(-2px);
+}
+
+.btn-secondary {
+  background: #ffffff;
+  color: #0052ff;
+  border: 1.5px solid #0052ff;
+  box-shadow: 0 2px 8px rgba(0, 82, 255, 0.08);
+}
+
+.btn-secondary:hover {
+  background: rgba(0, 82, 255, 0.08);
+  transform: translateY(-2px);
+}
+
+.btn-success {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35);
+}
+
+.btn-success:hover {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.35);
+}
+
+.btn-danger:hover {
+  filter: brightness(1.1);
+  transform: translateY(-2px);
+}
+
+.btn-sm {
+  padding: 0.45rem 1rem;
+  font-size: 0.85rem;
+  min-height: 38px;
+}
+
+.btn-block {
+  width: 100%;
+}
+
+.btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* ==========================================================================
+   BADGES & CHIPS
+   ========================================================================== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.28rem 0.65rem;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.badge-brand {
+  background: rgba(0, 82, 255, 0.12);
+  color: #0052ff;
+  border: 1px solid rgba(0, 82, 255, 0.3);
+}
+
+/* Utility Helpers */
+.text-center { text-align: center; }
+.w-full { width: 100%; }
