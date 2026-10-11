@@ -1,0 +1,34 @@
+<!-- =========================================================================
+     MODAL: ELIMINAR ANUNCIO (ADMIN CRUD CONFIRMACIÓN)
+     ========================================================================= -->
+@if (app.showAdminDeleteModal(); as isOpen) {
+@if (app.adminDeletingRoom; as room) {
+<div class="modal-backdrop" (click)="app.closeAdminDeleteModal()">
+  <div class="modal-dialog modal-sm animate-scale-up" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="app.closeAdminDeleteModal()"><i class="fa-solid fa-xmark"></i></button>
+
+    <div class="modal-body text-center" style="padding-top: 1.5rem;">
+      <div class="delete-warning-icon">
+        <i class="fa-solid fa-triangle-exclamation text-rose"></i>
+      </div>
+      <h3 class="delete-modal-title">¿Eliminar este Anuncio?</h3>
+      <p class="delete-modal-desc">
+        Estás a punto de eliminar la publicación <strong>"{{ room.title }}"</strong> (ID: {{ room.id }}). Esta acción
+        borrará el anuncio definitivamente de la base de datos de Abancay.
+      </p>
+
+      <div class="modal-actions modal-actions-center">
+        <button class="btn btn-secondary" (click)="app.closeAdminDeleteModal()">Cancelar</button>
+        <button class="btn btn-danger" [disabled]="app.adminDeletingLoading" (click)="app.executeAdminDeleteRoom()">
+          @if (app.adminDeletingLoading) {
+          <i class="fa-solid fa-spinner fa-spin"></i> Eliminando...
+          } @else {
+          <i class="fa-solid fa-trash-can"></i> Sí, Eliminar Anuncio
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+}
+}

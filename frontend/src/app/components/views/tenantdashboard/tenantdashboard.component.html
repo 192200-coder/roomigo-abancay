@@ -1,0 +1,260 @@
+<!-- ==========================================
+         TAB 2: MIS RESERVAS (INQUILINO CON SIDEBOARD)
+         ========================================== -->
+    @if (app.activeTab() === 'my-bookings') {
+    <div class="panel-layout-container animate-fade-in">
+      <!-- MENÚ VERTICAL LATERAL PERMANENTE (INQUILINO) -->
+      <aside class="dashboard-vertical-sidebar">
+        <!-- Perfil Inquilino Inspirado en Diseño de Referencia (Avatar, Nombre, Email, Acciones) -->
+        <div class="sidebar-user-header">
+          <div class="sidebar-avatar-wrapper" (click)="app.openEditProfileModal()" role="button" title="Editar perfil y foto">
+            <img [src]="app.auth.currentUser()?.profileImage || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80'"
+              alt="Foto de perfil" class="sidebar-avatar-img">
+            <span class="sidebar-avatar-badge" title="Cambiar foto"><i class="fa-solid fa-pen"></i></span>
+          </div>
+          <div class="sidebar-user-meta">
+            <div class="sidebar-user-title-row">
+              <h4 class="sidebar-user-name" [title]="(app.auth.currentUser()?.firstName || 'Inquilino') + ' ' + (app.auth.currentUser()?.lastName || '')">
+                {{ app.auth.currentUser()?.firstName || 'Inquilino' }} {{ app.auth.currentUser()?.lastName || '' }}
+              </h4>
+            </div>
+            <p class="sidebar-user-email" [title]="app.auth.currentUser()?.email || 'inquilino@gmail.com'">
+              {{ app.auth.currentUser()?.email || 'inquilino@gmail.com' }}
+            </p>
+          </div>
+        </div>
+
+        <!-- 1. Mi Perfil -->
+        <div class="sidebar-buttons-group">
+          <button class="sidebar-nav-btn" (click)="app.openEditProfileModal()" title="Editar información de mi perfil">
+            <div class="btn-icon-label">
+              <i class="fa-regular fa-user"></i>
+              <span>Mi Perfil</span>
+            </div>
+            <i class="fa-solid fa-chevron-right sidebar-arrow-icon"></i>
+          </button>
+
+          <!-- 2. Configuraciones (Con botón de Modo Claro / Oscuro) -->
+          <button class="sidebar-nav-btn" (click)="app.openSettingsModal()" title="Configuración de la plataforma y tema">
+            <div class="btn-icon-label">
+              <i class="fa-solid fa-gear"></i>
+              <span>Configuraciones</span>
+            </div>
+            <i class="fa-solid fa-chevron-right sidebar-arrow-icon"></i>
+          </button>
+
+          <!-- 3. Notificaciones (Confirmadas, Rechazadas, En espera) -->
+          <div class="sidebar-notifications-wrapper">
+            <button class="sidebar-nav-btn" (click)="app.toggleNotifications()" title="Ver notificaciones y filtros de reservas">
+              <div class="btn-icon-label">
+                <i class="fa-regular fa-bell"></i>
+                <span>Notificaciones</span>
+              </div>
+              <div class="sidebar-btn-right-action">
+                <span class="sidebar-pill-badge">{{ app.tenantBookings().length }}</span>
+                <i class="fa-solid" [class.fa-chevron-down]="app.notificationsOpen()" [class.fa-chevron-right]="!app.notificationsOpen()"></i>
+              </div>
+            </button>
+
+            @if (app.notificationsOpen()) {
+            <div class="sidebar-sub-items-menu animate-fade-in">
+              <!-- Confirmadas -->
+              <button class="sidebar-sub-btn" [class.active]="app.tenantFilter() === 'CONFIRMED'"
+                (click)="app.tenantFilter.set('CONFIRMED')" title="Reservas confirmadas">
+                <div class="sub-btn-content">
+                  <i class="fa-solid fa-circle-check text-emerald"></i>
+                  <span>Confirmadas</span>
+                </div>
+                <span class="sidebar-btn-badge">{{ app.getTenantStatusCount('CONFIRMED') }}</span>
+              </button>
+
+              <!-- Rechazadas -->
+              <button class="sidebar-sub-btn" [class.active]="app.tenantFilter() === 'REJECTED'"
+                (click)="app.tenantFilter.set('REJECTED')" title="Reservas rechazadas">
+                <div class="sub-btn-content">
+                  <i class="fa-solid fa-circle-xmark text-rose"></i>
+                  <span>Rechazadas</span>
+                </div>
+                <span class="sidebar-btn-badge">{{ app.getTenantStatusCount('REJECTED') }}</span>
+              </button>
+
+              <!-- En espera -->
+              <button class="sidebar-sub-btn" [class.active]="app.tenantFilter() === 'PENDING'"
+                (click)="app.tenantFilter.set('PENDING')" title="Reservas en espera de respuesta">
+                <div class="sub-btn-content">
+                  <i class="fa-solid fa-clock-rotate-left text-amber"></i>
+                  <span>En espera</span>
+                </div>
+                <span class="sidebar-btn-badge">{{ app.getTenantStatusCount('PENDING') }}</span>
+              </button>
+            </div>
+            }
+          </div>
+
+          <!-- Volver a Explorar Cuartos -->
+          <button class="sidebar-nav-btn" [class.active]="app.tenantFilter() === 'EXPLORE'"
+            (click)="app.tenantFilter.set('EXPLORE')" title="Explorar cuartos en Abancay">
+            <div class="btn-icon-label">
+              <i class="fa-solid fa-compass"></i>
+              <span>Explorar Cuartos</span>
+            </div>
+          </button>
+        </div>
+
+        <!-- 4. Resumen de Estado -->
+        <div class="sidebar-info-card">
+          <span class="sidebar-group-title">Resumen de Estado</span>
+          <div class="sidebar-stats-list">
+            <div class="sidebar-stat-item">
+              <span class="stat-lbl"><i class="fa-solid fa-circle-check text-emerald"></i> Confirmadas:</span>
+              <strong class="stat-val">{{ app.getTenantStatusCount('CONFIRMED') }}</strong>
+            </div>
+            <div class="sidebar-stat-item">
+              <span class="stat-lbl"><i class="fa-solid fa-circle-xmark text-rose"></i> Rechazadas:</span>
+              <strong class="stat-val">{{ app.getTenantStatusCount('REJECTED') }}</strong>
+            </div>
+            <div class="sidebar-stat-item">
+              <span class="stat-lbl"><i class="fa-solid fa-clock-rotate-left text-amber"></i> En espera:</span>
+              <strong class="stat-val">{{ app.getTenantStatusCount('PENDING') }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- 5. Soporte Roomix -->
+        <div class="sidebar-security-badge">
+          <i class="fa-solid fa-headset"></i>
+          <div>
+            <h5>Soporte Roomix Abancay</h5>
+            <p>Consultas y validación de pagos Yape/Plin: <strong>983 456 789</strong></p>
+          </div>
+        </div>
+
+        <div class="sidebar-spacer"></div>
+        <button class="sidebar-logout-btn" (click)="app.logout()" title="Cerrar sesión de mi cuenta">
+          <i class="fa-solid fa-arrow-right-from-bracket"></i>
+          <span>Cerrar Sesión</span>
+        </button>
+      </aside>
+
+      <!-- CONTENIDO PRINCIPAL (FONDO EN BLANCO ELEGANTE) -->
+      <div class="panel-main-stage">
+        @if (app.tenantFilter() === 'EXPLORE') {
+        <app-room-catalog></app-room-catalog>
+        } @else {
+        <div class="dashboard-header">
+          <div>
+            <h2 class="section-title">Mis Reservas de Alquiler</h2>
+            <p class="section-desc">Revisa el estado de tus solicitudes en Abancay, contacta al propietario y emite
+              calificaciones</p>
+          </div>
+          <button class="btn btn-secondary btn-sm" (click)="app.loadTenantBookings()">
+            <i class="fa-solid fa-arrows-rotate"></i> Actualizar
+          </button>
+        </div>
+
+        <!-- Filtros Rápidos de Estado para Inquilino (Sin iconos ruidosos) -->
+        <div class="dashboard-subtabs-nav">
+          <button class="dash-subtab-btn" [class.active]="app.tenantFilter() === 'ALL'" (click)="app.tenantFilter.set('ALL')">
+            Todas ({{ app.tenantBookings().length }})
+          </button>
+          <button class="dash-subtab-btn subtab-confirmed" [class.active]="app.tenantFilter() === 'CONFIRMED'"
+            (click)="app.tenantFilter.set('CONFIRMED')">
+            Confirmadas ({{ app.getTenantStatusCount('CONFIRMED') }})
+          </button>
+          <button class="dash-subtab-btn subtab-pending" [class.active]="app.tenantFilter() === 'PENDING'"
+            (click)="app.tenantFilter.set('PENDING')">
+            En Espera ({{ app.getTenantStatusCount('PENDING') }})
+          </button>
+          <button class="dash-subtab-btn subtab-rejected" [class.active]="app.tenantFilter() === 'REJECTED'"
+            (click)="app.tenantFilter.set('REJECTED')">
+            Rechazadas ({{ app.getTenantStatusCount('REJECTED') }})
+          </button>
+        </div>
+
+        @if (app.filteredTenantBookings.length === 0) {
+        <div class="empty-state-card glass-panel animate-fade-in">
+          <div class="empty-state-icon-box">
+            <i class="fa-solid fa-calendar-xmark"></i>
+          </div>
+          <h3 class="empty-state-heading">No tienes solicitudes de alquiler activas</h3>
+          <p class="empty-state-text">
+            @if (app.tenantFilter() === 'ALL') {
+            Explora las habitaciones en Abancay y Tamburco para solicitar tu primer cuarto cerca a UNAMBA o UTEA.
+            } @else {
+            No se encontraron reservas con el filtro seleccionado en este momento.
+            }
+          </p>
+          <div class="empty-state-buttons">
+            @if (app.tenantFilter() !== 'ALL') {
+            <button class="btn btn-secondary btn-sm" (click)="app.tenantFilter.set('ALL')">
+              Ver Todas las Solicitudes
+            </button>
+            }
+            <button class="btn btn-primary" (click)="app.switchTab('explore')">
+              Explorar Habitaciones
+            </button>
+          </div>
+        </div>
+        } @else {
+        <div class="bookings-grid-uniform">
+          @for (b of app.filteredTenantBookings; track b.id) {
+          <div class="booking-card-uniform glass-panel animate-slide-up">
+            <div class="booking-card-header">
+              <div class="booking-room-meta">
+                <span class="booking-id-tag">Reserva #{{ b.id }}</span>
+                <h4 class="booking-room-title" (click)="app.openRoomDetails(b.room)" title="{{ b.room.title }}">
+                  {{ b.room.title }}
+                </h4>
+                <p class="booking-room-addr">
+                  {{ b.room.propertyAddress || 'Abancay' }}
+                </p>
+              </div>
+              <span class="badge" [class.badge-pending]="b.status === 'PENDING'"
+                [class.badge-confirmed]="b.status === 'CONFIRMED'" [class.badge-rejected]="b.status === 'REJECTED'">
+                {{ b.status === 'PENDING' ? 'En Espera' : (b.status === 'CONFIRMED' ? 'Confirmada' : 'Rechazada') }}
+              </span>
+            </div>
+
+            <div class="booking-meta-grid">
+              <div class="meta-col">
+                <span class="meta-col-label">Estadía</span>
+                <strong class="meta-col-value">{{ b.startDate }} al {{ b.endDate }}</strong>
+              </div>
+              <div class="meta-col meta-col-price">
+                <span class="meta-col-label">Total a Pagar</span>
+                <strong class="meta-col-value text-emerald">S/. {{ b.totalPrice }}</strong>
+              </div>
+            </div>
+
+            <!-- CUADRO DE TEXTO UNIFORME Y ALINEADO -->
+            <div class="booking-notes-uniform-box">
+              <div class="notes-box-header">
+                <span>Comprobante & Observaciones:</span>
+              </div>
+              <div class="notes-box-body">
+                <p class="notes-text">
+                  {{ b.notes || 'Comprobante digital registrado en plataforma para validación del propietario.' }}
+                </p>
+              </div>
+            </div>
+
+            <div class="booking-card-footer">
+              <button class="btn btn-whatsapp" (click)="app.contactOwnerWhatsApp(b.room.ownerPhone, b.room.title)"
+                title="Coordinar entrega de llaves y mudanza por WhatsApp">
+                <i class="fa-brands fa-whatsapp"></i> <span>WhatsApp</span>
+              </button>
+              <button class="btn btn-warning" (click)="app.openReviewModal(b.id)" title="Calificar habitación">
+                <i class="fa-solid fa-star"></i> <span>Calificar</span>
+              </button>
+              <button class="btn btn-secondary" (click)="app.openRoomDetails(b.room)" title="Ver detalles completos de la habitación">
+                <i class="fa-solid fa-eye"></i> <span>Ver Habitación</span>
+              </button>
+            </div>
+          </div>
+          }
+        </div>
+        }
+        }
+      </div>
+    </div>
+    }

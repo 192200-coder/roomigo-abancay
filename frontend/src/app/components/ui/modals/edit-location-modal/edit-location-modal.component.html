@@ -1,0 +1,93 @@
+<!-- =========================================================================
+     MODAL: CONFIGURAR UBICACIÓN MANUAL DEL CUARTO (ADMIN GENERAL)
+     ========================================================================= -->
+@if (app.showEditLocationModal(); as isOpen) {
+@if (app.editLocationRoom; as room) {
+<div class="modal-backdrop" (click)="app.closeEditLocationModal()">
+  <div class="modal-dialog animate-scale-up" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="app.closeEditLocationModal()"><i class="fa-solid fa-xmark"></i></button>
+
+    <div class="modal-header">
+      <h2><i class="fa-solid fa-map-location-dot text-electric-blue"></i> Configurar Ubicación Manual</h2>
+      <p>Habitación: <strong>{{ room.title }}</strong> (ID: {{ room.id }})</p>
+    </div>
+
+    <div class="modal-body">
+      <!-- Puntos Clave de Abancay (Coordenadas Rápidas) -->
+      <div class="quick-coords-bar">
+        <span class="quick-coords-label"><i class="fa-solid fa-crosshairs"></i> Ubicaciones frecuentes en
+          Abancay:</span>
+        <div class="quick-coords-buttons">
+          <button type="button" class="btn-coord" (click)="app.setQuickCoordinates('unamba')">
+            <i class="fa-solid fa-graduation-cap"></i> UNAMBA
+          </button>
+          <button type="button" class="btn-coord" (click)="app.setQuickCoordinates('utea')">
+            <i class="fa-solid fa-book-open"></i> UTEA
+          </button>
+          <button type="button" class="btn-coord" (click)="app.setQuickCoordinates('centro')">
+            <i class="fa-solid fa-landmark"></i> Plaza de Armas
+          </button>
+          <button type="button" class="btn-coord" (click)="app.setQuickCoordinates('tamburco')">
+            <i class="fa-solid fa-tree"></i> Tamburco
+          </button>
+          <button type="button" class="btn-coord" (click)="app.setQuickCoordinates('patibamba')">
+            <i class="fa-solid fa-mountain-sun"></i> Patibamba
+          </button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Dirección Exacta / Calle y Número *</label>
+        <input type="text" class="form-input" [(ngModel)]="app.editAddress" placeholder="Ej. Av. Arenas 450, Tamburco">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Distrito / Zona en Abancay</label>
+        <select class="form-select" [(ngModel)]="app.editDistrict">
+          <option value="Centro">Centro de Abancay (Plaza de Armas)</option>
+          <option value="Tamburco">Tamburco (Frente a UNAMBA)</option>
+          <option value="Americas/Fonavi">Américas / Fonavi</option>
+          <option value="Condebamba/Aymas">Condebamba / Aymas</option>
+          <option value="Seguro/Illanya">Seguro / Illanya</option>
+          <option value="Victor Acosta/Bosque">Victor Acosta / Bosque</option>
+          <option value="Senati/Guillermo Diaz">Senati / Guillermo Diaz</option>
+          <option value="Vallecito/Circunvalacion">Vallecito el Olivo / Circunvalación</option>
+          <option value="Malvinas/San Martin">Malvinas / San Martin</option>
+          <option value="Olivo/Seoane">Olivo / Seoane</option>
+          <option value="Villa Ampay/4 de Noviembre">Villa Ampay / 4 de Noviembre</option>
+          <option value="Patibamba">Patibamba</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Referencia Cercana</label>
+        <input type="text" class="form-input" [(ngModel)]="app.editReference"
+          placeholder="Ej. A 20 metros de la puerta 2 de la UNAMBA">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Latitud GPS</label>
+          <input type="text" class="form-input" [(ngModel)]="app.editLatitude" placeholder="-13.6339">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Longitud GPS</label>
+          <input type="text" class="form-input" [(ngModel)]="app.editLongitude" placeholder="-72.8814">
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" (click)="app.closeEditLocationModal()">Cancelar</button>
+        <button class="btn btn-primary" [disabled]="app.editLocationSaving" (click)="app.saveRoomLocation()">
+          @if (app.editLocationSaving) {
+          <i class="fa-solid fa-spinner fa-spin"></i> Guardando...
+          } @else {
+          <i class="fa-solid fa-floppy-disk"></i> Guardar Ubicación Manual
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+}
+}

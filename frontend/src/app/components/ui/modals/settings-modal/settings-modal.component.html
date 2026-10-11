@@ -1,0 +1,78 @@
+<!-- =========================================================================
+     MODAL: CONFIGURACIONES (SETTINGS MODAL - INSPIRADO EN IMAGEN DE REFERENCIA)
+     Permite cambiar el tema de pantalla entre Claro y Oscuro, idioma y preferencias
+     ========================================================================= -->
+@if (app.showSettingsModal(); as isOpen) {
+<div class="modal-backdrop" (click)="app.closeSettingsModal()">
+  <div class="modal-dialog settings-modal-card animate-scale-up" (click)="$event.stopPropagation()">
+
+    <!-- Header Superior: Configuraciones + Cerrar (X) -->
+    <div class="settings-modal-header">
+      <div class="settings-header-title-wrap">
+        <h3 class="settings-modal-title">Configuración</h3>
+      </div>
+      <button type="button" class="settings-close-btn" (click)="app.closeSettingsModal()" aria-label="Cerrar modal" title="Cerrar">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Contenido de Opciones en Español -->
+    <div class="settings-modal-body">
+      
+      <!-- Fila 1: Tema (Claro / Oscuro) -->
+      <div class="settings-option-row">
+        <div class="settings-option-label-wrap">
+          <span class="settings-option-label">Tema de Pantalla</span>
+        </div>
+        <div class="settings-option-action-wrap">
+          <div class="theme-toggle-segmented">
+            <button type="button" class="theme-seg-btn" [class.active]="!app.isDarkMode()" (click)="app.setTheme('light')" title="Activar Modo Claro">
+              <i class="fa-solid fa-sun"></i>
+              <span>Claro</span>
+            </button>
+            <button type="button" class="theme-seg-btn" [class.active]="app.isDarkMode()" (click)="app.setTheme('dark')" title="Activar Modo Oscuro">
+              <i class="fa-solid fa-moon"></i>
+              <span>Oscuro</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fila 2: Idioma -->
+      <div class="settings-option-row">
+        <div class="settings-option-label-wrap">
+          <span class="settings-option-label">Idioma</span>
+        </div>
+        <div class="settings-option-action-wrap">
+          <div class="settings-select-display">
+            <span class="settings-select-val">Español (Perú)</span>
+            <i class="fa-solid fa-chevron-down settings-select-chevron"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fila 3: Notificaciones -->
+      <div class="settings-option-row">
+        <div class="settings-option-label-wrap">
+          <span class="settings-option-label">Notificaciones</span>
+        </div>
+        <div class="settings-option-action-wrap">
+          <div class="settings-select-display">
+            <span class="settings-select-val">Permitidas</span>
+            <i class="fa-solid fa-chevron-down settings-select-chevron"></i>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Botón Inferior de Cierre Rápido -->
+    <div class="settings-modal-footer">
+      <button type="button" class="btn-settings-done" (click)="app.closeSettingsModal()">
+        <span>Guardar Preferencias</span>
+      </button>
+    </div>
+
+  </div>
+</div>
+}

@@ -1,0 +1,146 @@
+<!-- ==================== MOBILE NAVIGATION DRAWER & BACKDROP ==================== -->
+@if (app.mobileMenuOpen()) {
+<div class="mobile-drawer-backdrop animate-fade-in" (click)="app.closeMobileMenu()"></div>
+<aside class="mobile-drawer-menu animate-slide-left">
+  <div class="mobile-drawer-header">
+    <div class="mobile-drawer-brand">
+      <img src="logo.png" alt="Logo" class="mobile-logo-img">
+      <div>
+        <span class="mobile-brand-title">ROOMIX ABANCAY</span>
+        <small class="mobile-brand-sub">Portal Oficial de Alquiler</small>
+      </div>
+    </div>
+    <button class="mobile-drawer-close" (click)="app.closeMobileMenu()" aria-label="Cerrar Menú">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+
+  @if (app.auth.isLoggedIn()) {
+  <div class="mobile-drawer-user-card">
+    <img
+      [src]="app.auth.currentUser()?.profileImage || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=120&q=80'"
+      alt="Avatar" class="mobile-user-pic">
+    <div class="mobile-user-details">
+      <h4 class="mobile-user-fullname">{{ app.auth.currentUser()?.firstName }} {{ app.auth.currentUser()?.lastName }}
+      </h4>
+      <span class="mobile-role-pill" [class.pill-admin]="app.auth.isAdmin()" [class.pill-owner]="app.auth.isOwner()"
+        [class.pill-tenant]="app.auth.isTenant()">
+        @if (app.auth.isAdmin()) { <i class="fa-solid fa-shield-check"></i> Admin General }
+        @else if (app.auth.isOwner()) { <i class="fa-solid fa-key"></i> Propietario }
+        @else { <i class="fa-solid fa-graduation-cap"></i> Inquilino }
+      </span>
+    </div>
+  </div>
+
+  <!-- Opciones Rápidas de Perfil y Ajustes en Móvil -->
+  <div class="mobile-quick-actions">
+    <button type="button" class="mobile-quick-btn" (click)="app.openEditProfileModal(); app.closeMobileMenu()">
+      <i class="fa-regular fa-user"></i>
+      <span>Mi Perfil</span>
+    </button>
+    <button type="button" class="mobile-quick-btn" (click)="app.openSettingsModal(); app.closeMobileMenu()">
+      <i class="fa-solid fa-gear"></i>
+      <span>Configuraciones</span>
+    </button>
+  </div>
+  } @else {
+  <div class="mobile-drawer-auth-box">
+    <p class="mobile-auth-intro">Accede para reservar habitaciones o gestionar tus cuartos en Abancay.</p>
+    <div class="mobile-auth-btn-row">
+      <button class="btn btn-secondary btn-sm btn-block" (click)="app.openAuth('login'); app.closeMobileMenu()">
+        <i class="fa-regular fa-user"></i> Iniciar Sesión
+      </button>
+      <button class="btn btn-primary btn-sm btn-block" (click)="app.openAuth('register'); app.closeMobileMenu()">
+        <i class="fa-solid fa-sparkles"></i> Registrarse
+      </button>
+    </div>
+  </div>
+  }
+
+  <div class="mobile-drawer-section">
+    <span class="mobile-section-label">Navegación & Paneles</span>
+    <div class="mobile-nav-links">
+      <button class="mobile-nav-link" [class.active]="app.activeTab() === 'explore'" (click)="app.switchTab('explore')">
+        <i class="fa-solid fa-compass text-primary"></i>
+        <span>Explorar Cuartos</span>
+      </button>
+
+      @if (app.auth.isTenant()) {
+      <button class="mobile-nav-link" [class.active]="app.activeTab() === 'my-bookings'"
+        (click)="app.switchTab('my-bookings')">
+        <i class="fa-solid fa-calendar-check text-cyan"></i>
+        <span>Mis Reservas</span>
+        @if (app.tenantBookings().length > 0) {
+        <span class="mobile-badge-count">{{ app.tenantBookings().length }}</span>
+        }
+      </button>
+      }
+
+      @if (app.auth.isOwner()) {
+      <button class="mobile-nav-link" [class.active]="app.activeTab() === 'owner-panel'"
+        (click)="app.switchTab('owner-panel')">
+        <i class="fa-solid fa-chart-line text-primary"></i>
+        <span>Panel Propietario</span>
+        @if (app.ownerBookings().length > 0) {
+        <span class="mobile-badge-count">{{ app.ownerBookings().length }}</span>
+        }
+      </button>
+
+      <div class="mobile-sublinks-group">
+        <button class="mobile-sublink-item" (click)="app.ownerTab.set('requests'); app.switchTab('owner-panel'); app.closeMobileMenu()">
+          <i class="fa-solid fa-envelope-open-text"></i> Solicitudes de Reserva ({{ app.ownerBookings().length }})
+        </button>
+        <button class="mobile-sublink-item" (click)="app.ownerTab.set('properties'); app.switchTab('owner-panel'); app.closeMobileMenu()">
+          <i class="fa-solid fa-building-user"></i> Mis Inmuebles ({{ app.myProperties().length }})
+        </button>
+        <button class="mobile-sublink-item" (click)="app.ownerTab.set('stats'); app.switchTab('owner-panel'); app.closeMobileMenu()">
+          <i class="fa-solid fa-chart-pie"></i> Resumen Financiero
+        </button>
+      </div>
+      }
+
+      @if (app.auth.isAdmin()) {
+      <button class="mobile-nav-link" [class.active]="app.activeTab() === 'admin-panel'"
+        (click)="app.switchTab('admin-panel')">
+        <i class="fa-solid fa-shield-halved text-rose"></i>
+        <span>Modo Administrador</span>
+        @if (app.pendingRooms().length > 0) {
+        <span class="mobile-badge-count pill-rose">{{ app.pendingRooms().length }}</span>
+        }
+      </button>
+
+      <div class="mobile-sublinks-group">
+        <button class="mobile-sublink-item" (click)="app.adminTab.set('pending'); app.switchTab('admin-panel'); app.closeMobileMenu()">
+          <i class="fa-solid fa-clock-rotate-left"></i> Aprobaciones y Pagos ({{ app.pendingRooms().length }})
+        </button>
+        <button class="mobile-sublink-item" (click)="app.adminTab.set('crud'); app.switchTab('admin-panel'); app.closeMobileMenu()">
+          <i class="fa-solid fa-list-check"></i> Control & CRUD
+        </button>
+        <button class="mobile-sublink-item" (click)="app.adminTab.set('wallets'); app.switchTab('admin-panel'); app.closeMobileMenu()">
+          <i class="fa-solid fa-qrcode"></i> Billeteras QR (Yape/Plin)
+        </button>
+        <button class="mobile-sublink-item" (click)="app.adminTab.set('reports'); app.switchTab('admin-panel'); app.closeMobileMenu()">
+          <i class="fa-solid fa-chart-pie"></i> Reportes Ejecutivos
+        </button>
+      </div>
+      }
+    </div>
+  </div>
+
+  @if (app.auth.isOwner()) {
+  <div class="mobile-drawer-cta">
+    <button class="btn btn-primary btn-block" (click)="app.openNewRoomModal(); app.closeMobileMenu()">
+      <i class="fa-solid fa-plus"></i> Publicar Cuarto (S/. 3.00)
+    </button>
+  </div>
+  }
+
+  @if (app.auth.isLoggedIn()) {
+  <div class="mobile-drawer-footer">
+    <button class="btn btn-danger-soft btn-block" (click)="app.logout()">
+      <i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar Sesión
+    </button>
+  </div>
+  }
+</aside>
+}

@@ -1,0 +1,63 @@
+@if (app.showMpSuccessReceipt()) {
+<div class="modal-backdrop mp-receipt-backdrop" (click)="app.closeMpReceipt()">
+  <div class="modal-dialog mp-receipt-modal animate-scale-up" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="app.closeMpReceipt()"><i class="fa-solid fa-xmark"></i></button>
+
+    <div class="mp-receipt-header">
+      <div class="mp-receipt-check">
+        <i class="fa-solid fa-check"></i>
+      </div>
+      <div class="mp-receipt-brand">
+        <i class="fa-solid fa-handshake-angle"></i> <strong>mercado</strong> pago
+      </div>
+      <h3 class="mp-receipt-title">¡Pago Acreditado Exitosamente!</h3>
+      <p class="mp-receipt-subtitle">Operación procesada en tiempo real mediante la API de Mercado Pago</p>
+    </div>
+
+    <div class="mp-receipt-card">
+      <div class="mp-receipt-row highlight-row">
+        <span class="label">Monto Acreditado:</span>
+        <strong class="value text-emerald">S/. {{ app.mpReceiptData?.transactionAmount?.toFixed(2) }} PEN</strong>
+      </div>
+      <div class="mp-receipt-divider"></div>
+      <div class="mp-receipt-row">
+        <span class="label">Código de Transacción (ID):</span>
+        <span class="value font-mono"><strong>{{ app.mpReceiptData?.id }}</strong></span>
+      </div>
+      <div class="mp-receipt-row">
+        <span class="label">Código de Autorización:</span>
+        <span class="value font-mono">{{ app.mpReceiptData?.authorizationCode }}</span>
+      </div>
+      <div class="mp-receipt-row">
+        <span class="label">Método de Pago:</span>
+        <span class="value">{{ app.mpReceiptData?.paymentMethod }}</span>
+      </div>
+      <div class="mp-receipt-row">
+        <span class="label">Estado de la Pasarela:</span>
+        <span class="value status-badge-approved"><i class="fa-solid fa-circle-check"></i> Aprobado (Acreditado)</span>
+      </div>
+      <div class="mp-receipt-row">
+        <span class="label">Fecha y Hora:</span>
+        <span class="value">{{ app.mpReceiptData?.dateApproved | date:'medium' }}</span>
+      </div>
+      @if (app.mpReceiptData?.cipCode) {
+      <div class="mp-receipt-row">
+        <span class="label">Código CIP PagoEfectivo:</span>
+        <strong class="value text-indigo">{{ app.mpReceiptData?.cipCode }}</strong>
+      </div>
+      }
+    </div>
+
+    <div class="mp-guarantee-box">
+      <i class="fa-solid fa-shield-halved text-electric-blue"></i>
+      <p>Esta transacción está asegurada y certificada bajo el programa de <strong>Protección al Comprador</strong> de Mercado Pago Perú.</p>
+    </div>
+
+    <div class="modal-actions modal-actions-center" style="margin-top: 1.25rem;">
+      <button class="btn btn-mp-checkout btn-full" (click)="app.closeMpReceipt()">
+        <i class="fa-solid fa-check-double"></i> Entendido, Continuar en RoomiGo
+      </button>
+    </div>
+  </div>
+</div>
+}

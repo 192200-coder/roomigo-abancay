@@ -70,10 +70,7 @@ public class BookingServiceImpl implements BookingService {
                 .notes(request.getNotes())
                 .build();
 
-        // Al reservarse, se retira de inmediato del catálogo de disponibles
-        room.setStatus(RoomStatus.RENTED);
-        roomRepository.save(room);
-
+        // La habitación permanece disponible en el Landing Page hasta que el propietario acepte y confirme la reserva
         return bookingMapper.toDto(reservationRepository.save(reservation));
     }
 
@@ -138,6 +135,10 @@ public class BookingServiceImpl implements BookingService {
         if (status == ReservationStatus.CONFIRMED) {
             Room room = reservation.getRoom();
             room.setStatus(RoomStatus.RENTED);
+            roomRepository.save(room);
+        } else if (status == ReservationStatus.REJECTED || status == ReservationStatus.CANCELLED) {
+            Room room = reservation.getRoom();
+            room.setStatus(RoomStatus.AVAILABLE);
             roomRepository.save(room);
         }
 

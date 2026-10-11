@@ -1,0 +1,88 @@
+<!-- =========================================================================
+     MODAL: EDITAR ANUNCIO (ADMIN CRUD)
+     ========================================================================= -->
+@if (app.showAdminEditModal(); as isOpen) {
+@if (app.adminEditingRoom; as room) {
+<div class="modal-backdrop" (click)="app.closeAdminEditModal()">
+  <div class="modal-dialog modal-md animate-scale-up" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="app.closeAdminEditModal()"><i class="fa-solid fa-xmark"></i></button>
+
+    <div class="modal-header">
+      <h2><i class="fa-solid fa-pen-to-square text-primary"></i> Editar Anuncio {{ room.id }}</h2>
+      <p>Modifica la información comercial y características del cuarto en Abancay.</p>
+    </div>
+
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Título del Anuncio *</label>
+        <input type="text" class="form-input" [(ngModel)]="app.adminEditTitle"
+          placeholder="Ej. Habitación Amoblada en Tamburco">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Precio Mensual (S/.) *</label>
+          <input type="number" class="form-input" [(ngModel)]="app.adminEditPrice" min="50" step="10">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Garantía (S/.)</label>
+          <input type="number" class="form-input" [(ngModel)]="app.adminEditDeposit" min="0" step="10">
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Tipo de Habitación</label>
+          <select class="form-select" [(ngModel)]="app.adminEditType">
+            <option value="SINGLE">Individual (1 Persona)</option>
+            <option value="DOUBLE">Doble (2 Personas)</option>
+            <option value="STUDIO">Mini Departamento / Estudio</option>
+            <option value="SUITE">Suite con Baño Privado</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Estado de la Habitación</label>
+          <select class="form-select" [(ngModel)]="app.adminEditStatus">
+            <option value="AVAILABLE">Disponible (En Catálogo)</option>
+            <option value="OCCUPIED">Ocupado</option>
+            <option value="RENTED">Alquilado</option>
+            <option value="PENDING_APPROVAL">Pendiente de Aprobación</option>
+            <option value="MAINTENANCE">En Mantenimiento</option>
+            <option value="REJECTED">Rechazado</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Servicios y Comodidades Incluidos</label>
+        <div class="checkbox-group-grid">
+          <label class="checkbox-option">
+            <input type="checkbox" [(ngModel)]="app.adminEditBathroom">
+            <span><i class="fa-solid fa-bath text-primary"></i> Baño Privado</span>
+          </label>
+          <label class="checkbox-option">
+            <input type="checkbox" [(ngModel)]="app.adminEditWifi">
+            <span><i class="fa-solid fa-wifi text-primary"></i> WiFi Fibra Óptica</span>
+          </label>
+          <label class="checkbox-option">
+            <input type="checkbox" [(ngModel)]="app.adminEditPets">
+            <span><i class="fa-solid fa-paw text-primary"></i> Acepta Mascotas</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" (click)="app.closeAdminEditModal()">Cancelar</button>
+        <button class="btn btn-primary" [disabled]="app.adminEditSaving" (click)="app.saveAdminEditRoom()">
+          @if (app.adminEditSaving) {
+          <i class="fa-solid fa-spinner fa-spin"></i> Guardando...
+          } @else {
+          <i class="fa-solid fa-floppy-disk"></i> Guardar Cambios
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+}
+}

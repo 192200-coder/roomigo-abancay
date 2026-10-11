@@ -1,9 +1,33 @@
+import { AuthModalComponent } from './components/ui/modals/auth-modal/auth-modal.component';
+import { LandingPageComponent } from './components/views/landingpage/landingpage.component';
+import { TenantDashboardComponent } from './components/views/tenantdashboard/tenantdashboard.component';
+import { OwnerDashboardComponent } from './components/views/ownerdashboard/ownerdashboard.component';
+import { AdminDashboardComponent } from './components/views/admindashboard/admindashboard.component';
+import { RoomCatalogComponent } from './components/views/roomcatalog/roomcatalog.component';
+import { ToastComponent } from './shared/components/toast/toast.component';
+import { NavbarComponent } from './components/layout/navbar/navbar.component';
+import { MobileNavDrawerComponent } from './components/layout/mobile-nav-drawer/mobile-nav-drawer.component';
+import { FooterComponent } from './components/layout/footer/footer.component';
+import { RoomDetailModalComponent } from './components/ui/modals/room-detail-modal/room-detail-modal.component';
+import { BookingModalComponent } from './components/ui/modals/booking-modal/booking-modal.component';
+import { PublishRoomModalComponent } from './components/ui/modals/publish-room-modal/publish-room-modal.component';
+import { ReviewModalComponent } from './components/ui/modals/review-modal/review-modal.component';
+import { EditLocationModalComponent } from './components/ui/modals/edit-location-modal/edit-location-modal.component';
+import { AdminEditRoomModalComponent } from './components/ui/modals/admin-edit-room-modal/admin-edit-room-modal.component';
+import { AdminDeleteRoomModalComponent } from './components/ui/modals/admin-delete-room-modal/admin-delete-room-modal.component';
+import { OwnerEditRoomModalComponent } from './components/ui/modals/owner-edit-room-modal/owner-edit-room-modal.component';
+import { OwnerDeleteRoomModalComponent } from './components/ui/modals/owner-delete-room-modal/owner-delete-room-modal.component';
+import { MpReceiptModalComponent } from './components/ui/modals/mp-receipt-modal/mp-receipt-modal.component';
+import { EditProfileModalComponent } from './components/ui/modals/edit-profile-modal/edit-profile-modal.component';
+import { SettingsModalComponent } from './components/ui/modals/settings-modal/settings-modal.component';
 import { Component, OnInit, signal, computed, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { RoomixApiService } from './core/roomix-api.service';
 import { AuthService } from './core/auth.service';
+import { MercadoPagoService } from './core/mercado-pago.service';
+import { MapSectionComponent } from './components/ui/map-section/map-section.component';
 import {
   Room,
   RoomFilter,
@@ -12,15 +36,42 @@ import {
   Booking,
   Review,
   UserRole,
-  AdminStats
+  AdminStats,
+  MercadoPagoSubMethod,
+  MercadoPagoPaymentResult
 } from './core/models';
 
+import { ViewEncapsulation } from '@angular/core';
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ToastComponent,
+    NavbarComponent,
+    MobileNavDrawerComponent,
+    LandingPageComponent,
+    TenantDashboardComponent,
+    OwnerDashboardComponent,
+    AdminDashboardComponent,
+    RoomDetailModalComponent,
+    BookingModalComponent,
+    PublishRoomModalComponent,
+    ReviewModalComponent,
+    EditLocationModalComponent,
+    AdminEditRoomModalComponent,
+    AdminDeleteRoomModalComponent,
+    OwnerEditRoomModalComponent,
+    OwnerDeleteRoomModalComponent,
+    MpReceiptModalComponent,
+    EditProfileModalComponent,
+    SettingsModalComponent,
+    AuthModalComponent,
+    FooterComponent
+  ],
   templateUrl: './app.html',
-  styleUrl: './app.css'
+  styleUrl: './app.css', encapsulation: ViewEncapsulation.None
 })
 export class App implements OnInit {
   // Navigation & View
@@ -95,13 +146,50 @@ export class App implements OnInit {
   authResetLoading = false;
   authResetSuccessMessage = '';
 
-  // Booking Form State con Pasarela Digital (Yape / Plin / Tarjeta)
+  // Booking Form State con Pasarela Integral de Mercado Pago (Perú)
   bookingStartDate = '';
   bookingEndDate = '';
   bookingNotes = '';
-  bookingPaymentMethod: 'YAPE' | 'PLIN' | 'TARJETA' = 'YAPE';
+  bookingPaymentMethod: string = 'MERCADO_PAGO';
   bookingPaymentRef = '';
   bookingSubmitting = false;
+
+  // Billeteras Digitales Booking Fields (Yape / Plin / Tarjetas)
+  mpBookingSubMethod: MercadoPagoSubMethod = 'YAPE';
+  mpCardNumber = '';
+  mpCardHolder = '';
+  mpCardExp = '';
+  mpCardCvv = '';
+  mpCardDni = '';
+  mpInstallments = 1;
+  mpYapeOtp = '';
+  mpCipGenerated = false;
+  mpGeneratedCip = '';
+  mpQrActive = true;
+
+  // Billeteras Digitales Oficiales (Yape & Plin) configurables por Administrador
+  readonly yapeQrImage = signal<string>(
+    localStorage.getItem('roomix_yape_qr') || 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=YAPE_BCP_983456789_ROOMIX_ABANCAY'
+  );
+  readonly plinQrImage = signal<string>(
+    localStorage.getItem('roomix_plin_qr') || 'https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=PLIN_INTERBANK_983456789_ROOMIX_ABANCAY'
+  );
+  readonly walletPhone = signal<string>(
+    localStorage.getItem('roomix_wallet_phone') || '983 456 789'
+  );
+  readonly walletBeneficiary = signal<string>(
+    localStorage.getItem('roomix_wallet_beneficiary') || 'Roomix Abancay Oficial'
+  );
+
+  // Comprobantes de Pago (Vouchers)
+  publishVoucherImage = '';
+  publishVoucherFileName = '';
+  bookingVoucherImage = '';
+  bookingVoucherFileName = '';
+
+  // Modal Comprobante Oficial de Mercado Pago
+  readonly showMpSuccessReceipt = signal<boolean>(false);
+  mpReceiptData: MercadoPagoPaymentResult | null = null;
 
   // Review Form State
   reviewRating = 5;
@@ -118,10 +206,10 @@ export class App implements OnInit {
   readonly mobileMenuOpen = signal<boolean>(false);
 
   // Tenant Panel Filter
-  readonly tenantFilter = signal<'ALL' | 'PENDING' | 'CONFIRMED' | 'REJECTED'>('ALL');
+  readonly tenantFilter = signal<'ALL' | 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'EXPLORE'>('ALL');
 
   // Owner Panel Functional Tabs & Filters
-  readonly ownerTab = signal<'requests' | 'properties' | 'stats'>('requests');
+  readonly ownerTab = signal<'requests' | 'properties' | 'stats' | 'explore'>('requests');
   readonly ownerBookingFilter = signal<'ALL' | 'PENDING' | 'CONFIRMED' | 'REJECTED'>('ALL');
 
   get filteredTenantBookings(): Booking[] {
@@ -175,6 +263,155 @@ export class App implements OnInit {
     window.open(`https://wa.me/${num}?text=${msg}`, '_blank');
   }
 
+  // ==========================================
+  // GESTIÓN DE CÓDIGOS QR Y BILLETERAS DIGITALES
+  // ==========================================
+  uploadYapeQr(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64 = e.target?.result as string;
+        this.yapeQrImage.set(base64);
+        localStorage.setItem('roomix_yape_qr', base64);
+        this.showToast('¡Código QR de Yape cargado con éxito!', 'success');
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  uploadPlinQr(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const base64 = e.target?.result as string;
+        this.plinQrImage.set(base64);
+        localStorage.setItem('roomix_plin_qr', base64);
+        this.showToast('¡Código QR de Plin cargado con éxito!', 'success');
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  updateWalletInfo(phone: string, beneficiary: string): void {
+    if (phone.trim()) {
+      this.walletPhone.set(phone.trim());
+      localStorage.setItem('roomix_wallet_phone', phone.trim());
+    }
+    if (beneficiary.trim()) {
+      this.walletBeneficiary.set(beneficiary.trim());
+      localStorage.setItem('roomix_wallet_beneficiary', beneficiary.trim());
+    }
+    this.showToast('Datos de Billeteras actualizados correctamente', 'success');
+  }
+
+  onPublishVoucherSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      this.publishVoucherFileName = file.name;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.publishVoucherImage = e.target?.result as string;
+        this.showToast(`Comprobante adjuntado: ${file.name}`, 'info');
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  onBookingVoucherSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files[0]) {
+      const file = input.files[0];
+      this.bookingVoucherFileName = file.name;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        this.bookingVoucherImage = e.target?.result as string;
+        this.showToast(`Comprobante adjuntado: ${file.name}`, 'info');
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  sendPublishVoucherWhatsApp(): void {
+    const currentUser = this.auth.currentUser();
+    const ownerName = `${currentUser?.firstName || 'Propietario'} ${currentUser?.lastName || ''}`.trim();
+    const ownerPhone = currentUser?.phone || 'Sin número registrado';
+    const method = this.mpPublishSubMethod === 'PLIN' ? 'Plin' : 'Yape';
+    const cleanPhone = this.walletPhone().replace(/\D/g, '') || '983456789';
+    const targetPhone = cleanPhone.startsWith('51') ? cleanPhone : `51${cleanPhone}`;
+
+    const text = 
+`🏠 *COMPROBANTE DE PUBLICACIÓN - ROOMIX ABANCAY* 🏠
+
+*DATOS DE LA HABITACIÓN:*
+• *Título:* ${this.newRoomTitle || 'Habitación en Abancay'}
+• *Dirección:* ${this.manualPropertyAddress || 'Abancay, Apurímac'}
+• *Precio:* S/. ${this.newRoomPrice} /mes
+• *Garantía:* S/. ${this.newRoomDeposit}
+• *Tipo:* ${this.newRoomType}
+• *Baño:* ${this.newRoomBathroom ? 'Privado' : 'Compartido'}
+• *Capacidad:* ${this.newRoomCapacity} persona(s)
+• *Servicios:* ${this.newRoomWifi ? 'WiFi incluido, ' : ''}${this.newRoomPets ? 'Acepta mascotas' : 'Sin mascotas'}
+
+*DATOS DEL PAGO:*
+• *Tarifa:* S/. ${this.publicationFee.toFixed(2)} PEN
+• *Billetera:* ${method}
+• *Destino:* ${this.walletBeneficiary()} (${this.walletPhone()})
+
+*PROPIETARIO:*
+• *Nombre:* ${ownerName}
+• *Celular:* ${ownerPhone}
+• *Email:* ${currentUser?.email || ''}
+
+_Hola Administrador de Roomix Abancay, acabo de realizar el pago de la tarifa mediante ${method}. Adjunto mi comprobante para la verificación y publicación de mi cuarto._`;
+
+    const url = `https://wa.me/${targetPhone}?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+  }
+
+  sendBookingVoucherWhatsApp(): void {
+    const room = this.selectedRoom();
+    if (!room) return;
+
+    const currentUser = this.auth.currentUser();
+    const tenantName = `${currentUser?.firstName || 'Inquilino'} ${currentUser?.lastName || ''}`.trim();
+    const tenantPhone = currentUser?.phone || 'Sin número registrado';
+    const method = this.mpBookingSubMethod === 'PLIN' ? 'Plin' : 'Yape';
+    const totalAmount = this.calculateBookingTotal();
+    const targetPhone = (room.ownerPhone ? room.ownerPhone.replace(/\D/g, '') : '') || this.walletPhone().replace(/\D/g, '') || '983456789';
+    const formattedPhone = targetPhone.startsWith('51') ? targetPhone : `51${targetPhone}`;
+
+    const text = 
+`📋 *COMPROBANTE DE RESERVA - ROOMIX ABANCAY* 📋
+
+*HABITACIÓN RESERVADA:*
+• *Cuarto:* ${room.title}
+• *Dirección:* ${room.propertyAddress || 'Abancay, Apurímac'}
+• *Precio Mensual:* S/. ${room.pricePerMonth}
+• *Garantía:* S/. ${room.depositPrice}
+• *Estadía:* ${this.bookingStartDate} al ${this.bookingEndDate} (${this.calculateStayDays()} días)
+• *Total Abonado:* S/. ${totalAmount.toFixed(2)} PEN
+
+*INQUILINO:*
+• *Nombre:* ${tenantName}
+• *Teléfono:* ${tenantPhone}
+• *Email:* ${currentUser?.email || 'inquilino@gmail.com'}
+• *Mensaje:* ${this.bookingNotes || 'Sin notas adicionales'}
+
+*PAGO:*
+• *Billetera:* ${method}
+• *Receptor:* ${this.walletBeneficiary()} (${this.walletPhone()})
+
+_Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi comprobante para confirmar mi estadía en Roomix Abancay._`;
+
+    const url = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+  }
+
   getRoomsForProperty(propertyId: number): Room[] {
     return this.rooms().filter(r => r.propertyId === propertyId);
   }
@@ -201,17 +438,27 @@ export class App implements OnInit {
   newRoomWifi = true;
   newRoomPets = false;
   newRoomImageUrl = 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80';
-  newRoomPaymentMethod: 'YAPE' | 'PLIN' = 'YAPE';
+  newRoomPaymentMethod: string = 'MERCADO_PAGO';
   newRoomPaymentRef = '';
-  readonly publicationFee: number = 15.00;
+  readonly publicationFee: number = 3.00;
   newRoomSubmitting = false;
+
+  // Billeteras Digitales Publicación Fields (Yape / Plin / Tarjetas)
+  mpPublishSubMethod: MercadoPagoSubMethod = 'YAPE';
+  mpPublishCardNumber = '';
+  mpPublishCardHolder = '';
+  mpPublishCardExp = '';
+  mpPublishCardCvv = '';
+  mpPublishCardDni = '';
+  mpPublishInstallments = 1;
+  mpPublishYapeOtp = '';
 
   // General Administrator Mode State (Abancay)
   readonly pendingRooms = signal<Room[]>([]);
   readonly adminStats = signal<AdminStats | null>(null);
   readonly adminAllRooms = signal<Room[]>([]);
   readonly loadingAdmin = signal<boolean>(false);
-  readonly adminTab = signal<'crud' | 'pending' | 'reports'>('crud');
+  readonly adminTab = signal<'crud' | 'pending' | 'reports' | 'explore' | 'wallets'>('crud');
   adminSearchKeyword = '';
   adminFilterStatus = 'ALL';
 
@@ -282,6 +529,7 @@ export class App implements OnInit {
   constructor(
     public auth: AuthService,
     private api: RoomixApiService,
+    public mpService: MercadoPagoService,
     private sanitizer: DomSanitizer,
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone
@@ -485,7 +733,18 @@ export class App implements OnInit {
     this.bookingStartDate = tomorrow.toISOString().split('T')[0];
     this.bookingEndDate = nextMonth.toISOString().split('T')[0];
     this.bookingNotes = '';
-    this.bookingPaymentMethod = 'YAPE';
+    this.bookingPaymentMethod = 'MERCADO_PAGO';
+    this.mpBookingSubMethod = 'YAPE';
+    this.bookingVoucherImage = '';
+    this.bookingVoucherFileName = '';
+    this.mpCardNumber = '';
+    this.mpCardHolder = '';
+    this.mpCardExp = '';
+    this.mpCardCvv = '';
+    this.mpCardDni = '';
+    this.mpInstallments = 1;
+    this.mpYapeOtp = '';
+    this.mpCipGenerated = false;
     this.bookingPaymentRef = '';
     this.selectedRoom.set(null);
   }
@@ -520,37 +779,92 @@ export class App implements OnInit {
       return;
     }
 
-    if (this.bookingPaymentMethod === 'YAPE') {
-      if (!this.bookingPaymentRef || !/^\d{6}$/.test(this.bookingPaymentRef.trim())) {
-        this.showToast('El código de operación de Yape debe contener exactamente 6 dígitos numéricos (ej. 849201)', 'error');
+    // Validaciones específicas de Mercado Pago según método elegido
+    if (this.mpBookingSubMethod === 'CREDIT_CARD' || this.mpBookingSubMethod === 'DEBIT_CARD') {
+      const cleanNum = this.mpCardNumber.replace(/\s+/g, '');
+      if (cleanNum.length < 15) {
+        this.showToast('Ingresa los 16 dígitos de tu tarjeta para procesar con Mercado Pago', 'error');
+        return;
+      }
+      if (!this.mpCardHolder.trim()) {
+        this.showToast('Ingresa el nombre del titular como figura en la tarjeta', 'error');
+        return;
+      }
+      if (!this.mpCardExp.trim() || !/^\d{2}\/\d{2}$/.test(this.mpCardExp.trim())) {
+        this.showToast('Ingresa la fecha de expiración en formato MM/AA (ej. 08/28)', 'error');
+        return;
+      }
+      if (!this.mpCardCvv.trim() || this.mpCardCvv.trim().length < 3) {
+        this.showToast('Ingresa el código CVV de seguridad (3 o 4 dígitos)', 'error');
+        return;
+      }
+      if (!this.mpCardDni.trim() || this.mpCardDni.trim().length < 8) {
+        this.showToast('Ingresa el DNI del titular para validación PCI de Mercado Pago', 'error');
+        return;
+      }
+    } else if (this.mpBookingSubMethod === 'YAPE') {
+      if (this.mpYapeOtp && !/^\d{6}$/.test(this.mpYapeOtp.trim())) {
+        this.showToast('El código de aprobación de Yape debe tener exactamente 6 dígitos', 'error');
         return;
       }
     }
 
-    const payNotes = `[Pago vía ${this.bookingPaymentMethod} | Op: ${this.bookingPaymentRef || 'Pendiente de validación'}] ${this.bookingNotes || ''}`.trim();
-
     this.bookingSubmitting = true;
-    this.api.createBooking({
-      roomId: room.id,
-      startDate: this.bookingStartDate,
-      endDate: this.bookingEndDate,
-      notes: payNotes
+    const totalAmount = this.calculateBookingTotal();
+    const currentUser = this.auth.currentUser();
+
+    // Procesar con la API de Mercado Pago
+    this.mpService.processPayment({
+      title: `Reserva RoomiGo: ${room.title} (Abancay)`,
+      amount: totalAmount,
+      currency: 'PEN',
+      subMethod: this.mpBookingSubMethod,
+      payerEmail: currentUser?.email || 'inquilino@roomix.com',
+      payerName: `${currentUser?.firstName || 'Inquilino'} ${currentUser?.lastName || 'RoomiGo'}`.trim(),
+      payerDni: this.mpCardDni || '74829103',
+      cardNumber: this.mpCardNumber,
+      cardHolder: this.mpCardHolder,
+      cardExpMonth: this.mpCardExp.split('/')[0] || '12',
+      cardExpYear: this.mpCardExp.split('/')[1] || '28',
+      cardCvv: this.mpCardCvv,
+      installments: this.mpInstallments,
+      yapeOtp: this.mpYapeOtp,
+      notes: this.bookingNotes,
+      entityType: 'BOOKING',
+      entityId: room.id
     }).subscribe({
-      next: res => {
-        this.bookingSubmitting = false;
-        if (res.success) {
-          this.closeBookingModal();
-          this.showToast('¡Reserva registrada con éxito! La habitación se ha retirado del catálogo público.', 'success');
-          // Retirar de inmediato la habitación del catálogo del Landing Page
-          this.rooms.update(list => list.filter(r => r.id !== room.id));
-          this.loadTenantBookings();
-          this.activeTab.set('my-bookings');
-        }
+      next: (mpResult: MercadoPagoPaymentResult) => {
+        this.bookingPaymentRef = mpResult.id;
+        const payNotes = `[Mercado Pago: ${mpResult.paymentMethod} | Ref: ${mpResult.id} | Auth: ${mpResult.authorizationCode}] ${this.bookingNotes || ''}`.trim();
+
+        this.api.createBooking({
+          roomId: room.id,
+          startDate: this.bookingStartDate,
+          endDate: this.bookingEndDate,
+          notes: payNotes
+        }).subscribe({
+          next: res => {
+            this.bookingSubmitting = false;
+            this.closeBookingModal();
+            this.mpReceiptData = mpResult;
+            this.showMpSuccessReceipt.set(true);
+            this.showToast(`¡Solicitud enviada al propietario (${mpResult.id})!`, 'success');
+            // La habitación se mantiene visible en el Landing Page hasta que el propietario confirme
+            this.loadRooms();
+            this.loadOwnerData();
+            this.loadTenantBookings();
+            this.activeTab.set('my-bookings');
+          },
+          error: err => {
+            this.bookingSubmitting = false;
+            const msg = err.error?.message || 'Error al procesar la reserva';
+            this.showToast(msg, 'error');
+          }
+        });
       },
-      error: err => {
+      error: () => {
         this.bookingSubmitting = false;
-        const msg = err.error?.message || 'Error al procesar la reserva';
-        this.showToast(msg, 'error');
+        this.showToast('Error al conectar con la pasarela de Mercado Pago. Intenta nuevamente.', 'error');
       }
     });
   }
@@ -709,6 +1023,9 @@ export class App implements OnInit {
     this.manualPropertyAddress = '';
     this.manualPropertyDistrict = 'Tamburco';
     this.newRoomPropertyMode = 'select';
+    this.mpPublishSubMethod = 'YAPE';
+    this.publishVoucherImage = '';
+    this.publishVoucherFileName = '';
   }
 
   onSelectRoomPhotos(event: Event): void {
@@ -776,14 +1093,32 @@ export class App implements OnInit {
       return;
     }
 
-    if (!this.newRoomPaymentRef.trim()) {
-      this.showToast('Ingresa el número de operación de tu pago por Yape o Plin (S/. 15)', 'error');
-      return;
-    }
-
-    if (this.newRoomPaymentMethod === 'YAPE') {
-      if (!/^\d{6}$/.test(this.newRoomPaymentRef.trim())) {
-        this.showToast('El código de comprobante de Yape debe contener exactamente 6 números (ej. 849201)', 'error');
+    // Validaciones Mercado Pago para publicación
+    if (this.mpPublishSubMethod === 'CREDIT_CARD' || this.mpPublishSubMethod === 'DEBIT_CARD') {
+      const cleanNum = this.mpPublishCardNumber.replace(/\s+/g, '');
+      if (cleanNum.length < 15) {
+        this.showToast('Ingresa los 16 dígitos de la tarjeta para pagar la publicación', 'error');
+        return;
+      }
+      if (!this.mpPublishCardHolder.trim()) {
+        this.showToast('Ingresa el nombre del titular de la tarjeta', 'error');
+        return;
+      }
+      if (!this.mpPublishCardExp.trim() || !/^\d{2}\/\d{2}$/.test(this.mpPublishCardExp.trim())) {
+        this.showToast('Ingresa la fecha de expiración MM/AA (ej. 09/27)', 'error');
+        return;
+      }
+      if (!this.mpPublishCardCvv.trim() || this.mpPublishCardCvv.trim().length < 3) {
+        this.showToast('Ingresa el código de seguridad CVV', 'error');
+        return;
+      }
+      if (!this.mpPublishCardDni.trim() || this.mpPublishCardDni.trim().length < 8) {
+        this.showToast('Ingresa el DNI del titular para procesar con Mercado Pago', 'error');
+        return;
+      }
+    } else if (this.mpPublishSubMethod === 'YAPE' || this.mpPublishSubMethod === 'PLIN') {
+      if (this.mpPublishYapeOtp && !/^\d{6}$/.test(this.mpPublishYapeOtp.trim())) {
+        this.showToast('El código de aprobación debe tener 6 números', 'error');
         return;
       }
     }
@@ -792,46 +1127,79 @@ export class App implements OnInit {
       ? this.newRoomImages[0] 
       : (this.newRoomImageUrl.trim() || 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80');
 
-    // Modo Inmueble Manual: Primero crea la propiedad en Abancay y luego el cuarto
-    if (this.newRoomPropertyMode === 'manual') {
-      if (!this.manualPropertyTitle.trim() || !this.manualPropertyAddress.trim()) {
-        this.showToast('Ingresa el nombre del inmueble y la dirección exacta en Abancay', 'error');
-        return;
-      }
-      this.newRoomSubmitting = true;
-      this.api.createProperty({
-        title: this.manualPropertyTitle.trim(),
-        description: `Inmueble ubicado en ${this.manualPropertyDistrict}, Abancay`,
-        address: `${this.manualPropertyAddress.trim()} (${this.manualPropertyDistrict})`,
-        city: 'Abancay',
-        country: 'Perú'
-      }).subscribe({
-        next: pRes => {
-          if (pRes.success && pRes.data) {
-            this.newRoomPropertyId = pRes.data.id;
-            this.loadOwnerData();
-            this.executeCreateRoom(pRes.data.id, mainImg);
-          } else {
+    this.newRoomSubmitting = true;
+    const currentUser = this.auth.currentUser();
+
+    // Procesar tarifa de publicación (S/. 15.00) mediante la API de Mercado Pago
+    this.mpService.processPayment({
+      title: `Tarifa de Publicación: ${this.newRoomTitle.trim()} (Abancay)`,
+      amount: this.publicationFee,
+      currency: 'PEN',
+      subMethod: this.mpPublishSubMethod,
+      payerEmail: currentUser?.email || '',
+      payerName: `${currentUser?.firstName || 'Propietario'} ${currentUser?.lastName || ''}`.trim(),
+      payerDni: this.mpPublishCardDni || '',
+      cardNumber: this.mpPublishCardNumber,
+      cardHolder: this.mpPublishCardHolder,
+      cardExpMonth: this.mpPublishCardExp.split('/')[0] || '12',
+      cardExpYear: this.mpPublishCardExp.split('/')[1] || '28',
+      cardCvv: this.mpPublishCardCvv,
+      installments: this.mpPublishInstallments,
+      yapeOtp: this.mpPublishYapeOtp,
+      entityType: 'ROOM_PUBLICATION'
+    }).subscribe({
+      next: (mpResult: MercadoPagoPaymentResult) => {
+        this.newRoomPaymentRef = mpResult.id;
+
+        // Modo Inmueble Manual: Primero crea la propiedad en Abancay y luego el cuarto
+        if (this.newRoomPropertyMode === 'manual') {
+          if (!this.manualPropertyTitle.trim() || !this.manualPropertyAddress.trim()) {
             this.newRoomSubmitting = false;
-            this.showToast('Error al registrar el inmueble manual', 'error');
+            this.showToast('Ingresa el nombre del inmueble y la dirección exacta en Abancay', 'error');
+            return;
           }
-        },
-        error: err => {
-          this.newRoomSubmitting = false;
-          this.showToast(err.error?.message || 'Error al crear el inmueble manual', 'error');
+          this.api.createProperty({
+            title: this.manualPropertyTitle.trim(),
+            description: `Inmueble ubicado en ${this.manualPropertyDistrict}, Abancay`,
+            address: `${this.manualPropertyAddress.trim()} (${this.manualPropertyDistrict})`,
+            city: 'Abancay',
+            country: 'Perú'
+          }).subscribe({
+            next: pRes => {
+              if (pRes.success && pRes.data) {
+                this.newRoomPropertyId = pRes.data.id;
+                this.loadOwnerData();
+                this.executeCreateRoom(pRes.data.id, mainImg, mpResult);
+              } else {
+                this.newRoomSubmitting = false;
+                this.showToast('Error al registrar el inmueble manual', 'error');
+              }
+            },
+            error: err => {
+              this.newRoomSubmitting = false;
+              this.showToast(err.error?.message || 'Error al crear el inmueble manual', 'error');
+            }
+          });
+        } else {
+          if (!this.newRoomPropertyId) {
+            this.newRoomSubmitting = false;
+            this.showToast('Selecciona una propiedad de Abancay o escribe una manualmente', 'error');
+            return;
+          }
+          this.executeCreateRoom(this.newRoomPropertyId, mainImg, mpResult);
         }
-      });
-    } else {
-      if (!this.newRoomPropertyId) {
-        this.showToast('Selecciona una propiedad de Abancay o escribe una manualmente', 'error');
-        return;
+      },
+      error: () => {
+        this.newRoomSubmitting = false;
+        this.showToast('Error al procesar el pago con Mercado Pago. Intenta nuevamente.', 'error');
       }
-      this.newRoomSubmitting = true;
-      this.executeCreateRoom(this.newRoomPropertyId, mainImg);
-    }
+    });
   }
 
-  private executeCreateRoom(propertyId: number, mainImg: string): void {
+  private executeCreateRoom(propertyId: number, mainImg: string, mpResult?: MercadoPagoPaymentResult): void {
+    const paymentRef = mpResult ? mpResult.id : (this.newRoomPaymentRef || `MP-${Date.now()}`);
+    const methodStr = mpResult ? `MERCADO_PAGO_${this.mpPublishSubMethod}` : 'MERCADO_PAGO';
+
     this.api.createRoom({
       propertyId: propertyId,
       title: this.newRoomTitle.trim(),
@@ -846,14 +1214,18 @@ export class App implements OnInit {
       acceptsPets: this.newRoomPets,
       mainImageUrl: mainImg,
       imageUrls: this.newRoomImages,
-      paymentMethod: this.newRoomPaymentMethod,
-      paymentReference: this.newRoomPaymentRef.trim()
+      paymentMethod: methodStr,
+      paymentReference: paymentRef
     }).subscribe({
       next: res => {
         this.newRoomSubmitting = false;
         if (res.success) {
           this.closeNewRoomModal();
-          this.showToast('¡Anuncio enviado a revisión! El Administrador General validará el comprobante de pago de S/. 15 para publicarlo.', 'success');
+          if (mpResult) {
+            this.mpReceiptData = mpResult;
+            this.showMpSuccessReceipt.set(true);
+          }
+          this.showToast(`¡Pago de S/. ${this.publicationFee.toFixed(2)} verificado (${paymentRef})! Anuncio publicado.`, 'success');
           this.loadRooms();
           this.loadOwnerData();
         }
@@ -864,6 +1236,63 @@ export class App implements OnInit {
         this.showToast(msg, 'error');
       }
     });
+  }
+
+  // ==========================================
+  // MERCADO PAGO INPUT FORMATTERS & HELPERS
+  // ==========================================
+  onMpCardNumberInput(event: Event, target: 'booking' | 'publish'): void {
+    const input = event.target as HTMLInputElement;
+    const formatted = this.mpService.formatCardNumber(input.value);
+    if (target === 'booking') {
+      this.mpCardNumber = formatted;
+    } else {
+      this.mpPublishCardNumber = formatted;
+    }
+    input.value = formatted;
+  }
+
+  onMpCardExpInput(event: Event, target: 'booking' | 'publish'): void {
+    const input = event.target as HTMLInputElement;
+    const formatted = this.mpService.formatExpiry(input.value);
+    if (target === 'booking') {
+      this.mpCardExp = formatted;
+    } else {
+      this.mpPublishCardExp = formatted;
+    }
+    input.value = formatted;
+  }
+
+  onMpDniInput(event: Event, target: 'booking' | 'publish'): void {
+    const input = event.target as HTMLInputElement;
+    const digitsOnly = input.value.replace(/\D/g, '').slice(0, 8);
+    if (target === 'booking') {
+      this.mpCardDni = digitsOnly;
+    } else {
+      this.mpPublishCardDni = digitsOnly;
+    }
+    input.value = digitsOnly;
+  }
+
+  onMpYapeOtpInput(event: Event, target: 'booking' | 'publish'): void {
+    const input = event.target as HTMLInputElement;
+    const digitsOnly = input.value.replace(/\D/g, '').slice(0, 6);
+    if (target === 'booking') {
+      this.mpYapeOtp = digitsOnly;
+    } else {
+      this.mpPublishYapeOtp = digitsOnly;
+    }
+    input.value = digitsOnly;
+  }
+
+  closeMpReceipt(): void {
+    this.showMpSuccessReceipt.set(false);
+    this.mpReceiptData = null;
+  }
+
+  generateCipCode(): void {
+    this.mpCipGenerated = true;
+    this.mpGeneratedCip = `CIP-${Math.floor(10000000 + Math.random() * 90000000)}`;
   }
 
   // ==========================================
@@ -1251,7 +1680,7 @@ export class App implements OnInit {
 
     rooms.forEach(r => {
       const price = Number(r.pricePerMonth || 0).toFixed(2);
-      const owner = r.ownerName || 'Carlos Mendoza';
+      const owner = r.ownerName || 'Propietario';
       const address = r.propertyAddress || 'Abancay';
       const wallet = r.paymentMethod || 'YAPE';
       const opCode = r.paymentReference || 'N/A';
@@ -1317,7 +1746,7 @@ export class App implements OnInit {
     let rowsHtml = '';
     rooms.forEach(r => {
       const price = Number(r.pricePerMonth || 0).toFixed(2);
-      const owner = r.ownerName || 'Carlos Mendoza';
+      const owner = r.ownerName || 'Propietario';
       const address = r.propertyAddress || 'Abancay';
       const wallet = r.paymentMethod || 'YAPE';
       const opCode = r.paymentReference || 'N/A';
@@ -1721,18 +2150,36 @@ export class App implements OnInit {
 
   submitAuth(): void {
     this.authError = '';
-    if (!this.authEmail.trim() || !this.authPassword.trim()) {
-      this.authError = 'Completa todos los campos obligatorios';
+    const emailVal = this.authEmail.trim();
+    const passwordVal = this.authPassword;
+
+    // Validación rápida e instantánea de campos requeridos
+    if (!emailVal && !passwordVal) {
+      this.authError = 'Por favor ingresa tu correo y contraseña.';
+      return;
+    }
+    if (!emailVal) {
+      this.authError = 'Por favor ingresa tu correo electrónico.';
+      return;
+    }
+    // Validación básica de formato de correo
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailVal)) {
+      this.authError = 'El formato del correo electrónico no es válido.';
+      return;
+    }
+    if (!passwordVal) {
+      this.authError = 'Por favor ingresa tu contraseña.';
       return;
     }
 
     if (this.authMode() === 'register') {
       if (!this.authFirstName.trim() || !this.authLastName.trim()) {
-        this.authError = 'Ingresa tu nombre y apellido';
+        this.authError = 'Por favor ingresa tu nombre y apellido.';
         return;
       }
-      if (this.authPassword.trim().length < 8) {
-        this.authError = 'La contraseña debe tener al menos 8 caracteres';
+      if (passwordVal.length < 8) {
+        this.authError = 'La contraseña debe tener al menos 8 caracteres.';
         return;
       }
     }
@@ -1752,7 +2199,7 @@ export class App implements OnInit {
               this.activeTab.set('owner-panel');
               this.loadOwnerData();
             } else {
-              this.activeTab.set('explore');
+              this.activeTab.set('my-bookings');
               this.loadTenantBookings();
             }
           }
@@ -1787,7 +2234,7 @@ export class App implements OnInit {
               this.activeTab.set('owner-panel');
               this.loadOwnerData();
             } else {
-              this.activeTab.set('explore');
+              this.activeTab.set('my-bookings');
               this.loadTenantBookings();
             }
           }
@@ -2001,7 +2448,7 @@ export class App implements OnInit {
             this.activeTab.set('owner-panel');
             this.loadOwnerData();
           } else {
-            this.activeTab.set('explore');
+            this.activeTab.set('my-bookings');
             this.loadTenantBookings();
           }
         } else {
@@ -2016,52 +2463,117 @@ export class App implements OnInit {
     });
   }
 
-  quickDemoLogin(role: 'admin' | 'owner' | 'tenant'): void {
-    this.authError = '';
-    this.authLoading = true;
-    let email = 'inquilino@roomix.com';
-    let password = 'password123';
-
-    if (role === 'admin') {
-      email = 'admin@roomix.com';
-      password = 'admin123';
-    } else if (role === 'owner') {
-      email = 'propietario@roomix.com';
-      password = 'password123';
-    }
-
-    this.auth.login({ email, password }).subscribe({
-      next: res => {
-        this.authLoading = false;
-        if (res.success) {
-          this.closeAuth();
-          if (role === 'admin') {
-            this.showToast('¡Modo Administrador General activado (Abancay)!', 'success');
-            this.activeTab.set('admin-panel');
-            this.loadAdminData();
-          } else if (role === 'owner') {
-            this.showToast('¡Sesión iniciada como Propietario!', 'success');
-            this.activeTab.set('owner-panel');
-            this.loadOwnerData();
-          } else {
-            this.showToast('¡Sesión iniciada como Inquilino!', 'success');
-            this.activeTab.set('explore');
-            this.loadTenantBookings();
-          }
-        }
-      },
-      error: err => {
-        this.authLoading = false;
-        this.authError = err.error?.message || 'Error al iniciar sesión demo';
-      }
-    });
-  }
 
   logout(): void {
     this.mobileMenuOpen.set(false);
     this.auth.logout();
     this.activeTab.set('explore');
     this.showToast('Has cerrado sesión correctamente', 'info');
+  }
+
+  // ==========================================
+  // MODAL: EDICIÓN DE PERFIL DE USUARIO
+  // ==========================================
+  readonly showEditProfileModal = signal<boolean>(false);
+  profileEditFirstName = '';
+  profileEditLastName = '';
+  profileEditPhone = '';
+  profileEditImage = '';
+  profileEditSaving = false;
+
+  openEditProfileModal(): void {
+    const u = this.auth.currentUser();
+    if (!u) return;
+    this.profileEditFirstName = u.firstName || '';
+    this.profileEditLastName = u.lastName || '';
+    this.profileEditPhone = u.phone || '';
+    this.profileEditImage = u.profileImage || '';
+    this.showEditProfileModal.set(true);
+  }
+
+  closeEditProfileModal(): void {
+    this.showEditProfileModal.set(false);
+  }
+
+  saveProfileChanges(): void {
+    if (!this.profileEditFirstName.trim()) {
+      this.showToast('El nombre no puede estar vacío', 'error');
+      return;
+    }
+    this.profileEditSaving = true;
+    setTimeout(() => {
+      this.auth.updateUserData({
+        firstName: this.profileEditFirstName.trim(),
+        lastName: this.profileEditLastName.trim(),
+        phone: this.profileEditPhone.trim(),
+        profileImage: this.profileEditImage.trim() || undefined
+      });
+      this.profileEditSaving = false;
+      this.closeEditProfileModal();
+      this.showToast('¡Tu perfil ha sido actualizado con éxito!', 'success');
+    }, 300);
+  }
+
+  onProfileImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    if (input?.files && input.files[0]) {
+      const file = input.files[0];
+      const reader = new FileReader();
+      reader.onload = (e: ProgressEvent<FileReader>) => {
+        if (e.target?.result) {
+          this.profileEditImage = e.target.result as string;
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  }
+
+  // ==========================================
+  // CONFIGURACIONES & MODO OSCURO (THEME)
+  // ==========================================
+  readonly isDarkMode = signal<boolean>(false);
+  readonly showSettingsModal = signal<boolean>(false);
+  readonly notificationsOpen = signal<boolean>(true);
+
+  toggleTheme(): void {
+    const nextVal = !this.isDarkMode();
+    this.isDarkMode.set(nextVal);
+    if (typeof document !== 'undefined') {
+      if (nextVal) {
+        document.documentElement.classList.add('dark-theme');
+        document.body.classList.add('dark-theme');
+      } else {
+        document.documentElement.classList.remove('dark-theme');
+        document.body.classList.remove('dark-theme');
+      }
+    }
+    this.showToast(nextVal ? 'Modo Oscuro activado' : 'Modo Claro activado', 'info');
+  }
+
+  setTheme(mode: 'light' | 'dark'): void {
+    const isDark = mode === 'dark';
+    this.isDarkMode.set(isDark);
+    if (typeof document !== 'undefined') {
+      if (isDark) {
+        document.documentElement.classList.add('dark-theme');
+        document.body.classList.add('dark-theme');
+      } else {
+        document.documentElement.classList.remove('dark-theme');
+        document.body.classList.remove('dark-theme');
+      }
+    }
+  }
+
+  openSettingsModal(): void {
+    this.showSettingsModal.set(true);
+  }
+
+  closeSettingsModal(): void {
+    this.showSettingsModal.set(false);
+  }
+
+  toggleNotifications(): void {
+    this.notificationsOpen.update(v => !v);
   }
 
   // ==========================================
@@ -2117,5 +2629,46 @@ export class App implements OnInit {
     this.toastTimeout = setTimeout(() => {
       this.toast.set(null);
     }, 4000);
+  }
+
+  // ==========================================
+  // PUBLIC SECTIONS SCROLL & HELP
+  // ==========================================
+  scrollToSection(sectionId: string): void {
+    this.mobileMenuOpen.set(false);
+    if (this.activeTab() !== 'explore') {
+      this.switchTab('explore');
+      setTimeout(() => {
+        const el = document.getElementById(sectionId);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+      }, 150);
+    } else {
+      const el = document.getElementById(sectionId);
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }
+  }
+
+  onSearchRoomsClick(): void {
+    const el = document.getElementById('cuartos-catalog-grid') || document.getElementById('cuartos-section');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
+  onPublishPropertyClick(): void {
+    if (!this.auth.isLoggedIn()) {
+      this.openAuth('register');
+      this.showToast('Regístrate o inicia sesión como Propietario para publicar tu inmueble', 'info');
+      return;
+    }
+    if (!this.auth.isOwner()) {
+      this.showToast('Tu cuenta actual es de Inquilino. Inicia sesión como Propietario para publicar inmuebles.', 'info');
+      return;
+    }
+    this.openNewRoomModal();
   }
 }

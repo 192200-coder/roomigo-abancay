@@ -1,0 +1,548 @@
+<!-- ==========================================
+         TAB 3: PANEL PROPIETARIO (CON SIDEBOARD)
+         ========================================== -->
+@if (app.activeTab() === 'owner-panel') {
+<div class="panel-layout-container animate-fade-in">
+  <!-- MENÚ VERTICAL LATERAL PERMANENTE (PROPIETARIO) -->
+  <aside class="dashboard-vertical-sidebar">
+    <!-- Perfil Propietario Inspirado en Diseño de Referencia (Avatar, Nombre, Email) -->
+    <div class="sidebar-user-header">
+      <div class="sidebar-avatar-wrapper" (click)="app.openEditProfileModal()" role="button"
+        title="Editar perfil y foto">
+        <img
+          [src]="app.auth.currentUser()?.profileImage || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=150&q=80'"
+          alt="Foto de perfil" class="sidebar-avatar-img">
+        <span class="sidebar-avatar-badge" title="Cambiar foto"><i class="fa-solid fa-pen"></i></span>
+      </div>
+      <div class="sidebar-user-meta">
+        <div class="sidebar-user-title-row">
+          <h4 class="sidebar-user-name"
+            [title]="(app.auth.currentUser()?.firstName || 'Propietario') + ' ' + (app.auth.currentUser()?.lastName || '')">
+            {{ app.auth.currentUser()?.firstName || 'Propietario' }} {{ app.auth.currentUser()?.lastName || '' }}
+          </h4>
+        </div>
+        <p class="sidebar-user-email" [title]="app.auth.currentUser()?.email || ''">
+          {{ app.auth.currentUser()?.email || 'propietario@roomix.com' }}
+        </p>
+      </div>
+    </div>
+
+    <!-- 1. Mi Perfil -->
+    <div class="sidebar-buttons-group">
+      <!-- 1. Mi Perfil -->
+      <button class="sidebar-nav-btn" (click)="app.openEditProfileModal()" title="Editar información de perfil">
+        <div class="btn-icon-label">
+          <i class="fa-regular fa-user"></i>
+          <span>Mi Perfil</span>
+        </div>
+        <i class="fa-solid fa-chevron-right sidebar-arrow-icon"></i>
+      </button>
+
+      <!-- 2. Configuraciones (Con botón de Modo Claro / Oscuro) -->
+      <button class="sidebar-nav-btn" (click)="app.openSettingsModal()" title="Configuración de la plataforma y tema">
+        <div class="btn-icon-label">
+          <i class="fa-solid fa-gear"></i>
+          <span>Configuraciones</span>
+        </div>
+        <i class="fa-solid fa-chevron-right sidebar-arrow-icon"></i>
+      </button>
+
+      <!-- 3. Notificaciones y Gestión de Solicitudes -->
+      <div class="sidebar-notifications-wrapper">
+        <button class="sidebar-nav-btn" (click)="app.toggleNotifications()" title="Ver solicitudes de inquilinos">
+          <div class="btn-icon-label">
+            <i class="fa-regular fa-bell"></i>
+            <span>Notificaciones</span>
+          </div>
+          <div class="sidebar-btn-right-action">
+            <span class="sidebar-pill-badge">{{ app.ownerBookings().length }}</span>
+            <i class="fa-solid" [class.fa-chevron-down]="app.notificationsOpen()"
+              [class.fa-chevron-right]="!app.notificationsOpen()"></i>
+          </div>
+        </button>
+
+        @if (app.notificationsOpen()) {
+        <div class="sidebar-sub-items-menu animate-fade-in">
+          <!-- Confirmadas -->
+          <button class="sidebar-sub-btn" [class.active]="app.ownerBookingFilter() === 'CONFIRMED'"
+            (click)="app.ownerBookingFilter.set('CONFIRMED'); app.ownerTab.set('requests')"
+            title="Solicitudes confirmadas">
+            <div class="sub-btn-content">
+              <i class="fa-solid fa-circle-check text-emerald"></i>
+              <span>Confirmadas</span>
+            </div>
+            <span class="sidebar-btn-badge">{{ app.getOwnerStatusCount('CONFIRMED') }}</span>
+          </button>
+
+          <!-- Rechazadas -->
+          <button class="sidebar-sub-btn" [class.active]="app.ownerBookingFilter() === 'REJECTED'"
+            (click)="app.ownerBookingFilter.set('REJECTED'); app.ownerTab.set('requests')"
+            title="Solicitudes rechazadas">
+            <div class="sub-btn-content">
+              <i class="fa-solid fa-circle-xmark text-rose"></i>
+              <span>Rechazadas</span>
+            </div>
+            <span class="sidebar-btn-badge">{{ app.getOwnerStatusCount('REJECTED') }}</span>
+          </button>
+
+          <!-- En espera -->
+          <button class="sidebar-sub-btn" [class.active]="app.ownerBookingFilter() === 'PENDING'"
+            (click)="app.ownerBookingFilter.set('PENDING'); app.ownerTab.set('requests')"
+            title="Solicitudes pendientes">
+            <div class="sub-btn-content">
+              <i class="fa-solid fa-clock-rotate-left text-amber"></i>
+              <span>En espera</span>
+            </div>
+            <span class="sidebar-btn-badge">{{ app.getOwnerStatusCount('PENDING') }}</span>
+          </button>
+        </div>
+        }
+      </div>
+
+      <!-- Mis Inmuebles & Cuartos -->
+      <button class="sidebar-nav-btn" [class.active]="app.ownerTab() === 'properties'"
+        (click)="app.ownerTab.set('properties')">
+        <div class="btn-icon-label">
+          <i class="fa-solid fa-building-user"></i>
+          <span>Mis Inmuebles</span>
+        </div>
+        <span class="sidebar-btn-badge">{{ app.myProperties().length }}</span>
+      </button>
+
+      <!-- Resumen Financiero -->
+      <button class="sidebar-nav-btn" [class.active]="app.ownerTab() === 'stats'" (click)="app.ownerTab.set('stats')">
+        <div class="btn-icon-label">
+          <i class="fa-solid fa-chart-pie"></i>
+          <span>Resumen Financiero</span>
+        </div>
+      </button>
+
+      <!-- Volver a Explorar -->
+      <button class="sidebar-nav-btn" [class.active]="app.ownerTab() === 'explore'"
+        (click)="app.ownerTab.set('explore')" title="Volver al catálogo general de cuartos">
+        <div class="btn-icon-label">
+          <i class="fa-solid fa-compass"></i>
+          <span>Explorar Cuartos</span>
+        </div>
+      </button>
+    </div>
+
+    <!-- 4. Resumen de Cartera -->
+    <div class="sidebar-info-card">
+      <span class="sidebar-group-title">Resumen de Cartera</span>
+      <div class="sidebar-stats-list">
+        <div class="sidebar-stat-item">
+          <span class="stat-lbl"><i class="fa-solid fa-building-user"></i> Inmuebles:</span>
+          <strong class="stat-val">{{ app.myProperties().length }}</strong>
+        </div>
+        <div class="sidebar-stat-item">
+          <span class="stat-lbl"><i class="fa-solid fa-envelope-open-text"></i> Solicitudes:</span>
+          <strong class="stat-val">{{ app.ownerBookings().length }}</strong>
+        </div>
+        <div class="sidebar-stat-item">
+          <span class="stat-lbl"><i class="fa-solid fa-wallet"></i> Publicación:</span>
+          <strong class="stat-val">S/. 3 (Yape/Plin)</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. Seguridad & Soporte en Alquiler -->
+    <div class="sidebar-security-badge">
+      <i class="fa-solid fa-headset"></i>
+      <div>
+        <h5>Soporte Propietarios</h5>
+        <p>Atención directa por WhatsApp y soporte técnico: <strong>983 456 789</strong></p>
+      </div>
+    </div>
+
+    <div class="sidebar-spacer"></div>
+    <button class="sidebar-logout-btn" (click)="app.logout()" title="Cerrar sesión de mi cuenta">
+      <i class="fa-solid fa-arrow-right-from-bracket"></i>
+      <span>Cerrar Sesión</span>
+    </button>
+  </aside>
+
+  <!-- CONTENIDO PRINCIPAL (FONDO EN BLANCO ELEGANTE) -->
+  <div class="panel-main-stage">
+    @if (app.ownerTab() === 'explore') {
+    <app-room-catalog></app-room-catalog>
+    } @else {
+    <div class="dashboard-header">
+      <div>
+        <h2 class="section-title"><i class="fa-solid fa-chart-line" style="color: #001f48;"></i> Panel de Propietario
+        </h2>
+        <p class="section-desc">Gestiona tus inmuebles, revisa solicitudes de inquilinos y administra tus
+          publicaciones con Yape/Plin</p>
+      </div>
+      <button class="btn btn-primary" (click)="app.openNewRoomModal()">
+        <i class="fa-solid fa-plus"></i> Publicar Cuarto (S/. 3.00)
+      </button>
+    </div>
+
+    <!-- Navegación de Módulos Separados del Propietario -->
+    <div class="dashboard-subtabs-nav">
+      <button class="dash-subtab-btn" [class.active]="app.ownerTab() === 'requests'"
+        (click)="app.ownerTab.set('requests')">
+        <i class="fa-solid fa-envelope-open-text"></i>
+        <span>Solicitudes de Reserva</span>
+        @if (app.ownerBookings().length > 0) {
+        <span class="subtab-badge" [class.subtab-badge-rose]="app.getOwnerStatusCount('PENDING') > 0">{{
+          app.ownerBookings().length }}</span>
+        }
+      </button>
+      <button class="dash-subtab-btn" [class.active]="app.ownerTab() === 'properties'"
+        (click)="app.ownerTab.set('properties')">
+        <i class="fa-solid fa-building-user"></i>
+        <span>Mis Inmuebles & Cuartos ({{ app.myProperties().length }})</span>
+      </button>
+      <button class="dash-subtab-btn" [class.active]="app.ownerTab() === 'stats'" (click)="app.ownerTab.set('stats')">
+        <i class="fa-solid fa-chart-pie"></i>
+        <span>Resumen Financiero</span>
+      </button>
+    </div>
+
+    <!-- ==============================================================
+               MÓDULO 1: SOLICITUDES DE RESERVA DE INQUILINOS
+               ============================================================== -->
+    @if (app.ownerTab() === 'requests') {
+    <!-- Sub-filtros para solicitudes del Propietario -->
+    <div class="panel-filter-pills">
+      <button class="panel-filter-pill" [class.active]="app.ownerBookingFilter() === 'ALL'"
+        (click)="app.ownerBookingFilter.set('ALL')">
+        Todas ({{ app.ownerBookings().length }})
+      </button>
+      <button class="panel-filter-pill pill-pending" [class.active]="app.ownerBookingFilter() === 'PENDING'"
+        (click)="app.ownerBookingFilter.set('PENDING')">
+        Pendientes de Aprobación ({{ app.getOwnerStatusCount('PENDING') }})
+      </button>
+      <button class="panel-filter-pill pill-confirmed" [class.active]="app.ownerBookingFilter() === 'CONFIRMED'"
+        (click)="app.ownerBookingFilter.set('CONFIRMED')">
+        Confirmadas ({{ app.getOwnerStatusCount('CONFIRMED') }})
+      </button>
+      <button class="panel-filter-pill pill-rejected" [class.active]="app.ownerBookingFilter() === 'REJECTED'"
+        (click)="app.ownerBookingFilter.set('REJECTED')">
+        Rechazadas ({{ app.getOwnerStatusCount('REJECTED') }})
+      </button>
+    </div>
+
+    <!-- Booking Requests Table -->
+    <div class="requests-block glass-panel animate-fade-in">
+      <div class="block-header">
+        <div>
+          <h3>Solicitudes de Alquiler Recibidas</h3>
+          <p class="sub-text">Evalúa las solicitudes de estudiantes y profesionales en Abancay. Coordina por
+            WhatsApp o confirma el arriendo.</p>
+        </div>
+        <button class="btn btn-secondary btn-sm" (click)="app.loadOwnerData()">
+          <i class="fa-solid fa-arrows-rotate"></i> Actualizar
+        </button>
+      </div>
+
+      @if (app.filteredOwnerBookings.length === 0) {
+      <div class="empty-state-card">
+        <div class="empty-state-icon-box">
+          <i class="fa-solid fa-envelope-open"></i>
+        </div>
+        <h3 class="empty-state-heading">No hay solicitudes en este momento</h3>
+        <p class="empty-state-text">
+          @if (app.ownerBookingFilter() === 'ALL') {
+          Aún no tienes solicitudes de reserva pendientes para tus propiedades en Abancay.
+          } @else {
+          No se encontraron solicitudes con el filtro seleccionado.
+          }
+        </p>
+        @if (app.ownerBookingFilter() !== 'ALL') {
+        <button class="btn btn-secondary btn-sm" (click)="app.ownerBookingFilter.set('ALL')">
+          <i class="fa-solid fa-rotate-left"></i> Ver Todas las Solicitudes
+        </button>
+        }
+      </div>
+      } @else {
+      <div class="table-responsive">
+        <table class="custom-table owner-requests-table">
+          <thead>
+            <tr>
+              <th>Inquilino</th>
+              <th>Habitación</th>
+              <th>Estadía</th>
+              <th>Monto Alquiler</th>
+              <th>Estado</th>
+              <th class="text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (req of app.filteredOwnerBookings; track req.id) {
+            <tr>
+              <td>
+                <strong>{{ req.tenant.firstName }} {{ req.tenant.lastName }}</strong>
+                <div class="cell-sub-info"><i class="fa-solid fa-envelope"></i> {{ req.tenant.email }}</div>
+                @if (req.tenant.phone) {
+                <div class="cell-sub-info"><i class="fa-solid fa-phone"></i> {{ req.tenant.phone }}</div>
+                }
+              </td>
+              <td>
+                <strong class="room-title-link" (click)="app.openRoomDetails(req.room)">{{ req.room.title }}</strong>
+                <div class="cell-sub-info"><i class="fa-solid fa-location-dot"></i> {{ req.room.propertyAddress ||
+                  'Abancay' }}</div>
+              </td>
+              <td>
+                <div><strong>Del:</strong> {{ req.startDate }}</div>
+                <div class="cell-sub-info"><strong>Al:</strong> {{ req.endDate }}</div>
+              </td>
+              <td>
+                <strong class="text-emerald font-bold">S/. {{ req.totalPrice }}</strong>
+              </td>
+              <td>
+                <span class="badge" [class.badge-pending]="req.status === 'PENDING'"
+                  [class.badge-confirmed]="req.status === 'CONFIRMED'"
+                  [class.badge-rejected]="req.status === 'REJECTED'">
+                  {{ req.status === 'PENDING' ? 'En Espera' : (req.status === 'CONFIRMED' ? 'Confirmada' :
+                  'Rechazada') }}
+                </span>
+              </td>
+              <td class="text-center">
+                @if (req.status === 'PENDING') {
+                <div class="action-btn-group">
+                  <button class="btn btn-sm btn-success" (click)="app.updateBookingStatus(req.id, 'CONFIRMED')"
+                    title="Aprobar solicitud de alquiler">
+                    <i class="fa-solid fa-check"></i> Aprobar
+                  </button>
+                  <button class="btn btn-sm btn-danger" (click)="app.updateBookingStatus(req.id, 'REJECTED')"
+                    title="Rechazar solicitud">
+                    <i class="fa-solid fa-xmark"></i> Rechazar
+                  </button>
+                  <button class="btn btn-sm btn-whatsapp"
+                    (click)="app.contactTenantWhatsApp(req.tenant.phone, req.tenant.firstName, req.room.title)"
+                    title="Contactar al inquilino por WhatsApp">
+                    <i class="fa-brands fa-whatsapp"></i>
+                  </button>
+                </div>
+                } @else if (req.status === 'CONFIRMED') {
+                <div class="action-btn-group">
+                  <span class="action-done"><i class="fa-solid fa-circle-check text-emerald"></i> Aprobado</span>
+                  <button class="btn btn-sm btn-whatsapp"
+                    (click)="app.contactTenantWhatsApp(req.tenant.phone, req.tenant.firstName, req.room.title)"
+                    title="Coordinar detalles por WhatsApp">
+                    <i class="fa-brands fa-whatsapp"></i> WhatsApp
+                  </button>
+                </div>
+                } @else {
+                <span class="badge badge-rejected"><i class="fa-solid fa-circle-xmark"></i> Rechazado</span>
+                }
+              </td>
+            </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      }
+    </div>
+    }
+
+    <!-- ==============================================================
+               MÓDULO 2: MIS INMUEBLES Y CUARTOS REGISTRADOS
+               ============================================================== -->
+    @if (app.ownerTab() === 'properties') {
+    <div class="owner-properties-block animate-fade-in">
+      <!-- Header perfectamente alineado para Mis Inmuebles Registrados en Abancay -->
+      <div class="owner-header-box">
+        <div class="owner-header-content">
+          <div class="owner-header-icon">
+            <i class="fa-solid fa-building-user"></i>
+          </div>
+          <div class="owner-header-text">
+            <span class="owner-tag-pill">
+              <i class="fa-solid fa-house-chimney"></i> GESTIÓN DE INMUEBLES • ABANCAY
+            </span>
+            <h3 class="owner-header-title">Mis Inmuebles Registrados en Abancay</h3>
+            <p class="owner-header-desc">
+              Inmuebles registrados a tu nombre. Puedes agregar nuevas habitaciones a cualquier inmueble con tarifa
+              única de S/. 3.00 (Yape/Plin).
+            </p>
+          </div>
+        </div>
+      </div>
+
+      @if (app.myProperties().length === 0) {
+      <div class="empty-state-card glass-panel">
+        <div class="empty-state-icon-box">
+          <i class="fa-solid fa-city"></i>
+        </div>
+        <h3 class="empty-state-heading">No tienes inmuebles registrados</h3>
+        <p class="empty-state-text">Publica tu primera habitación para registrar automáticamente tu propiedad en
+          Abancay.</p>
+        <button class="btn btn-primary" (click)="app.openNewRoomModal()">
+          <i class="fa-solid fa-plus"></i> Publicar mi Primer Cuarto
+        </button>
+      </div>
+      } @else {
+      <div class="properties-cards-grid">
+        @for (prop of app.myProperties(); track prop.id) {
+        <div class="property-summary-card glass-panel">
+          <div class="prop-card-header">
+            <div class="prop-icon-box">
+              <i class="fa-solid fa-house-chimney"></i>
+            </div>
+            <div class="prop-meta">
+              <span class="prop-id-badge">Inmueble #{{ prop.id }}</span>
+              <h4 class="prop-title">{{ prop.title }}</h4>
+              <p class="prop-address">
+                <i class="fa-solid fa-location-dot text-primary"></i> {{ prop.address }}, {{ prop.city }}
+              </p>
+            </div>
+          </div>
+          <p class="prop-description">{{ prop.description }}</p>
+
+          <!-- Lista de Habitaciones del Inmueble con acciones: Ver Cuarto, Editar, Quitar -->
+          <div class="prop-rooms-section">
+            <div class="prop-rooms-header">
+              <span class="prop-rooms-stat">
+                <i class="fa-solid fa-door-open text-indigo"></i>
+                <span>Cuartos registrados: <strong>{{ app.getRoomsForProperty(prop.id).length }}</strong></span>
+              </span>
+            </div>
+
+            @if (app.getRoomsForProperty(prop.id).length === 0) {
+            <div class="prop-empty-rooms">
+              <i class="fa-regular fa-folder-open text-muted"></i>
+              <span>No hay habitaciones registradas en este inmueble.</span>
+            </div>
+            } @else {
+            <div class="prop-rooms-list">
+              @for (rm of app.getRoomsForProperty(prop.id); track rm.id) {
+              <div class="prop-room-card">
+                <!-- Imagen Grande y Destacada -->
+                <div class="prop-room-media">
+                  <img
+                    [src]="rm.mainImageUrl || 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=600&q=80'"
+                    [alt]="rm.title" class="prop-room-banner-img"
+                    (error)="$any($event.target).src='https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=600&q=80'">
+                  <div class="prop-room-floating-badges">
+                    <span class="prop-room-type-tag">{{ app.getRoomTypeName(rm.roomType) }}</span>
+                    @if (rm.status === 'AVAILABLE') {
+                    <span class="badge badge-success badge-xs"><i class="fa-solid fa-circle-check"></i>
+                      Disponible</span>
+                    } @else if (rm.status === 'OCCUPIED' || rm.status === 'RENTED') {
+                    <span class="badge badge-indigo badge-xs"><i class="fa-solid fa-user-check"></i> Ocupado</span>
+                    } @else if (rm.status === 'PENDING_APPROVAL') {
+                    <span class="badge badge-warning badge-xs"><i class="fa-solid fa-clock"></i> En revisión</span>
+                    } @else {
+                    <span class="badge badge-rejected badge-xs"><i class="fa-solid fa-circle-xmark"></i> {{
+                      rm.status }}</span>
+                    }
+                  </div>
+                </div>
+
+                <!-- Información del Cuarto -->
+                <div class="prop-room-body">
+                  <h5 class="prop-room-title-text" [title]="rm.title">{{ rm.title }}</h5>
+                  <div class="prop-room-specs-row">
+                    <div class="prop-room-price-tag">
+                      <span class="prop-price-number">S/. {{ rm.pricePerMonth }}</span>
+                      <span class="prop-price-freq">/ mes</span>
+                    </div>
+                    <div class="prop-room-features-pills">
+                      @if (rm.privateBathroom) {
+                      <span class="prop-feat-pill"><i class="fa-solid fa-bath"></i> Baño priv.</span>
+                      }
+                      @if (rm.offersWifi) {
+                      <span class="prop-feat-pill"><i class="fa-solid fa-wifi"></i> WiFi</span>
+                      }
+                      @if (rm.acceptsPets) {
+                      <span class="prop-feat-pill"><i class="fa-solid fa-paw"></i> Mascotas</span>
+                      }
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Botones colocados DEBAJO de la imagen y del contenido -->
+                <div class="prop-room-footer-actions">
+                  <button type="button" class="btn-prop-action btn-prop-view" (click)="app.openRoomDetails(rm)"
+                    title="Ver publicación completa">
+                    Ver cuarto
+                  </button>
+                  <button type="button" class="btn-prop-action btn-prop-edit" (click)="app.openOwnerEditRoomModal(rm)"
+                    title="Editar publicación">
+                    Editar
+                  </button>
+                  <button type="button" class="btn-prop-action btn-prop-delete"
+                    (click)="app.openOwnerDeleteRoomModal(rm)" title="Quitar publicación">
+                    Quitar
+                  </button>
+                </div>
+              </div>
+              }
+            </div>
+            }
+          </div>
+        </div>
+        }
+      </div>
+      }
+    </div>
+    }
+
+    <!-- ==============================================================
+               MÓDULO 3: RESUMEN FINANCIERO Y TARIFAS
+               ============================================================== -->
+    @if (app.ownerTab() === 'stats') {
+    <div class="owner-stats-block animate-fade-in">
+      <!-- Resumen Financiero y Métricas del Propietario (Compacto & Profesional) -->
+      <div class="metrics-grid owner-metrics-grid">
+        <div class="metric-card owner-metric-card" (click)="app.ownerTab.set('properties')"
+          title="Ver mis inmuebles registrados">
+          <div class="metric-icon"><i class="fa-solid fa-building-user"></i></div>
+          <div class="metric-body">
+            <span class="metric-title">Inmuebles Registrados</span>
+            <div class="metric-num-wrapper">
+              <span class="metric-num">{{ app.myProperties().length }}</span>
+              <span class="kpi-micro-badge">Inmuebles</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="metric-card owner-metric-card" (click)="app.ownerTab.set('requests')"
+          title="Ver solicitudes de alquiler">
+          <div class="metric-icon"><i class="fa-solid fa-envelope-open-text"></i></div>
+          <div class="metric-body">
+            <span class="metric-title">Solicitudes de Alquiler</span>
+            <div class="metric-num-wrapper">
+              <span class="metric-num">{{ app.ownerBookings().length }}</span>
+              @if (app.getOwnerStatusCount('PENDING') > 0) {
+              <span class="kpi-micro-badge kpi-badge-pending">{{ app.getOwnerStatusCount('PENDING') }} Pendientes</span>
+              } @else {
+              <span class="kpi-micro-badge">Total</span>
+              }
+            </div>
+          </div>
+        </div>
+
+        <div class="metric-card owner-metric-card" title="Alquileres confirmados y activos">
+          <div class="metric-icon"><i class="fa-solid fa-circle-check"></i></div>
+          <div class="metric-body">
+            <span class="metric-title">Alquileres Confirmados</span>
+            <div class="metric-num-wrapper">
+              <span class="metric-num">{{ app.getOwnerStatusCount('CONFIRMED') }}</span>
+              <span class="kpi-micro-badge">Confirmados</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="metric-card owner-metric-card"
+          title="Tarifa única por publicación mediante billeteras digitales">
+          <div class="metric-icon"><i class="fa-solid fa-qrcode"></i></div>
+          <div class="metric-body">
+            <span class="metric-title">Tarifa Publicación Yape/Plin</span>
+            <div class="metric-num-wrapper">
+              <span class="metric-num">S/. 3.00</span>
+              <span class="kpi-micro-badge">Yape / Plin</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    }
+    }
+  </div>
+</div>
+}

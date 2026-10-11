@@ -1,0 +1,90 @@
+<!-- ==================== NAVBAR ==================== -->
+<header class="navbar glass-panel">
+  <div class="nav-container">
+    <!-- Brand Identity (RoomiGo - 3D Yellow White Text Effect) -->
+    <div class="nav-brand" (click)="app.switchTab('explore')" style="cursor: pointer;" title="Ir al Inicio">
+      <div class="brand-text">
+        <span class="brand-name navbar-roomigo-logo" data-text="RoomiGo">RoomiGo</span>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs & Secciones Elegantes -->
+    <nav class="nav-tabs">
+      <button class="nav-tab" [class.active]="app.activeTab() === 'explore'" (click)="app.switchTab('explore')">
+        <i class="fa-solid fa-compass"></i>
+        <span>Inicio</span>
+      </button>
+
+      <button class="nav-tab" (click)="app.scrollToSection('cuartos-section')">
+        <i class="fa-solid fa-bed"></i>
+        <span>Cuartos</span>
+      </button>
+
+      <button class="nav-tab" (click)="app.scrollToSection('mapa-section')">
+        <i class="fa-solid fa-map-location-dot"></i>
+        <span>Mapa Abancay</span>
+      </button>
+
+      <button class="nav-tab" (click)="app.scrollToSection('contacto-footer')">
+        <i class="fa-solid fa-circle-question"></i>
+        <span>Ayuda</span>
+      </button>
+
+      <button class="nav-tab" (click)="app.scrollToSection('contacto-footer')">
+        <i class="fa-solid fa-users"></i>
+        <span>Nosotros</span>
+      </button>
+
+      <button class="nav-tab" (click)="app.scrollToSection('contacto-footer')">
+        <i class="fa-solid fa-headset"></i>
+        <span>Contacto</span>
+      </button>
+
+      @if (app.auth.isTenant()) {
+      <button class="nav-tab tab-tenant" [class.active]="app.activeTab() === 'my-bookings'" (click)="app.switchTab('my-bookings')">
+        <i class="fa-solid fa-calendar-check"></i>
+        <span>Mis Reservas</span>
+      </button>
+      }
+
+      @if (app.auth.isOwner()) {
+      <button class="nav-tab tab-owner" [class.active]="app.activeTab() === 'owner-panel'"
+        (click)="app.switchTab('owner-panel')">
+        <i class="fa-solid fa-chart-line"></i>
+        <span>Panel Propietario</span>
+      </button>
+      }
+
+      @if (app.auth.isAdmin()) {
+      <button class="nav-tab tab-admin" [class.active]="app.activeTab() === 'admin-panel'"
+        (click)="app.switchTab('admin-panel')">
+        <i class="fa-solid fa-shield-halved"></i>
+        <span>Modo Administrador</span>
+        @if (app.pendingRooms().length > 0) {
+        <span class="admin-badge-count animate-pulse">{{ app.pendingRooms().length }}</span>
+        }
+      </button>
+      }
+    </nav>
+
+    <!-- Auth Controls (Solo cuando no está logeado) -->
+    <div class="nav-actions">
+      @if (!app.auth.isLoggedIn()) {
+      <div class="auth-buttons">
+        <button class="btn btn-secondary btn-sm" (click)="app.openAuth('login')">
+          <i class="fa-regular fa-user"></i> Iniciar Sesión
+        </button>
+        <button class="btn btn-primary btn-sm" (click)="app.openAuth('register')">
+          <i class="fa-solid fa-sparkles"></i> Registrarse
+        </button>
+      </div>
+      }
+    </div>
+
+    <!-- Mobile Hamburger Button -->
+    <button class="mobile-hamburger-btn" [class.is-active]="app.mobileMenuOpen()" (click)="app.toggleMobileMenu()"
+      aria-label="Menú de Navegación">
+      <i class="fa-solid" [class.fa-bars]="!app.mobileMenuOpen()" [class.fa-xmark]="app.mobileMenuOpen()"></i>
+    </button>
+  </div>
+</header>

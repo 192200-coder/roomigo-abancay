@@ -1,0 +1,46 @@
+<!-- ==================== MODAL: EMITIR RESEÑA ==================== -->
+@if (app.showReviewModal(); as isOpen) {
+<div class="modal-backdrop" (click)="app.closeReviewModal()">
+  <div class="modal-dialog animate-scale-up" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="app.closeReviewModal()"><i class="fa-solid fa-xmark"></i></button>
+
+    <div class="modal-header">
+      <h2>Calificar Estadía en Abancay</h2>
+      <p>Comparte tu experiencia para ayudar a otros estudiantes y vecinos</p>
+    </div>
+
+    <div class="modal-body">
+      <div class="rating-selector">
+        <span class="rating-prompt">Calificación:</span>
+        <div class="stars-interactive">
+          @for (star of [1,2,3,4,5]; track star) {
+          <button type="button" class="star-btn" [class.star-active]="star <= (app.hoverRating() || app.reviewRating)"
+            (click)="app.setRating(star)" (mouseenter)="app.setHoverRating(star)" (mouseleave)="app.setHoverRating(0)"
+            [title]="star + ' estrellas'">
+            <i class="fa-solid fa-star"></i>
+          </button>
+          }
+        </div>
+        <span class="rating-number-badge">★ {{ app.reviewRating }} / 5 estrellas</span>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Comentario y opinión</label>
+        <textarea class="form-textarea" rows="4" [(ngModel)]="app.reviewComment"
+          placeholder="¿Qué tal fue la comodidad, agua caliente, internet y trato en el cuarto?"></textarea>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" (click)="app.closeReviewModal()">Cancelar</button>
+        <button class="btn btn-primary" [disabled]="app.reviewSubmitting" (click)="app.submitReview()">
+          @if (app.reviewSubmitting) {
+          <i class="fa-solid fa-spinner fa-spin"></i> Publicando...
+          } @else {
+          <i class="fa-solid fa-paper-plane"></i> Enviar Reseña
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+}

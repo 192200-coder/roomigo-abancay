@@ -27,6 +27,7 @@ export interface User {
   createdAt?: string;
 }
 
+
 export interface AuthResponse {
   accessToken: string;
   tokenType: string;
@@ -202,5 +203,46 @@ export interface SendCodeResponse {
   expiresInSeconds: number;
   message: string;
   devCode?: string;
+}
+
+// ==========================================
+// MERCADO PAGO INTEGRATION MODELS
+// ==========================================
+export type MercadoPagoSubMethod = 'YAPE' | 'PLIN' | 'CREDIT_CARD' | 'DEBIT_CARD';
+
+export interface MercadoPagoPaymentRequest {
+  title: string;
+  amount: number;
+  currency: 'PEN';
+  subMethod: MercadoPagoSubMethod;
+  payerEmail: string;
+  payerName: string;
+  payerDni?: string;
+  cardNumber?: string;
+  cardHolder?: string;
+  cardExpMonth?: string;
+  cardExpYear?: string;
+  cardCvv?: string;
+  installments?: number;
+  yapeOtp?: string;
+  notes?: string;
+  entityType: 'BOOKING' | 'ROOM_PUBLICATION';
+  entityId?: number;
+}
+
+export interface MercadoPagoPaymentResult {
+  id: string; // e.g. MP-98421048
+  status: 'approved' | 'in_process' | 'rejected' | 'pending';
+  statusDetail: string;
+  paymentMethod: string;
+  paymentTypeId: string;
+  transactionAmount: number;
+  currency: string;
+  dateApproved: string;
+  authorizationCode: string;
+  cipCode?: string; // Para PagoEfectivo
+  qrCode?: string;  // Para Yape / QR
+  qrCodeBase64?: string;
+  receiptUrl?: string;
 }
 

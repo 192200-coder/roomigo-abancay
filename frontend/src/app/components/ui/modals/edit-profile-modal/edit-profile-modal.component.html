@@ -1,0 +1,86 @@
+<!-- =========================================================================
+     MODAL: EDITAR PERFIL DE USUARIO (FOTO, NOMBRE, APELLIDO, TELÉFONO)
+     Diseño profesional, fondo blanco de alta fidelidad, excelente contraste
+     ========================================================================= -->
+@if (app.showEditProfileModal(); as isOpen) {
+<div class="modal-backdrop" (click)="app.closeEditProfileModal()">
+  <div class="modal-dialog edit-profile-modal-card animate-scale-up" (click)="$event.stopPropagation()">
+    
+    <!-- Header Superior Minimalista Estilo Imagen de Referencia -->
+    <div class="edit-profile-header-minimal">
+      <div class="profile-hero-user-row">
+        <div class="profile-avatar-container-ref">
+          <img [src]="app.profileEditImage || app.auth.currentUser()?.profileImage || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80'"
+               alt="Vista previa de perfil"
+               class="profile-avatar-img-ref">
+          <label class="profile-avatar-pen-badge" title="Cambiar foto de perfil">
+            <i class="fa-solid fa-pen"></i>
+            <input type="file" accept="image/*" (change)="app.onProfileImageSelected($event)" style="display: none;">
+          </label>
+        </div>
+        <div class="profile-hero-user-info">
+          <h3 class="profile-hero-name">{{ (app.auth.currentUser()?.firstName || 'Tu') + ' ' + (app.auth.currentUser()?.lastName || 'Nombre') }}</h3>
+          <p class="profile-hero-email">{{ app.auth.currentUser()?.email || 'tunombre@gmail.com' }}</p>
+        </div>
+      </div>
+      <button type="button" class="profile-minimal-close-btn" (click)="app.closeEditProfileModal()" aria-label="Cerrar modal" title="Cerrar">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Contenido del Formulario en Lista Minimalista (Diseño Imagen 2) -->
+    <form (ngSubmit)="app.saveProfileChanges()" class="edit-profile-form-ref">
+      
+      <!-- Fila: Nombre Completo -->
+      <div class="profile-ref-row">
+        <label class="profile-ref-label">Nombre Completo</label>
+        <div class="profile-ref-inputs-grid">
+          <input type="text" class="profile-ref-input" [(ngModel)]="app.profileEditFirstName" name="firstName" required
+                 placeholder="Tu nombre" autocomplete="given-name">
+          <input type="text" class="profile-ref-input" [(ngModel)]="app.profileEditLastName" name="lastName"
+                 placeholder="Tu apellido" autocomplete="family-name">
+        </div>
+      </div>
+
+      <!-- Fila: Email Account -->
+      <div class="profile-ref-row">
+        <label class="profile-ref-label">Correo Electrónico</label>
+        <div class="profile-ref-value-wrap">
+          <input type="email" class="profile-ref-input profile-ref-disabled" [value]="app.auth.currentUser()?.email" disabled
+                 title="El correo de la cuenta no puede modificarse">
+        </div>
+      </div>
+
+      <!-- Fila: Mobile Number -->
+      <div class="profile-ref-row">
+        <label class="profile-ref-label">Número Móvil</label>
+        <div class="profile-ref-value-wrap">
+          <input type="tel" class="profile-ref-input" [(ngModel)]="app.profileEditPhone" name="phone"
+                 placeholder="+51 983 456 789" autocomplete="tel">
+        </div>
+      </div>
+
+      <!-- Fila: Ubicación -->
+      <div class="profile-ref-row">
+        <label class="profile-ref-label">Ubicación</label>
+        <div class="profile-ref-value-wrap">
+          <span class="profile-ref-static-val">Abancay, Perú</span>
+        </div>
+      </div>
+
+      <!-- Botón de Guardar Estilo Referencia (Save Change) -->
+      <div class="profile-ref-footer">
+        <button type="submit" class="btn-save-change-ref" [disabled]="app.profileEditSaving">
+          @if (app.profileEditSaving) {
+            <i class="fa-solid fa-spinner fa-spin"></i>
+            <span>Guardando...</span>
+          } @else {
+            <span>Guardar Cambios</span>
+          }
+        </button>
+      </div>
+
+    </form>
+  </div>
+</div>
+}

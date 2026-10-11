@@ -1,0 +1,53 @@
+<!-- ==================== GOOGLE MAPS INTERACTIVO DE ABANCAY (DESPUÉS DEL CATÁLOGO) ==================== -->
+    <section class="abancay-maps-section glass-panel animate-slide-up" id="mapa-section">
+      <div class="maps-header">
+        <div class="maps-title-block">
+          <div class="map-icon-badge">
+            <i class="fa-solid fa-map-location-dot"></i>
+          </div>
+          <div>
+            <h2 class="maps-title">Mapa Interactivo de Cuartos en Abancay</h2>
+            <p class="maps-desc">Localiza cuartos y minidepas disponibles en tiempo real con Google Maps cerca a las
+              universidades y avenidas clave de Abancay.</p>
+          </div>
+        </div>
+
+        <!-- Selector de Zonas en Abancay -->
+        <div class="map-zone-pills">
+          <button class="map-pill" [class.active]="app.activeMapZone() === 'all'"
+            (click)="app.selectMapZone('all'); app.applyChipFilter('all')">
+            <i class="fa-solid fa-earth-americas"></i> Todo Abancay
+          </button>
+          <button class="map-pill" [class.active]="app.activeMapZone() === 'unamba'"
+            (click)="app.selectMapZone('unamba'); app.applyChipFilter('unamba')">
+            <i class="fa-solid fa-graduation-cap"></i> Frente a UNAMBA
+          </button>
+          <button class="map-pill" [class.active]="app.activeMapZone() === 'utea'"
+            (click)="app.selectMapZone('utea'); app.applyChipFilter('utea')">
+            <i class="fa-solid fa-book-open"></i> Cerca a UTEA
+          </button>
+          <button class="map-pill" [class.active]="app.activeMapZone() === 'centro'"
+            (click)="app.selectMapZone('centro'); app.applyChipFilter('centro')">
+            <i class="fa-solid fa-landmark"></i> Plaza de Armas
+          </button>
+          <button class="map-pill" [class.active]="app.activeMapZone() === 'tamburco'"
+            (click)="app.selectMapZone('tamburco'); app.applyChipFilter('tamburco')">
+            <i class="fa-solid fa-tree"></i> Tamburco
+          </button>
+          <button class="map-pill" [class.active]="app.activeMapZone() === 'patibamba'"
+            (click)="app.selectMapZone('patibamba'); app.applyChipFilter('patibamba')">
+            <i class="fa-solid fa-mountain-sun"></i> Patibamba
+          </button>
+        </div>
+      </div>
+
+      <div class="map-frame-wrapper">
+        <iframe [src]="app.safeMapUrl" class="google-map-iframe" width="100%" height="390" style="border:0;"
+          allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Google Maps Abancay">
+        </iframe>
+        <div class="map-overlay-badge">
+          <span class="live-dot"></span>
+          <span>📍 Google Maps Apurímac • Georreferenciación de cuartos activos en tiempo real</span>
+        </div>
+      </div>
+    </section>

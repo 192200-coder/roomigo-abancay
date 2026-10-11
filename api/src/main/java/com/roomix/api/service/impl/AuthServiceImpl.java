@@ -47,11 +47,14 @@ public class AuthServiceImpl implements AuthService {
     private final UserMapper userMapper;
     private final VerificationCodeRepository verificationCodeRepository;
     private final EmailService emailService;
+    private final com.roomix.api.security.LoginAttemptService loginAttemptService;
+    private final com.roomix.api.security.InputSanitizer inputSanitizer;
 
     @Override
     @Transactional
     public AuthResponseDto register(RegisterRequestDto request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
+        String cleanEmail = request.getEmail().toLowerCase().trim();
+        if (userRepository.existsByEmail(cleanEmail)) {
             throw new ConflictException("El correo electrónico ya se encuentra registrado.");
         }
 
@@ -59,11 +62,11 @@ public class AuthServiceImpl implements AuthService {
                 .orElseThrow(() -> new ResourceNotFoundException("El rol especificado no existe."));
 
         User user = User.builder()
-                .firstName(request.getFirstName())
-                .lastName(request.getLastName())
-                .email(request.getEmail())
+                .firstName(inputSanitizer.sanitizeText(request.getFirstName()))
+                .lastName(inputSanitizer.sanitizeText(request.getLastName()))
+                .email(cleanEmail)
                 .password(passwordEncoder.encode(request.getPassword()))
-                .phone(request.getPhone())
+                .phone(inputSanitizer.sanitizeText(request.getPhone()))
                 .role(role)
                 .status(UserStatus.ACTIVE)
                 .build();
@@ -71,7 +74,7 @@ public class AuthServiceImpl implements AuthService {
         User savedUser = userRepository.save(user);
 
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
+                new UsernamePasswordAuthenticationToken(cleanEmail, request.getPassword())
         );
 
         String token = tokenProvider.generateToken(authentication);
@@ -84,13 +87,27 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponseDto login(LoginRequestDto request) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
-        );
+        String normalizedEmail = request.getEmail().toLowerCase().trim();
+
+        if (loginAttemptService.isBlocked(normalizedEmail)) {
+            int remaining = loginAttemptService.getRemainingMinutes(normalizedEmail);
+            throw new UnauthorizedException("Demasiados intentos fallidos. Su cuenta ha sido bloqueada temporalmente por seguridad. Reintente en " + remaining + " minuto(s).");
+        }
+
+        Authentication authentication;
+        try {
+            authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(normalizedEmail, request.getPassword())
+            );
+            loginAttemptService.loginSucceeded(normalizedEmail);
+        } catch (org.springframework.security.core.AuthenticationException ex) {
+            loginAttemptService.loginFailed(normalizedEmail);
+            throw ex;
+        }
 
         String token = tokenProvider.generateToken(authentication);
 
-        User user = userRepository.findByEmail(request.getEmail())
+        User user = userRepository.findByEmail(normalizedEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado."));
 
         return AuthResponseDto.builder()

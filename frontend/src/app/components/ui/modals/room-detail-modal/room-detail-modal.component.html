@@ -1,0 +1,140 @@
+<!-- ==================== MODAL: DETALLES DE HABITACIÓN ==================== -->
+@if (app.showDetailModal(); as isOpen) {
+@if (app.selectedRoom(); as r) {
+<div class="modal-backdrop" (click)="app.closeRoomDetails()">
+  <div class="modal-dialog modal-detail-dialog animate-scale-up" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="app.closeRoomDetails()"><i class="fa-solid fa-xmark"></i></button>
+
+    <div class="detail-hero">
+      <img
+        [src]="r.mainImageUrl || 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80'"
+        alt="Room Banner">
+      <div class="detail-hero-gradient"></div>
+      <div class="detail-badge-group">
+        <span class="hero-badge hero-badge-type">
+          <i class="fa-solid fa-door-open"></i> {{ app.getRoomTypeName(r.roomType) }}
+        </span>
+        <span class="hero-badge" [ngClass]="app.getRoomStatusBadgeClass(r.status)">
+          @if (r.status === 'AVAILABLE') {
+          <i class="fa-solid fa-circle-check"></i>
+          } @else if (r.status === 'OCCUPIED' || r.status === 'RENTED') {
+          <i class="fa-solid fa-user-lock"></i>
+          } @else if (r.status === 'PENDING_APPROVAL') {
+          <i class="fa-solid fa-clock"></i>
+          } @else if (r.status === 'MAINTENANCE') {
+          <i class="fa-solid fa-wrench"></i>
+          } @else {
+          <i class="fa-solid fa-circle-xmark"></i>
+          }
+          {{ app.getRoomStatusName(r.status) }}
+        </span>
+        <span class="hero-badge hero-badge-verified">
+          <i class="fa-solid fa-shield-check"></i> Verificado por Administrador
+        </span>
+      </div>
+    </div>
+
+    <div class="detail-body">
+      <div class="detail-header-row">
+        <div>
+          <h2>{{ r.title }}</h2>
+          <p class="detail-location"><i class="fa-solid fa-location-dot"></i> {{ r.propertyAddress }}, {{
+            r.propertyCity || 'Abancay' }}</p>
+        </div>
+
+        <div class="detail-price-box">
+          <span class="price-lg">S/. {{ r.pricePerMonth }}</span>
+          <span class="price-sub">mensual (Garantía: S/. {{ r.depositPrice }})</span>
+        </div>
+      </div>
+
+      <!-- Mercado Pago Accepted Badge -->
+      <div class="wallets-banner glass-card mp-wallets-banner">
+        <div class="wallets-banner-left">
+          <i class="fa-solid fa-handshake-angle text-electric-blue"></i>
+          <div>
+            <strong>Pagos Seguros y Verificados en Abancay</strong>
+            <p>Billeteras móviles Yape, Plin y Tarjetas con comprobante directo por WhatsApp.</p>
+          </div>
+        </div>
+        <div class="wallets-banner-badges">
+          <span class="mp-tag-badge"><i class="fa-solid fa-qrcode"></i> Yape</span>
+          <span class="mp-tag-badge"><i class="fa-solid fa-mobile-screen-button"></i> Plin</span>
+          <span class="mp-mini-pill">Tarjetas</span>
+        </div>
+      </div>
+
+      <div class="features-grid">
+        <div class="feature-item">
+          <i class="fa-solid fa-bath"></i>
+          <span>{{ r.privateBathroom ? 'Baño Privado en Suite' : 'Baño Compartido' }}</span>
+        </div>
+        <div class="feature-item">
+          <i class="fa-solid fa-wifi"></i>
+          <span>{{ r.offersWifi ? 'Internet WiFi Fibra Óptica' : 'Sin WiFi' }}</span>
+        </div>
+        <div class="feature-item">
+          <i class="fa-solid fa-paw"></i>
+          <span>{{ r.acceptsPets ? 'Pet Friendly (Admite mascotas)' : 'No se admiten mascotas' }}</span>
+        </div>
+        <div class="feature-item">
+          <i class="fa-solid fa-ruler-combined"></i>
+          <span>{{ r.sizeSqm || 18 }} m² de área</span>
+        </div>
+        <div class="feature-item">
+          <i class="fa-solid fa-user-group"></i>
+          <span>Capacidad: {{ r.capacity || 1 }} persona(s)</span>
+        </div>
+        <div class="feature-item">
+          <i class="fa-solid fa-couch"></i>
+          <span>Habitación Amoblada</span>
+        </div>
+      </div>
+
+      <div class="detail-section">
+        <h3>Descripción</h3>
+        <p class="description-text">{{ r.description }}</p>
+      </div>
+
+      <!-- Reviews Section -->
+      <div class="detail-section">
+        <div class="reviews-header">
+          <h3>Reseñas de Inquilinos</h3>
+          <span class="rating-badge">★ {{ r.averageRating ? r.averageRating.toFixed(1) : '5.0' }} / 5.0</span>
+        </div>
+
+        @if (app.roomReviews().length === 0) {
+        <p class="no-reviews">Aún no hay reseñas para esta habitación. ¡Sé el primero en hospedarte!</p>
+        } @else {
+        <div class="reviews-list">
+          @for (rev of app.roomReviews(); track rev.id) {
+          <div class="review-bubble">
+            <div class="review-author">
+              <i class="fa-solid fa-circle-user"></i>
+              <strong>{{ rev.authorName }}</strong>
+              <span class="review-stars">
+                @for (s of [1,2,3,4,5]; track s) {
+                <i class="fa-solid fa-star" [class.star-active]="s <= rev.rating"></i>
+                }
+              </span>
+            </div>
+            <p class="review-comment">"{{ rev.comment }}"</p>
+          </div>
+          }
+        </div>
+        }
+      </div>
+
+      <div class="detail-actions">
+        <button class="btn btn-secondary" (click)="app.closeRoomDetails()">Cerrar</button>
+        @if (!app.auth.isAdmin() && !app.auth.isOwner()) {
+        <button class="btn btn-primary" [disabled]="r.status !== 'AVAILABLE'" (click)="app.openBookingModal(r)">
+          <i class="fa-solid fa-key"></i> Reservar Habitación
+        </button>
+        }
+      </div>
+    </div>
+  </div>
+</div>
+}
+}

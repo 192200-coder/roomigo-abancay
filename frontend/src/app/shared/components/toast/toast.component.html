@@ -1,0 +1,12 @@
+<!-- ==================== TOAST NOTIFICATION ==================== -->
+@if (app.toast(); as t) {
+<div class="toast-banner animate-slide-up" [class]="'toast-' + t.type">
+  <div class="toast-icon">
+    @if (t.type === 'success') { <i class="fa-solid fa-circle-check"></i> }
+    @else if (t.type === 'error') { <i class="fa-solid fa-circle-exclamation"></i> }
+    @else { <i class="fa-solid fa-circle-info"></i> }
+  </div>
+  <div class="toast-text">{{ t.message }}</div>
+  <button class="toast-close" (click)="app.toast.set(null)"><i class="fa-solid fa-xmark"></i></button>
+</div>
+}

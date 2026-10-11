@@ -1,0 +1,387 @@
+<!-- =========================================================================
+     MODAL: PUBLICAR NUEVA HABITACIÓN CON PASARELA DE MERCADO PAGO
+     ========================================================================= -->
+@if (app.showNewRoomModal(); as isOpen) {
+<div class="modal-backdrop" (click)="app.closeNewRoomModal()">
+  <div class="modal-dialog modal-lg animate-scale-up" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="app.closeNewRoomModal()"><i class="fa-solid fa-xmark"></i></button>
+
+    <div class="modal-header">
+      <h2><i class="fa-solid fa-cloud-arrow-up text-indigo"></i> Publicar Cuarto en Abancay</h2>
+      <p>Publicación inmediata y segura procesada por la pasarela oficial de <strong>Mercado Pago Perú</strong></p>
+    </div>
+
+    <div class="modal-body">
+      <!-- Inmueble / Propiedad: Selección o Escritura Manual -->
+      <div class="form-group property-mode-section">
+        <div class="property-mode-header">
+          <label class="form-label">Inmueble / Propiedad en Abancay</label>
+          <div class="property-mode-toggle">
+            <button type="button" class="btn-mode-toggle" [class.active]="app.newRoomPropertyMode === 'select'"
+              (click)="app.newRoomPropertyMode = 'select'">
+              <i class="fa-solid fa-list-check"></i> Mis Inmuebles
+            </button>
+            <button type="button" class="btn-mode-toggle" [class.active]="app.newRoomPropertyMode === 'manual'"
+              (click)="app.newRoomPropertyMode = 'manual'">
+              <i class="fa-solid fa-pen-to-square"></i> Escribir Manualmente
+            </button>
+          </div>
+        </div>
+
+        @if (app.newRoomPropertyMode === 'select') {
+        @if (app.myProperties().length > 0) {
+        <select class="form-select" [(ngModel)]="app.newRoomPropertyId">
+          @for (p of app.myProperties(); track p.id) {
+          <option [value]="p.id">{{ p.title }} - {{ p.address }} ({{ p.city }})</option>
+          }
+        </select>
+        } @else {
+        <div class="no-props-alert">
+          <p><i class="fa-solid fa-circle-info"></i> Aún no tienes inmuebles registrados. Puedes escribir los datos de
+            tu inmueble manualmente.</p>
+          <button type="button" class="btn btn-sm btn-white" (click)="app.newRoomPropertyMode = 'manual'">
+            <i class="fa-solid fa-pen"></i> Escribir Inmueble Manualmente
+          </button>
+        </div>
+        }
+        } @else {
+        <!-- Escritura Manual de Inmueble -->
+        <div class="manual-property-card animate-fade-in">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-sublabel">Nombre del Inmueble / Edificio *</label>
+              <input type="text" class="form-input" [(ngModel)]="app.manualPropertyTitle"
+                placeholder="Ej. Residencial Los Sauces / Edificio Arenas">
+            </div>
+            <div class="form-group">
+              <label class="form-sublabel">Zona / Distrito en Abancay *</label>
+              <select class="form-select" [(ngModel)]="app.manualPropertyDistrict">
+                <option value="Centro">Centro de Abancay (Plaza de Armas)</option>
+                <option value="Tamburco">Tamburco (Frente a UNAMBA)</option>
+                <option value="Americas/Fonavi">Américas / Fonavi</option>
+                <option value="Condebamba/Aymas">Condebamba / Aymas</option>
+                <option value="Seguro/Illanya">Seguro / Illanya</option>
+                <option value="Victor Acosta/Bosque">Victor Acosta / Bosque</option>
+                <option value="Senati/Guillermo Diaz">Senati / Guillermo Diaz</option>
+                <option value="Vallecito/Circunvalacion">Vallecito el Olivo / Circunvalación</option>
+                <option value="Malvinas/San Martin">Malvinas / San Martin</option>
+                <option value="Olivo/Seoane">Olivo / Seoane</option>
+                <option value="Villa Ampay/4 de Noviembre">Villa Ampay / 4 de Noviembre</option>
+                <option value="Patibamba">Patibamba</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-sublabel">Dirección Exacta o Referencia en Abancay *</label>
+            <input type="text" class="form-input" [(ngModel)]="app.manualPropertyAddress"
+              placeholder="Ej. Av. Arenas 450, a 2 cuadras de la puerta principal">
+          </div>
+        </div>
+        }
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Título del Anuncio</label>
+        <input type="text" class="form-input" [(ngModel)]="app.newRoomTitle"
+          placeholder="Ej. Habitación Amoblada frente a la UNAMBA con Baño Privado">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Descripción Detallada</label>
+        <textarea class="form-textarea" rows="3" [(ngModel)]="app.newRoomDescription"
+          placeholder="Detalles de la habitación, servicios incluidos (agua caliente, wifi), reglas de convivencia..."></textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Precio Mensual (S/.)</label>
+          <input type="number" class="form-input" [(ngModel)]="app.newRoomPrice">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Depósito de Garantía (S/.)</label>
+          <input type="number" class="form-input" [(ngModel)]="app.newRoomDeposit">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Tipo de Habitación</label>
+          <select class="form-select" [(ngModel)]="app.newRoomType">
+            <option value="SINGLE">Individual</option>
+            <option value="DOUBLE">Doble (Minidepartamento)</option>
+            <option value="SUITE">Suite con Baño</option>
+            <option value="SHARED">Compartida</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Área (m²)</label>
+          <input type="number" class="form-input" [(ngModel)]="app.newRoomSize">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Capacidad (Personas)</label>
+          <input type="number" class="form-input" [(ngModel)]="app.newRoomCapacity">
+        </div>
+      </div>
+
+      <!-- Fotos de la Habitación (Máximo 5 fotos) -->
+      <div class="form-group photos-upload-section">
+        <div class="photos-header">
+          <label class="form-label">
+            <i class="fa-solid fa-camera text-primary"></i> Fotos de la Habitación (Máximo 5 fotos)
+          </label>
+          <span class="photos-counter" [class.counter-full]="app.newRoomImages.length >= 5">
+            {{ app.newRoomImages.length }} / 5 fotos agregadas
+          </span>
+        </div>
+
+        <!-- Upload Controls -->
+        <div class="photo-controls-row">
+          <input type="file" #roomFileInput multiple accept="image/*" (change)="app.onSelectRoomPhotos($event)"
+            style="display: none;">
+
+          <button type="button" class="btn btn-sm btn-white btn-upload" (click)="roomFileInput.click()"
+            [disabled]="app.newRoomImages.length >= 5">
+            <i class="fa-solid fa-cloud-arrow-up text-primary"></i> Subir Fotos desde tu Equipo o Celular
+          </button>
+        </div>
+
+        <!-- Previsualización de Galería de Fotos -->
+        @if (app.newRoomImages.length > 0) {
+        <div class="photos-preview-grid animate-fade-in">
+          @for (img of app.newRoomImages; track $index) {
+          <div class="photo-thumb-card">
+            <img [src]="img" alt="Foto habitación {{ $index + 1 }}">
+            <span class="photo-order-badge" [class.order-main]="$index === 0">
+              {{ $index === 0 ? '★ Principal' : '#' + ($index + 1) }}
+            </span>
+            <button type="button" class="btn-remove-thumb" title="Eliminar foto" (click)="app.removePhoto($index)">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </div>
+          }
+        </div>
+        } @else {
+        <div class="photo-empty-dropzone" (click)="roomFileInput.click()">
+          <i class="fa-solid fa-images text-primary photo-empty-icon"></i>
+          <p>Haz clic para subir de 1 a 5 fotos de tu habitación (o pega los enlaces URL arriba)</p>
+          <small>Formatos JPG, PNG, WebP aceptados</small>
+        </div>
+        }
+      </div>
+
+      <div class="checkbox-row">
+        <label class="checkbox-label">
+          <input type="checkbox" [(ngModel)]="app.newRoomBathroom">
+          <span>Baño Privado</span>
+        </label>
+
+        <label class="checkbox-label">
+          <input type="checkbox" [(ngModel)]="app.newRoomWifi">
+          <span>WiFi Fibra Óptica</span>
+        </label>
+
+        <label class="checkbox-label">
+          <input type="checkbox" [(ngModel)]="app.newRoomPets">
+          <span>Acepta Mascotas</span>
+        </label>
+      </div>
+
+      <!-- ==================== BILLETERAS DIGITALES (YAPE & PLIN) ==================== -->
+      <div class="publication-fee-card mp-publication-panel">
+        <div class="fee-card-header">
+          <div class="fee-icon mp-fee-icon">
+            <i class="fa-solid fa-qrcode" style="color: #730099;"></i>
+          </div>
+          <div>
+            <div class="mp-brand-header-inline">
+              <h4>Tarifa de Publicación: <span class="text-emerald">S/. {{ app.publicationFee.toFixed(2) }} PEN</span></h4>
+              <span class="mp-tag-mini"><i class="fa-solid fa-mobile-screen-button"></i> Yape / Plin Abancay</span>
+            </div>
+            <p>Escanea el código QR de tu billetera preferida para activar y validar tu habitación en Abancay.
+            </p>
+          </div>
+        </div>
+
+        <!-- Selector de Billeteras: YAPE, PLIN y TARJETA -->
+        <div class="mp-selector-tabs mp-selector-mini">
+          <button type="button" class="mp-tab-btn btn-tab-yape" [class.active]="app.mpPublishSubMethod === 'YAPE'"
+            (click)="app.mpPublishSubMethod = 'YAPE'">
+            <i class="fa-solid fa-qrcode text-purple"></i> Yape Oficial
+          </button>
+          <button type="button" class="mp-tab-btn btn-tab-plin" [class.active]="app.mpPublishSubMethod === 'PLIN'"
+            (click)="app.mpPublishSubMethod = 'PLIN'">
+            <i class="fa-solid fa-mobile-screen-button text-cyan"></i> Plin Digital
+          </button>
+          <button type="button" class="mp-tab-btn" [class.active]="app.mpPublishSubMethod === 'CREDIT_CARD'"
+            (click)="app.mpPublishSubMethod = 'CREDIT_CARD'">
+            <i class="fa-regular fa-credit-card"></i> Tarjeta
+          </button>
+        </div>
+
+        <!-- PANEL DE YAPE -->
+        @if (app.mpPublishSubMethod === 'YAPE') {
+        <div class="wallet-qr-display-panel animate-fade-in" style="margin-top: 0.75rem;">
+          <div class="wallet-qr-card wallet-yape-theme">
+            <div class="wallet-qr-image-wrapper">
+              <img [src]="app.yapeQrImage()" alt="Código QR Yape" class="wallet-qr-image">
+              <span class="wallet-badge-overlay yape-badge">Yape BCP</span>
+            </div>
+            <div class="wallet-qr-details">
+              <h5>Paga con Yape (S/. {{ app.publicationFee.toFixed(2) }})</h5>
+              <div class="wallet-meta-item">
+                <i class="fa-solid fa-phone"></i>
+                <span>Número: <strong>{{ app.walletPhone() }}</strong></span>
+              </div>
+              <div class="wallet-meta-item">
+                <i class="fa-solid fa-user-check"></i>
+                <span>Titular: <strong>{{ app.walletBeneficiary() }}</strong></span>
+              </div>
+              <div class="wallet-meta-item">
+                <i class="fa-solid fa-money-bill-wave text-emerald"></i>
+                <span>Monto Exacto: <strong>S/. {{ app.publicationFee.toFixed(2) }} PEN</strong></span>
+              </div>
+
+              <!-- Botón para subir o cambiar la imagen QR de Yape -->
+              <label class="btn-upload-qr-link">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <span>Subir / Cambiar Imagen QR de Yape</span>
+                <input type="file" accept="image/*" (change)="app.uploadYapeQr($event)" hidden>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group voucher-input-compact" style="margin-top: 0.5rem;">
+            <label class="form-label form-label-compact">Código de Aprobación de Yape (6 dígitos - opcional)</label>
+            <input type="text" maxlength="6" inputmode="numeric" class="form-input form-input-compact"
+              [(ngModel)]="app.mpPublishYapeOtp" (input)="app.onMpYapeOtpInput($event, 'publish')"
+              placeholder="Ej. 849201">
+          </div>
+        </div>
+        }
+
+        <!-- PANEL DE PLIN -->
+        @if (app.mpPublishSubMethod === 'PLIN') {
+        <div class="wallet-qr-display-panel animate-fade-in" style="margin-top: 0.75rem;">
+          <div class="wallet-qr-card wallet-plin-theme">
+            <div class="wallet-qr-image-wrapper">
+              <img [src]="app.plinQrImage()" alt="Código QR Plin" class="wallet-qr-image">
+              <span class="wallet-badge-overlay plin-badge">Plin Interbank/BBVA</span>
+            </div>
+            <div class="wallet-qr-details">
+              <h5>Paga con Plin (S/. {{ app.publicationFee.toFixed(2) }})</h5>
+              <div class="wallet-meta-item">
+                <i class="fa-solid fa-phone"></i>
+                <span>Número: <strong>{{ app.walletPhone() }}</strong></span>
+              </div>
+              <div class="wallet-meta-item">
+                <i class="fa-solid fa-user-check"></i>
+                <span>Titular: <strong>{{ app.walletBeneficiary() }}</strong></span>
+              </div>
+              <div class="wallet-meta-item">
+                <i class="fa-solid fa-money-bill-wave text-emerald"></i>
+                <span>Monto Exacto: <strong>S/. {{ app.publicationFee.toFixed(2) }} PEN</strong></span>
+              </div>
+
+              <!-- Botón para subir o cambiar la imagen QR de Plin -->
+              <label class="btn-upload-qr-link">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <span>Subir / Cambiar Imagen QR de Plin</span>
+                <input type="file" accept="image/*" (change)="app.uploadPlinQr($event)" hidden>
+              </label>
+            </div>
+          </div>
+
+          <div class="form-group voucher-input-compact" style="margin-top: 0.5rem;">
+            <label class="form-label form-label-compact">Código de Aprobación de Plin (opcional)</label>
+            <input type="text" maxlength="6" inputmode="numeric" class="form-input form-input-compact"
+              [(ngModel)]="app.mpPublishYapeOtp" (input)="app.onMpYapeOtpInput($event, 'publish')"
+              placeholder="Ej. 651920">
+          </div>
+        </div>
+        }
+
+        <!-- Campos de Tarjeta para Publicación (Opcional) -->
+        @if (app.mpPublishSubMethod === 'CREDIT_CARD' || app.mpPublishSubMethod === 'DEBIT_CARD') {
+        <div class="mp-card-form animate-fade-in" style="margin-top: 0.75rem;">
+          <div class="form-group" style="margin-bottom: 0.6rem;">
+            <label class="form-label form-label-compact">Número de Tarjeta (16 dígitos) *</label>
+            <div class="mp-input-with-icon">
+              <i class="fa-regular fa-credit-card mp-input-icon"></i>
+              <input type="text" class="form-input form-input-compact" maxlength="19"
+                [(ngModel)]="app.mpPublishCardNumber" (input)="app.onMpCardNumberInput($event, 'publish')"
+                placeholder="0000 0000 0000 0000">
+            </div>
+          </div>
+
+          <div class="form-row-2" style="margin-bottom: 0.6rem;">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label form-label-compact">Titular de la Tarjeta *</label>
+              <input type="text" class="form-input form-input-compact" [(ngModel)]="app.mpPublishCardHolder"
+                placeholder="Ej. CARLOS MENDOZA">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label form-label-compact">DNI del Titular *</label>
+              <input type="text" maxlength="8" class="form-input form-input-compact"
+                [(ngModel)]="app.mpPublishCardDni" (input)="app.onMpDniInput($event, 'publish')"
+                placeholder="Ej. 48291048">
+            </div>
+          </div>
+
+          <div class="form-row-2">
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label form-label-compact">Vencimiento (MM/AA) *</label>
+              <input type="text" maxlength="5" class="form-input form-input-compact"
+                [(ngModel)]="app.mpPublishCardExp" (input)="app.onMpCardExpInput($event, 'publish')"
+                placeholder="MM/AA (ej. 09/27)">
+            </div>
+            <div class="form-group" style="margin-bottom: 0;">
+              <label class="form-label form-label-compact">CVV *</label>
+              <input type="password" maxlength="4" class="form-input form-input-compact"
+                [(ngModel)]="app.mpPublishCardCvv" placeholder="•••">
+            </div>
+          </div>
+        </div>
+        }
+
+        <!-- SUBIDA DE COMPROBANTE DE PAGO (VOUCHER) Y ENVÍO POR WHATSAPP -->
+        <div class="voucher-action-section" style="margin-top: 0.85rem;">
+          <div class="voucher-upload-row">
+            <label class="btn-attach-voucher">
+              <i class="fa-solid fa-file-invoice-dollar"></i>
+              <span>Adjuntar Comprobante (Voucher)</span>
+              <input type="file" accept="image/*" (change)="app.onPublishVoucherSelected($event)" hidden>
+            </label>
+
+            @if (app.publishVoucherImage) {
+            <div class="voucher-preview-chip">
+              <img [src]="app.publishVoucherImage" alt="Comprobante" class="voucher-thumb">
+              <span class="voucher-file-title"><i class="fa-solid fa-circle-check text-emerald"></i> {{ app.publishVoucherFileName }}</span>
+            </div>
+            }
+          </div>
+
+          <!-- BOTÓN OFICIAL DE WHATSAPP CON TODOS LOS DATOS DEL CUARTO -->
+          <button type="button" class="btn btn-whatsapp-voucher-full" (click)="app.sendPublishVoucherWhatsApp()"
+            title="Enviar comprobante y ficha del cuarto por WhatsApp al Administrador">
+            <i class="fa-brands fa-whatsapp"></i>
+            <span>Enviar Comprobante</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn btn-secondary" (click)="app.closeNewRoomModal()">Cancelar</button>
+        <button class="btn btn-primary" [disabled]="app.newRoomSubmitting" (click)="app.submitNewRoom()">
+          @if (app.newRoomSubmitting) {
+          <i class="fa-solid fa-spinner fa-spin"></i> Registrando habitación...
+          } @else {
+          <i class="fa-solid fa-circle-check"></i> Publicar Cuarto (S/. {{ app.publicationFee.toFixed(2) }})
+          }
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+}

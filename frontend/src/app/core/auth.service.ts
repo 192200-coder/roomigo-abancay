@@ -158,6 +158,14 @@ export class AuthService {
     this.currentUser.set(null);
   }
 
+  updateUserData(updatedFields: Partial<User>): void {
+    const current = this.currentUser();
+    if (!current) return;
+    const updatedUser: User = { ...current, ...updatedFields };
+    localStorage.setItem(this.USER_KEY, JSON.stringify(updatedUser));
+    this.currentUser.set(updatedUser);
+  }
+
   getAuthHeaders(): HttpHeaders {
     const t = this.token();
     let headers = new HttpHeaders({ 'Content-Type': 'application/json' });
