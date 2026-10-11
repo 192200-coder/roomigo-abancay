@@ -64,6 +64,26 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.FORBIDDEN);
     }
 
+    @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorDetailDto> handleMethodArgumentTypeMismatch(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException ex) {
+        String detail = String.format("El parámetro '%s' con valor '%s' no es válido. Se esperaba tipo %s.",
+                ex.getName(), ex.getValue(), ex.getRequiredType() != null ? ex.getRequiredType().getSimpleName() : "válido");
+        ErrorDetailDto error = ErrorDetailDto.of("Parámetro de solicitud inválido", List.of(detail));
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorDetailDto> handleHttpMessageNotReadable(org.springframework.http.converter.HttpMessageNotReadableException ex) {
+        ErrorDetailDto error = ErrorDetailDto.of("Cuerpo de solicitud JSON inválido o malformado", List.of("Verifique el formato y los tipos de datos enviados en el JSON."));
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(org.springframework.web.bind.MissingServletRequestParameterException.class)
+    public ResponseEntity<ErrorDetailDto> handleMissingServletRequestParameter(org.springframework.web.bind.MissingServletRequestParameterException ex) {
+        ErrorDetailDto error = ErrorDetailDto.of("Parámetro requerido ausente", List.of("El parámetro '" + ex.getParameterName() + "' es obligatorio."));
+        return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorDetailDto> handleGlobalException(Exception ex) {
         String msg = ex.getLocalizedMessage() != null ? ex.getLocalizedMessage() : "Ocurrió un error inesperado en el servidor.";

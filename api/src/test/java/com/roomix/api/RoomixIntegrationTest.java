@@ -33,6 +33,9 @@ class RoomixIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
+    private static final String OWNER_EMAIL = "carlos.owner." + System.currentTimeMillis() + "@test.com";
+    private static final String TENANT_EMAIL = "ana.tenant." + System.currentTimeMillis() + "@test.com";
+
     private static String ownerToken;
     private static String tenantToken;
     private static Long propertyId;
@@ -45,7 +48,7 @@ class RoomixIntegrationTest {
         RegisterRequestDto ownerRegister = RegisterRequestDto.builder()
                 .firstName("Carlos")
                 .lastName("Propietario")
-                .email("carlos.owner@test.com")
+                .email(OWNER_EMAIL)
                 .password("password123")
                 .phone("+51987654321")
                 .role(UserRole.ROLE_OWNER)
@@ -58,7 +61,7 @@ class RoomixIntegrationTest {
                 .andExpect(jsonPath("$.data.accessToken").isNotEmpty());
 
         LoginRequestDto ownerLogin = LoginRequestDto.builder()
-                .email("carlos.owner@test.com")
+                .email(OWNER_EMAIL)
                 .password("password123")
                 .build();
 
@@ -79,7 +82,7 @@ class RoomixIntegrationTest {
         RegisterRequestDto tenantRegister = RegisterRequestDto.builder()
                 .firstName("Ana")
                 .lastName("Inquilina")
-                .email("ana.tenant@test.com")
+                .email(TENANT_EMAIL)
                 .password("password123")
                 .phone("+51912345678")
                 .role(UserRole.ROLE_TENANT)
@@ -92,7 +95,7 @@ class RoomixIntegrationTest {
                 .andExpect(jsonPath("$.data.accessToken").isNotEmpty());
 
         LoginRequestDto tenantLogin = LoginRequestDto.builder()
-                .email("ana.tenant@test.com")
+                .email(TENANT_EMAIL)
                 .password("password123")
                 .build();
 
@@ -156,11 +159,31 @@ class RoomixIntegrationTest {
                         .content(objectMapper.writeValueAsString(roomRequest)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.data.id").isNotEmpty())
-                .andExpect(jsonPath("$.data.status").value("AVAILABLE"))
+                .andExpect(jsonPath("$.data.status").value("PENDING_APPROVAL"))
                 .andReturn();
 
         String responseJson = result.getResponse().getContentAsString();
         roomId = objectMapper.readTree(responseJson).path("data").path("id").asLong();
+
+        // Iniciar sesión como Administrador del sistema para aprobar la habitación
+        LoginRequestDto adminLogin = LoginRequestDto.builder()
+                .email("admin@roomix.com")
+                .password("admin123")
+                .build();
+
+        MvcResult adminLoginResult = mockMvc.perform(post("/api/v1/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(adminLogin)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String adminToken = objectMapper.readTree(adminLoginResult.getResponse().getContentAsString()).path("data").path("accessToken").asText();
+
+        // Aprobar la publicación para dejarla en estado AVAILABLE
+        mockMvc.perform(patch("/api/v1/admin/rooms/" + roomId + "/approve")
+                        .header("Authorization", "Bearer " + adminToken))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.status").value("AVAILABLE"));
     }
 
     @Test

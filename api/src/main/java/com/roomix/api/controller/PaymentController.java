@@ -76,6 +76,7 @@ public class PaymentController {
     }
 
     @PostMapping("/mercadopago/process")
+    @org.springframework.transaction.annotation.Transactional
     @Operation(summary = "Procesar pago completo con Mercado Pago", description = "Valida y acredita el pago mediante la API unificada de Mercado Pago.")
     public ResponseEntity<ApiResponseDto<MercadoPagoPaymentResponseDto>> processPayment(
             @Valid @RequestBody MercadoPagoPaymentRequestDto req,
@@ -123,7 +124,11 @@ public class PaymentController {
         if ("BOOKING".equalsIgnoreCase(req.getEntityType()) && req.getEntityId() != null) {
             reservationRepository.findById(req.getEntityId()).ifPresent(reservation -> {
                 reservation.setStatus(ReservationStatus.CONFIRMED);
-                reservation.getRoom().setStatus(RoomStatus.RENTED);
+                Room room = reservation.getRoom();
+                if (room != null) {
+                    room.setStatus(RoomStatus.RENTED);
+                    roomRepository.save(room);
+                }
                 reservationRepository.save(reservation);
 
                 Payment payment = Payment.builder()
