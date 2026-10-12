@@ -28,7 +28,7 @@ COPY --from=builder /build/target/*.jar app.jar
 
 # Render asigna dinámicamente la variable de entorno PORT (por defecto 10000 o 8081)
 ENV PORT=8081
-EXPOSE 8081
+EXPOSE 8081 10000
 
-# Flags de JVM optimizados para contenedores y conexión IPv6 con Supabase
-ENTRYPOINT ["sh", "-c", "java -Djava.net.preferIPv6Addresses=true -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -jar app.jar"]
+# Flags de JVM optimizados para contenedores y compatibilidad IPv4 con Supabase Pooler
+ENTRYPOINT ["sh", "-c", "java -Djava.net.preferIPv4Stack=true -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -jar app.jar"]

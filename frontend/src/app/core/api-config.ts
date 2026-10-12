@@ -14,7 +14,7 @@ export function getApiBaseUrl(): string {
     const hostname = window.location.hostname;
     if (hostname && hostname !== 'localhost' && hostname !== '127.0.0.1') {
       // En Vercel o dominio externo, usamos ruta relativa '/api/v1'
-      // que vercel.json redirige a https://backend-roomigo.onrender.com/api/v1
+      // que vercel.json redirige a https://backendroomigo.onrender.com/api/v1
       return '/api/v1';
     }
   }

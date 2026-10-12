@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: backend-roomigo
+    name: backendroomigo
     env: docker
     plan: free
     dockerfilePath: Dockerfile

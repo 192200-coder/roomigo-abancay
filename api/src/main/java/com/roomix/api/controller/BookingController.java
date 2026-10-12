@@ -34,14 +34,6 @@ public class BookingController {
         return new ResponseEntity<>(ApiResponseDto.success("Solicitud de reserva enviada", response), HttpStatus.CREATED);
     }
 
-    @GetMapping("/{id}")
-    @Operation(summary = "Obtener detalle de reserva")
-    public ResponseEntity<ApiResponseDto<BookingResponseDto>> getBookingById(
-            @PathVariable Long id,
-            Authentication authentication) {
-        return ResponseEntity.ok(ApiResponseDto.success("Detalle de reserva", bookingService.getBookingById(id, authentication.getName())));
-    }
-
     @GetMapping("/my-bookings")
     @PreAuthorize("hasAnyRole('TENANT', 'ADMIN')")
     @Operation(summary = "Listar mis reservas (Inquilino)")
@@ -56,6 +48,14 @@ public class BookingController {
     public ResponseEntity<ApiResponseDto<List<BookingResponseDto>>> getOwnerBookings(Authentication authentication) {
         List<BookingResponseDto> list = bookingService.getOwnerBookings(authentication.getName());
         return ResponseEntity.ok(ApiResponseDto.success("Solicitudes de alquiler recibidas", list));
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Obtener detalle de reserva")
+    public ResponseEntity<ApiResponseDto<BookingResponseDto>> getBookingById(
+            @PathVariable Long id,
+            Authentication authentication) {
+        return ResponseEntity.ok(ApiResponseDto.success("Detalle de reserva", bookingService.getBookingById(id, authentication.getName())));
     }
 
     @PatchMapping("/{id}/status")
