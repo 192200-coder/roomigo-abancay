@@ -27,6 +27,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class RoomixIntegrationTest {
 
+    static {
+        System.setProperty("java.net.preferIPv4Stack", "false");
+        System.setProperty("java.net.preferIPv6Addresses", "true");
+    }
+
     @Autowired
     private MockMvc mockMvc;
 
