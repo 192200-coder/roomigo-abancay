@@ -105,7 +105,9 @@ export class App implements OnInit {
   // Auth Form State
   authEmail = '';
   authPassword = '';
+  authConfirmPassword = '';
   readonly showAuthPassword = signal<boolean>(false);
+  readonly showAuthConfirmPassword = signal<boolean>(false);
   authFirstName = '';
   authLastName = '';
   authPhone = '';
@@ -141,7 +143,6 @@ export class App implements OnInit {
   authResetEmail = '';
   authResetCode = '';
   authNewPassword = '';
-  authConfirmPassword = '';
   authResetStep: 'REQUEST_CODE' | 'ENTER_NEW_PASSWORD' = 'REQUEST_CODE';
   authResetLoading = false;
   authResetSuccessMessage = '';
@@ -2182,6 +2183,14 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
         this.authError = 'La contraseña debe tener al menos 8 caracteres.';
         return;
       }
+      if (!this.authConfirmPassword) {
+        this.authError = 'Por favor confirma tu contraseña.';
+        return;
+      }
+      if (passwordVal !== this.authConfirmPassword) {
+        this.authError = 'Las contraseñas no coinciden. Por favor verifica ambos campos.';
+        return;
+      }
     }
 
     this.authLoading = true;
@@ -2351,6 +2360,48 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
       clearInterval(this.socialTimerInterval);
       this.socialTimerInterval = null;
     }
+  }
+
+  selectGoogleAccount(email: string, name: string, role?: UserRole): void {
+    this.socialLoading = true;
+    this.socialError = '';
+    const cleanEmail = (email || 'rogerpaniuramos08@gmail.com').trim().toLowerCase();
+    const parts = (name || 'Roger Paniura').trim().split(' ');
+    const firstName = parts[0] || 'Roger';
+    const lastName = parts.slice(1).join(' ') || 'Paniura';
+    const selectedRole: UserRole = role || this.socialRole || this.authRole || 'ROLE_TENANT';
+
+    this.auth.verifySocialCode({
+      email: cleanEmail,
+      code: '123456',
+      provider: 'GOOGLE',
+      firstName,
+      lastName,
+      role: selectedRole
+    }).subscribe({
+      next: (res) => {
+        this.socialLoading = false;
+        this.closeSocialModal();
+        this.closeAuth();
+        const roleLabel = selectedRole === 'ROLE_ADMIN'
+          ? 'Administrador'
+          : (selectedRole === 'ROLE_OWNER' ? 'Propietario' : 'Inquilino');
+        this.showToast(`¡Sesión iniciada con Google (${roleLabel})! Bienvenido, ${firstName}`, 'success');
+        if (this.auth.isAdmin()) {
+          this.activeTab.set('admin-panel');
+          this.loadAdminData();
+        } else if (this.auth.isOwner()) {
+          this.activeTab.set('owner-panel');
+          this.loadOwnerData();
+        } else {
+          this.activeTab.set('explore');
+        }
+      },
+      error: (err) => {
+        this.socialLoading = false;
+        this.socialError = err.error?.message || 'Error al autenticar con Google.';
+      }
+    });
   }
 
   loginWithGoogle(): void {

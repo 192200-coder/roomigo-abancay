@@ -49,8 +49,24 @@ export class MercadoPagoService {
     return this.mpInstance;
   }
 
-  getSdkInstance(): any {
-    if (!this.mpInstance && typeof window !== 'undefined' && window.MercadoPago) {
+  async loadScript(): Promise<void> {
+    if (typeof window === 'undefined') return;
+    if (window.MercadoPago) return;
+    return new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://sdk.mercadopago.com/js/v2';
+      script.async = true;
+      script.onload = () => resolve();
+      script.onerror = () => resolve(); // no bloquear si falla el CDN
+      document.body.appendChild(script);
+    });
+  }
+
+  async getSdkInstance(): Promise<any> {
+    if (!this.mpInstance && typeof window !== 'undefined') {
+      if (!window.MercadoPago) {
+        await this.loadScript();
+      }
       this.initMercadoPagoSdk();
     }
     return this.mpInstance;
