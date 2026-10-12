@@ -27,22 +27,26 @@ export class MercadoPagoService {
   private mpInstance: any = null;
 
   constructor() {
-    this.initMercadoPagoSdk();
+    // Inicialización bajo demanda (lazy) para evitar llamadas automáticas de Mercado Pago con keys de prueba
   }
 
   /**
-   * Inicializa la instancia oficial del SDK Mercado Pago v2 si está cargado en window
+   * Inicializa la instancia oficial del SDK Mercado Pago v2 únicamente bajo demanda
    */
-  initMercadoPagoSdk(): void {
+  initMercadoPagoSdk(): any {
+    if (this.mpInstance) {
+      return this.mpInstance;
+    }
     if (typeof window !== 'undefined' && window.MercadoPago) {
       try {
         this.mpInstance = new window.MercadoPago(this.publicKey, {
           locale: 'es-PE'
         });
       } catch (err) {
-        console.warn('[MercadoPago] Error al instanciar SDK:', err);
+        console.warn('[MercadoPago] Advertencia al instanciar SDK:', err);
       }
     }
+    return this.mpInstance;
   }
 
   getSdkInstance(): any {
