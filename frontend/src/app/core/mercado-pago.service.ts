@@ -4,6 +4,7 @@ import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { AuthService } from './auth.service';
 import { ApiResponse, MercadoPagoPaymentRequest, MercadoPagoPaymentResult } from './models';
+import { getApiBaseUrl } from './api-config';
 
 declare global {
   interface Window {
@@ -17,7 +18,9 @@ declare global {
 export class MercadoPagoService {
   private http = inject(HttpClient);
   private auth = inject(AuthService);
-  private baseUrl = 'http://localhost:8081/api/v1';
+  private get baseUrl(): string {
+    return getApiBaseUrl();
+  }
 
   // Clave Pública de Mercado Pago (Perú) - Soporte para Sandbox y Producción
   readonly publicKey: string = 'TEST-f076b976-5832-47ef-b695-12a52efc7a40';

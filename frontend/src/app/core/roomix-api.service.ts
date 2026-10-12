@@ -27,12 +27,15 @@ import {
   INITIAL_MOCK_ROOMS,
   INITIAL_MOCK_PROPERTIES
 } from './mock-data';
+import { getApiBaseUrl } from './api-config';
 
 @Injectable({
   providedIn: 'root'
 })
 export class RoomixApiService {
-  private readonly baseUrl = 'http://localhost:8081/api/v1';
+  private get baseUrl(): string {
+    return getApiBaseUrl();
+  }
 
   constructor(
     private http: HttpClient,

@@ -2,12 +2,15 @@ import { Injectable, signal, computed } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, tap, of } from 'rxjs';
 import { ApiResponse, AuthResponse, User, UserRole, SocialSendCodeRequest, SocialVerifyCodeRequest, SendCodeResponse } from './models';
+import { getApiBaseUrl } from './api-config';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly baseUrl = 'http://localhost:8081/api/v1/auth';
+  private get baseUrl(): string {
+    return `${getApiBaseUrl()}/auth`;
+  }
   private readonly TOKEN_KEY = 'roomix_access_token';
   private readonly USER_KEY = 'roomix_user_data';
 
