@@ -48,6 +48,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         // Endpoints Públicos
+                        .requestMatchers("/", "/health", "/favicon.ico", "/actuator/**").permitAll()
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/rooms", "/api/v1/rooms/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/properties", "/api/v1/properties/**").permitAll()
@@ -55,7 +56,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/payments/**").permitAll()
                         .requestMatchers("/error").permitAll()
                         // Swagger UI & OpenAPI Docs
-                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs/**", "/v3/api-docs/**").permitAll()
+                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/api-docs", "/api-docs/**", "/v3/api-docs", "/v3/api-docs/**").permitAll()
                         // H2 Console
                         .requestMatchers("/h2-console/**").permitAll()
                         // Endpoints Protegidos por Rol
