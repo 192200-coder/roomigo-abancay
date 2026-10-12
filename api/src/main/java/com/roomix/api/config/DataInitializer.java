@@ -77,6 +77,43 @@ public class DataInitializer implements CommandLineRunner {
             log.warn("[AUDITORÍA LIMPIEZA] Aviso al purgar registros de prueba: {}", ex.getMessage());
         }
 
-        log.info("[SISTEMA] Base de datos limpia y lista para operar con usuarios y publicaciones reales.");
+        // 3. Aplicar Row Level Security (RLS) y blindaje de esquemas en Supabase
+        log.info("[SEGURIDAD SUPABASE] Habilitando Row Level Security (RLS) en todas las tablas públicas...");
+        java.util.List<String> tables = java.util.List.of(
+                "users", "roles", "verification_codes", "properties", "rooms",
+                "room_images", "amenities", "room_amenities", "reservations",
+                "payments", "reviews", "favorites", "notifications"
+        );
+
+        for (String table : tables) {
+            try {
+                jdbcTemplate.execute("ALTER TABLE IF EXISTS public." + table + " ENABLE ROW LEVEL SECURITY;");
+            } catch (Exception ex) {
+                log.warn("[SEGURIDAD SUPABASE] Aviso habilitando RLS en {}: {}", table, ex.getMessage());
+            }
+        }
+
+        try {
+            jdbcTemplate.execute("""
+                DO $$
+                BEGIN
+                    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
+                        REVOKE ALL ON ALL TABLES IN SCHEMA public FROM anon;
+                        REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM anon;
+                        REVOKE ALL ON ALL ROUTINES IN SCHEMA public FROM anon;
+                    END IF;
+                    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'authenticated') THEN
+                        REVOKE ALL ON ALL TABLES IN SCHEMA public FROM authenticated;
+                        REVOKE ALL ON ALL SEQUENCES IN SCHEMA public FROM authenticated;
+                        REVOKE ALL ON ALL ROUTINES IN SCHEMA public FROM authenticated;
+                    END IF;
+                END $$;
+                """);
+            log.info("[SEGURIDAD SUPABASE] Permisos directos de PostgREST revocados. Columnas sensibles protegidas.");
+        } catch (Exception ex) {
+            log.warn("[SEGURIDAD SUPABASE] Aviso al revocar permisos públicos: {}", ex.getMessage());
+        }
+
+        log.info("[SISTEMA] Base de datos limpia y blindada con RLS lista para operar.");
     }
 }
