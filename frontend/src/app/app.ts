@@ -113,6 +113,7 @@ export class App implements OnInit {
   authPhone = '';
   authRole: UserRole = 'ROLE_TENANT';
   authError = '';
+  authSuccessMessage = '';
   authLoading = false;
   authRememberMe = false;
   authSocialLoading = false;
@@ -2124,7 +2125,14 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
   openAuth(mode: 'login' | 'register'): void {
     this.authMode.set(mode);
     this.authError = '';
+    this.authSuccessMessage = '';
     this.showAuthModal.set(true);
+  }
+
+  switchAuthMode(mode: 'login' | 'register' | 'forgot'): void {
+    this.authMode.set(mode);
+    this.authError = '';
+    this.authSuccessMessage = '';
   }
 
   closeAuth(): void {
@@ -2135,22 +2143,32 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
   resetAuthForm(): void {
     this.authEmail = '';
     this.authPassword = '';
+    this.authConfirmPassword = '';
     this.showAuthPassword.set(false);
+    this.showAuthConfirmPassword.set(false);
     this.authFirstName = '';
     this.authLastName = '';
     this.authPhone = '';
     this.authRole = 'ROLE_TENANT';
     this.authError = '';
+    this.authSuccessMessage = '';
     this.authResetEmail = '';
     this.authResetCode = '';
     this.authNewPassword = '';
-    this.authConfirmPassword = '';
     this.authResetStep = 'REQUEST_CODE';
     this.authResetSuccessMessage = '';
+    this.socialEmail = '';
+    this.socialFirstName = '';
+    this.socialLastName = '';
+    this.socialCode = '';
+    this.socialError = '';
+    this.socialSuccessMsg = '';
+    this.authRememberMe = false;
   }
 
   submitAuth(): void {
     this.authError = '';
+    this.authSuccessMessage = '';
     const emailVal = this.authEmail.trim();
     const passwordVal = this.authPassword;
 
@@ -2195,10 +2213,11 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
 
     this.authLoading = true;
     if (this.authMode() === 'login') {
-      this.auth.login({ email: this.authEmail.trim(), password: this.authPassword }).subscribe({
+      this.auth.login({ email: emailVal, password: passwordVal }).subscribe({
         next: res => {
           this.authLoading = false;
           if (res.success) {
+            // Limpieza estricta de formularios y seguridad (no guardar correos ni claves en memoria de formulario)
             this.closeAuth();
             this.showToast(`¡Bienvenido de nuevo, ${res.data.user.firstName}!`, 'success');
             if (this.auth.isAdmin()) {
@@ -2220,32 +2239,25 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
         }
       });
     } else {
+      // Registrar cuenta sin iniciar sesión de golpe: dirige al login con la cuenta creada
+      const targetEmail = emailVal;
       this.auth.register({
         firstName: this.authFirstName.trim(),
         lastName: this.authLastName.trim(),
-        email: this.authEmail.trim(),
-        password: this.authPassword,
+        email: targetEmail,
+        password: passwordVal,
         phone: this.authPhone.trim() || undefined,
         role: this.authRole
-      }).subscribe({
+      }, false).subscribe({
         next: res => {
           this.authLoading = false;
           if (res.success) {
-            this.closeAuth();
-            const roleLabel = this.authRole === 'ROLE_ADMIN' 
-              ? 'Administrador General' 
-              : (this.authRole === 'ROLE_OWNER' ? 'Propietario' : 'Inquilino');
-            this.showToast(`¡Cuenta de ${roleLabel} creada con éxito! Bienvenido, ${res.data.user.firstName}`, 'success');
-            if (this.auth.isAdmin()) {
-              this.activeTab.set('admin-panel');
-              this.loadAdminData();
-            } else if (this.auth.isOwner()) {
-              this.activeTab.set('owner-panel');
-              this.loadOwnerData();
-            } else {
-              this.activeTab.set('my-bookings');
-              this.loadTenantBookings();
-            }
+            this.resetAuthForm();
+            this.authMode.set('login');
+            this.authEmail = targetEmail;
+            this.authPassword = '';
+            this.authSuccessMessage = '¡Cuenta creada con éxito! Ingresa tu contraseña para acceder al sistema.';
+            this.showToast('¡Cuenta creada exitosamente! Por favor inicia sesión para acceder.', 'success');
           }
         },
         error: err => {
@@ -2356,6 +2368,12 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
 
   closeSocialModal(): void {
     this.showSocialModal.set(false);
+    this.socialEmail = '';
+    this.socialFirstName = '';
+    this.socialLastName = '';
+    this.socialCode = '';
+    this.socialError = '';
+    this.socialSuccessMsg = '';
     if (this.socialTimerInterval) {
       clearInterval(this.socialTimerInterval);
       this.socialTimerInterval = null;
@@ -2365,10 +2383,16 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
   selectGoogleAccount(email: string, name: string, role?: UserRole): void {
     this.socialLoading = true;
     this.socialError = '';
-    const cleanEmail = (email || 'rogerpaniuramos08@gmail.com').trim().toLowerCase();
-    const parts = (name || 'Roger Paniura').trim().split(' ');
-    const firstName = parts[0] || 'Roger';
-    const lastName = parts.slice(1).join(' ') || 'Paniura';
+    const cleanEmail = (email || '').trim().toLowerCase();
+    if (!cleanEmail || !cleanEmail.includes('@')) {
+      this.socialLoading = false;
+      this.socialError = 'Por favor ingresa un correo electrónico de Google válido.';
+      return;
+    }
+    const cleanName = (name || '').trim();
+    const parts = cleanName ? cleanName.split(' ') : cleanEmail.split('@')[0].split('.');
+    const firstName = parts[0] || 'Usuario';
+    const lastName = parts.slice(1).join(' ') || 'Google';
     const selectedRole: UserRole = role || this.socialRole || this.authRole || 'ROLE_TENANT';
 
     this.auth.verifySocialCode({

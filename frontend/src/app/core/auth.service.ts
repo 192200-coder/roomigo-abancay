@@ -38,10 +38,10 @@ export class AuthService {
     password: string;
     phone?: string;
     role: UserRole;
-  }): Observable<ApiResponse<AuthResponse>> {
+  }, autoLogin: boolean = false): Observable<ApiResponse<AuthResponse>> {
     return this.http.post<ApiResponse<AuthResponse>>(`${this.baseUrl}/register`, data).pipe(
       tap(res => {
-        if (res.success && res.data) {
+        if (autoLogin && res.success && res.data) {
           this.setSession(res.data);
         }
       })

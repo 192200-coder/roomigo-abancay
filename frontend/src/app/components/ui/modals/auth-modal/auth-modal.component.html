@@ -35,17 +35,17 @@
       <!-- Segmented Tab Switcher (Moderno, espaciado y perfectamente alineado) -->
       <div class="auth-segmented-nav" role="tablist">
         <button type="button" class="auth-segment-tab" [class.active]="app.authMode() === 'login'"
-          (click)="app.authMode.set('login')">
+          (click)="app.switchAuthMode('login')">
           <i class="fa-solid fa-arrow-right-to-bracket"></i>
           <span>Iniciar Sesión</span>
         </button>
         <button type="button" class="auth-segment-tab" [class.active]="app.authMode() === 'register'"
-          (click)="app.authMode.set('register')">
+          (click)="app.switchAuthMode('register')">
           <i class="fa-solid fa-user-plus"></i>
           <span>Crear Cuenta</span>
         </button>
         @if (app.authMode() === 'forgot') {
-        <button type="button" class="auth-segment-tab active" (click)="app.authMode.set('forgot')">
+        <button type="button" class="auth-segment-tab active" (click)="app.switchAuthMode('forgot')">
           <i class="fa-solid fa-key"></i>
           <span>Recuperar</span>
         </button>
@@ -53,6 +53,12 @@
       </div>
 
       <div class="modal-body auth-modal-body">
+        @if (app.authSuccessMessage) {
+        <div class="auth-success-box animate-fade-in">
+          <i class="fa-solid fa-circle-check"></i> {{ app.authSuccessMessage }}
+        </div>
+        }
+
         @if (app.authError) {
         <div class="auth-error-box animate-fade-in">
           <i class="fa-solid fa-triangle-exclamation"></i> {{ app.authError }}
@@ -91,7 +97,7 @@
             <span>Correo Electrónico</span>
           </label>
           <input type="email" class="form-input auth-modern-input" [(ngModel)]="app.authEmail"
-            placeholder="correo@ejemplo.com">
+            autocomplete="email" placeholder="correo@ejemplo.com">
         </div>
 
         <div class="form-group auth-field-group">
@@ -103,7 +109,7 @@
           </div>
           <div class="auth-input-password-wrap">
             <input [type]="app.showAuthPassword() ? 'text' : 'password'" class="form-input auth-modern-input"
-              [(ngModel)]="app.authPassword" placeholder="••••••••">
+              [(ngModel)]="app.authPassword" autocomplete="current-password" placeholder="••••••••">
             <button type="button" class="auth-eye-btn" (click)="app.showAuthPassword.set(!app.showAuthPassword())"
               [attr.aria-label]="app.showAuthPassword() ? 'Ocultar contraseña' : 'Ver contraseña'">
               <i [class]="app.showAuthPassword() ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"></i>
@@ -167,7 +173,8 @@
               <i class="fa-regular fa-user field-icon"></i>
               <span>Nombre</span>
             </label>
-            <input type="text" class="form-input auth-modern-input" [(ngModel)]="app.authFirstName" placeholder="Tu nombre">
+            <input type="text" class="form-input auth-modern-input" [(ngModel)]="app.authFirstName"
+              autocomplete="given-name" placeholder="Tu nombre">
           </div>
           <div class="form-group auth-field-group">
             <label class="form-label">
@@ -175,7 +182,7 @@
               <span>Apellido</span>
             </label>
             <input type="text" class="form-input auth-modern-input" [(ngModel)]="app.authLastName"
-              placeholder="Tu apellido">
+              autocomplete="family-name" placeholder="Tu apellido">
           </div>
         </div>
 
@@ -219,7 +226,8 @@
             <i class="fa-brands fa-whatsapp field-icon text-emerald"></i>
             <span>Teléfono Móvil (WhatsApp)</span>
           </label>
-          <input type="tel" class="form-input auth-modern-input" [(ngModel)]="app.authPhone" placeholder="+51 983 456 789">
+          <input type="tel" class="form-input auth-modern-input" [(ngModel)]="app.authPhone"
+            autocomplete="tel" placeholder="+51 983 456 789">
         </div>
 
         <div class="form-group auth-field-group">
@@ -228,7 +236,7 @@
             <span>Correo Electrónico</span>
           </label>
           <input type="email" class="form-input auth-modern-input" [(ngModel)]="app.authEmail"
-            placeholder="correo@ejemplo.com">
+            autocomplete="email" placeholder="correo@ejemplo.com">
         </div>
 
         <div class="form-group auth-field-group">
@@ -241,7 +249,7 @@
           </div>
           <div class="auth-input-password-wrap">
             <input [type]="app.showAuthPassword() ? 'text' : 'password'" class="form-input auth-modern-input"
-              [(ngModel)]="app.authPassword" placeholder="•••••••• (mínimo 8 caracteres)">
+              [(ngModel)]="app.authPassword" autocomplete="new-password" placeholder="•••••••• (mínimo 8 caracteres)">
             <button type="button" class="auth-eye-btn" (click)="app.showAuthPassword.set(!app.showAuthPassword())"
               [attr.aria-label]="app.showAuthPassword() ? 'Ocultar contraseña' : 'Ver contraseña'">
               <i [class]="app.showAuthPassword() ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"></i>
@@ -263,7 +271,7 @@
           </div>
           <div class="auth-input-password-wrap">
             <input [type]="app.showAuthConfirmPassword() ? 'text' : 'password'" class="form-input auth-modern-input"
-              [(ngModel)]="app.authConfirmPassword" placeholder="•••••••• (repite tu contraseña)">
+              [(ngModel)]="app.authConfirmPassword" autocomplete="new-password" placeholder="•••••••• (repite tu contraseña)">
             <button type="button" class="auth-eye-btn" (click)="app.showAuthConfirmPassword.set(!app.showAuthConfirmPassword())"
               [attr.aria-label]="app.showAuthConfirmPassword() ? 'Ocultar contraseña' : 'Ver contraseña'">
               <i [class]="app.showAuthConfirmPassword() ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"></i>
@@ -416,54 +424,32 @@
           </div>
         </div>
 
-        <!-- Cuenta Principal de Google sugerida (1-Click Login) -->
-        <div class="google-accounts-list">
-          <button type="button" class="google-account-card animate-fade-in"
-            [disabled]="app.socialLoading"
-            (click)="app.selectGoogleAccount('rogerpaniuramos08@gmail.com', 'Roger Paniura Ramos', app.socialRole)">
-            <div class="google-avatar-box">
-              <span class="google-avatar-initials">RP</span>
-              <span class="google-account-badge"><i class="fa-brands fa-google"></i></span>
-            </div>
-            <div class="google-account-info">
-              <span class="google-account-name">Roger Paniura Ramos</span>
-              <span class="google-account-email">rogerpaniuramos08&#64;gmail.com</span>
-            </div>
-            <div class="google-account-action">
-              <i class="fa-solid fa-arrow-right"></i>
-            </div>
-          </button>
-        </div>
-
-        <div class="google-divider-row">
-          <span class="google-divider-line"></span>
-          <span class="google-divider-text">o escribe tu correo Google</span>
-          <span class="google-divider-line"></span>
-        </div>
-
-        <!-- Opción para ingresar otra cuenta Gmail -->
-        <div class="google-custom-account-box">
+        <!-- Ingreso seguro de cuenta Google -->
+        <div class="google-custom-account-box animate-fade-in">
           <div class="form-row auth-names-grid mb-2">
             <div class="form-group auth-field-group">
-              <input type="text" class="form-input text-sm" [(ngModel)]="app.socialFirstName" placeholder="Nombre (ej. Juan)">
+              <input type="text" class="form-input text-sm" [(ngModel)]="app.socialFirstName"
+                autocomplete="given-name" placeholder="Nombre (ej. Juan)">
             </div>
             <div class="form-group auth-field-group">
-              <input type="text" class="form-input text-sm" [(ngModel)]="app.socialLastName" placeholder="Apellido (ej. Pérez)">
+              <input type="text" class="form-input text-sm" [(ngModel)]="app.socialLastName"
+                autocomplete="family-name" placeholder="Apellido (ej. Pérez)">
             </div>
           </div>
           <div class="form-group auth-field-group mb-3">
             <div class="input-with-icon">
               <i class="fa-regular fa-envelope"></i>
-              <input type="email" class="form-input text-sm" [(ngModel)]="app.socialEmail" placeholder="tu-correo@gmail.com">
+              <input type="email" class="form-input text-sm" [(ngModel)]="app.socialEmail"
+                autocomplete="email" placeholder="tu-correo@gmail.com">
             </div>
           </div>
           <button type="button" class="btn btn-outline btn-block btn-sm google-connect-btn"
             [disabled]="app.socialLoading || !app.socialEmail"
-            (click)="app.selectGoogleAccount(app.socialEmail, app.socialFirstName + ' ' + app.socialLastName, app.socialRole)">
+            (click)="app.selectGoogleAccount(app.socialEmail, (app.socialFirstName + ' ' + app.socialLastName).trim(), app.socialRole)">
             @if (app.socialLoading) {
             <i class="fa-solid fa-spinner fa-spin"></i> Conectando con Google...
             } @else {
-            <i class="fa-brands fa-google text-rose-500"></i> Continuar con esta cuenta de Google
+            <i class="fa-brands fa-google text-rose-500"></i> Acceder con cuenta de Google
             }
           </button>
         </div>

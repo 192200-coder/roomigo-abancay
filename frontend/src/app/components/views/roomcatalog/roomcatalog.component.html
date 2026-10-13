@@ -160,44 +160,49 @@
   <div class="filter-chips-container">
     <span class="filter-chips-label"><i class="fa-solid fa-sliders"></i> Filtros Rápidos:</span>
     <div class="filter-chips">
-      <button class="chip chip-all" [class.active]="app.activeChip === 'all'" (click)="app.applyChipFilter('all')">
-        <i class="fa-solid fa-border-all"></i> Todo Abancay
-      </button>
+      <!-- Fila 1: Ubicaciones y Campus Universitarios -->
+      <div class="filter-chips-row">
+        <button class="chip chip-all" [class.active]="app.activeChip === 'all'" (click)="app.applyChipFilter('all')">
+          <i class="fa-solid fa-border-all"></i> Todo Abancay
+        </button>
 
-      <button class="chip chip-unamba" [class.active]="app.activeChip === 'unamba'" (click)="app.applyChipFilter('unamba')">
-        <i class="fa-solid fa-graduation-cap"></i> Frente UNAMBA
-      </button>
+        <button class="chip chip-unamba" [class.active]="app.activeChip === 'unamba'" (click)="app.applyChipFilter('unamba')">
+          <i class="fa-solid fa-graduation-cap"></i> Frente UNAMBA
+        </button>
 
-      <button class="chip chip-centro" [class.active]="app.activeChip === 'centro'" (click)="app.applyChipFilter('centro')">
-        <i class="fa-solid fa-landmark"></i> Centro / Plaza de Armas
-      </button>
+        <button class="chip chip-utea" [class.active]="app.activeChip === 'utea'" (click)="app.applyChipFilter('utea')">
+          <i class="fa-solid fa-book-open-reader"></i> Cerca a UTEA
+        </button>
 
-      <button class="chip chip-utea" [class.active]="app.activeChip === 'utea'" (click)="app.applyChipFilter('utea')">
-        <i class="fa-solid fa-book-open-reader"></i> Cerca a UTEA
-      </button>
+        <button class="chip chip-centro" [class.active]="app.activeChip === 'centro'" (click)="app.applyChipFilter('centro')">
+          <i class="fa-solid fa-landmark"></i> Centro / Plaza de Armas
+        </button>
 
-      <button class="chip chip-tamburco" [class.active]="app.activeChip === 'tamburco'"
-        (click)="app.applyChipFilter('tamburco')">
-        <i class="fa-solid fa-tree"></i> Tamburco
-      </button>
+        <button class="chip chip-tamburco" [class.active]="app.activeChip === 'tamburco'"
+          (click)="app.applyChipFilter('tamburco')">
+          <i class="fa-solid fa-tree"></i> Tamburco
+        </button>
+      </div>
 
-      <button class="chip chip-patibamba" [class.active]="app.activeChip === 'patibamba'"
-        (click)="app.applyChipFilter('patibamba')">
-        <i class="fa-solid fa-mountain-sun"></i> Patibamba
-      </button>
+      <!-- Fila 2: Zonas Adicionales, Servicios y Presupuesto -->
+      <div class="filter-chips-row">
+        <button class="chip chip-patibamba" [class.active]="app.activeChip === 'patibamba'"
+          (click)="app.applyChipFilter('patibamba')">
+          <i class="fa-solid fa-mountain-sun"></i> Patibamba
+        </button>
 
+        <button class="chip chip-bath" [class.active]="app.activeChip === 'bathroom'" (click)="app.applyChipFilter('bathroom')">
+          <i class="fa-solid fa-shower"></i> Baño Privado
+        </button>
 
-      <button class="chip chip-bath" [class.active]="app.activeChip === 'bathroom'" (click)="app.applyChipFilter('bathroom')">
-        <i class="fa-solid fa-shower"></i> Baño Privado
-      </button>
+        <button class="chip chip-wifi" [class.active]="app.activeChip === 'wifi'" (click)="app.applyChipFilter('wifi')">
+          <i class="fa-solid fa-wifi"></i> Fibra Óptica
+        </button>
 
-      <button class="chip chip-wifi" [class.active]="app.activeChip === 'wifi'" (click)="app.applyChipFilter('wifi')">
-        <i class="fa-solid fa-wifi"></i> Fibra Óptica
-      </button>
-
-      <button class="chip chip-cheap" [class.active]="app.activeChip === 'cheap'" (click)="app.applyChipFilter('cheap')">
-        <i class="fa-solid fa-tag"></i> Económicos (≤ S/. 200)
-      </button>
+        <button class="chip chip-cheap" [class.active]="app.activeChip === 'cheap'" (click)="app.applyChipFilter('cheap')">
+          <i class="fa-solid fa-tag"></i> Económicos (≤ S/. 200)
+        </button>
+      </div>
     </div>
   </div>
 
