@@ -351,7 +351,8 @@ export class App implements OnInit {
   newRoomWifi = true;
   newRoomPets = false;
   newRoomImageUrl = 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80';
-  readonly publicationFee: number = 3.00;
+  /** Tarifa de publicación por defecto; el backend la cobra por Mercado Pago (Room.publicationFeeAmount). */
+  readonly publicationFee: number = 15.00;
   newRoomSubmitting = false;
 
   // Billeteras Digitales Publicación Fields (Yape / Plin / Tarjetas)
@@ -1342,10 +1343,12 @@ export class App implements OnInit {
     const available = rooms.filter(r => r.status === 'AVAILABLE').length;
     const occupied = rooms.filter(r => r.status === 'OCCUPIED' || r.status === 'RENTED').length;
     const pending = this.pendingRooms().length;
-    const feesCollected = total * 15;
+    // Solo cuentan las tarifas efectivamente pagadas por Mercado Pago (antes se multiplicaba el total de cuartos)
+    const feePaidRooms = rooms.filter(r => r.publicationFeePaid);
+    const feesCollected = feePaidRooms.reduce((s, r) => s + (r.publicationFeeAmount ?? this.publicationFee), 0);
     const avgPrice = total > 0 ? Math.round(rooms.reduce((s, r) => s + (r.pricePerMonth || 0), 0) / total) : 0;
-    const yapeCount = rooms.filter(r => (r.paymentMethod || 'YAPE') === 'YAPE').length;
-    const plinCount = rooms.filter(r => r.paymentMethod === 'PLIN').length;
+    const feePaidCount = feePaidRooms.length;
+    const feePendingCount = total - feePaidCount;
 
     const tamburco = rooms.filter(r => {
       const txt = `${r.propertyAddress || ''} ${r.propertyCity || ''} ${r.title || ''}`.toLowerCase();
@@ -1374,8 +1377,8 @@ export class App implements OnInit {
       pending,
       feesCollected,
       avgPrice,
-      yapeCount,
-      plinCount,
+      feePaidCount,
+      feePendingCount,
       tamburco,
       centro,
       utea,

@@ -29,10 +29,10 @@ public class RegisterRequestDto {
 
     @NotBlank(message = "La contraseña es obligatoria")
     @Size(min = 8, message = "La contraseña debe tener al menos 8 caracteres")
-    @Pattern(regexp = "^(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z\\d]).+$", message = "La contraseÃ±a debe incluir una mayÃºscula, un nÃºmero y un carÃ¡cter especial")
+    @Pattern(regexp = "^(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z\\d]).+$", message = "La contraseña debe incluir una mayúscula, un número y un carácter especial")
     private String password;
 
-    @Pattern(regexp = "^(?:\\+?51)?9\\d{8}$", message = "El telÃ©fono debe contener un nÃºmero mÃ³vil peruano de 9 dÃ­gitos")
+    @Pattern(regexp = "^(?:\\+?51)?9\\d{8}$", message = "El teléfono debe contener un número móvil peruano de 9 dígitos")
     private String phone;
 
     @NotNull(message = "El rol es obligatorio")
