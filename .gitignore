@@ -54,3 +54,8 @@ desktop.ini
 
 # Material archivado local (capturas y pruebas visuales antiguas)
 _archivo/
+
+# Variables de entorno y secretos (tokens de Mercado Pago, BD, JWT)
+.env
+.env.*
+!.env.example
