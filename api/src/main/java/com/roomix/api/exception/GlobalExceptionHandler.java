@@ -42,6 +42,19 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.UNAUTHORIZED);
     }
 
+    @ExceptionHandler(PaymentGatewayException.class)
+    public ResponseEntity<ErrorDetailDto> handlePaymentGatewayException(PaymentGatewayException ex) {
+        log.error("Error de la pasarela de pagos: {}", ex.getMessage(), ex.getCause());
+        ErrorDetailDto error = ErrorDetailDto.of(ex.getMessage(), List.of("Mercado Pago no pudo procesar la solicitud. Intenta nuevamente."));
+        return new ResponseEntity<>(error, HttpStatus.BAD_GATEWAY);
+    }
+
+    @ExceptionHandler(PaymentUnavailableException.class)
+    public ResponseEntity<ErrorDetailDto> handlePaymentUnavailableException(PaymentUnavailableException ex) {
+        ErrorDetailDto error = ErrorDetailDto.of(ex.getMessage(), List.of("La pasarela de pagos no está disponible en este momento."));
+        return new ResponseEntity<>(error, HttpStatus.SERVICE_UNAVAILABLE);
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ErrorDetailDto> handleValidationExceptions(MethodArgumentNotValidException ex) {
         List<String> errors = new ArrayList<>();

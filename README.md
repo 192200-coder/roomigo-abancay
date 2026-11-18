@@ -85,6 +85,31 @@ npm start
 
 ---
 
+## 💳 Pagos con Mercado Pago (Checkout Pro)
+
+**Qué se cobra:**
+* **Reserva:** primer mes + depósito, después de que el propietario la aprueba. Al acreditarse, el cuarto pasa a *Alquilado*.
+* **Publicación:** tarifa del cuarto (S/ 15 por defecto), desde *Mis inmuebles*.
+
+**Cómo funciona:** el backend crea la preferencia y el usuario paga en la página de Mercado Pago
+(Yape, tarjetas, PagoEfectivo). Roomix **nunca recibe datos de tarjeta**. El pago se confirma por dos vías,
+ambas consultando la API de Mercado Pago antes de aplicarlo y sin procesar dos veces el mismo pago:
+1. Al volver el comprador (`/?pago=resultado`), el frontend llama a `GET /api/v1/payments/mercadopago/confirm`.
+2. El webhook `POST /api/v1/payments/mercadopago/webhook` (firma `x-signature` validada con `MP_WEBHOOK_SECRET`).
+
+**Probar en local** (Mercado Pago necesita URLs públicas HTTPS):
+1. En `api/.env` define `MP_ACCESS_TOKEN` (cuenta **vendedora de prueba**), `MP_WEBHOOK_SECRET`,
+   `MP_BACK_URL_BASE=https://<tu-dominio>.ngrok-free.dev` y
+   `MP_WEBHOOK_URL=https://<tu-dominio>.ngrok-free.dev/api/v1/payments/mercadopago/webhook`.
+2. Levanta backend y frontend (`ng serve` reenvía `/api` al backend con `proxy.conf.mjs`).
+3. Abre el túnel hacia el **frontend**: `ngrok http --url=<tu-dominio>.ngrok-free.dev 4200`.
+4. Entra a la app **por la URL de ngrok** (no por `localhost`, porque la sesión se guarda por dominio) y paga
+   con una **cuenta compradora de prueba**.
+
+Sin `MP_ACCESS_TOKEN` los endpoints de pago responden 503 y el resto de la app funciona igual.
+
+---
+
 ## 🗄️ Cambios en el esquema de base de datos
 
 Todo cambio de tablas o columnas se hace con una **nueva migración** en

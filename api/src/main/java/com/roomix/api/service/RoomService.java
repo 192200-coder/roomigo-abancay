@@ -11,6 +11,8 @@ import java.util.List;
 public interface RoomService {
     RoomResponseDto createRoom(RoomRequestDto request, String ownerEmail);
     RoomResponseDto getRoomById(Long id);
+    /** Todas las habitaciones de las propiedades del propietario, en cualquier estado. */
+    List<RoomResponseDto> getRoomsByOwner(String ownerEmail);
     PageResponseDto<RoomResponseDto> searchRooms(RoomFilterDto filter, Pageable pageable);
     RoomResponseDto updateRoomStatus(Long id, String status, String ownerEmail);
     List<RoomResponseDto> getPendingRooms();

@@ -1,17 +1,25 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of, throwError } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { AuthService } from './auth.service';
-import { ApiResponse, MercadoPagoPaymentRequest, MercadoPagoPaymentResult } from './models';
+import { ApiResponse, CheckoutSession, PaymentStatusResult } from './models';
 import { getApiBaseUrl } from './api-config';
 
-declare global {
-  interface Window {
-    MercadoPago?: any;
-  }
+/** Parámetros con los que Mercado Pago devuelve al comprador desde Checkout Pro. */
+export interface CheckoutReturnParams {
+  paymentId: string | null;
+  status: string | null;
+  externalReference: string | null;
 }
 
+/**
+ * Pagos con Mercado Pago Checkout Pro.
+ *
+ * El frontend nunca procesa datos de tarjeta ni decide si un pago fue aprobado:
+ * pide al backend un checkout, redirige al usuario a Mercado Pago y, al volver,
+ * pide al backend que confirme el pago consultando la API de Mercado Pago.
+ */
 @Injectable({
   providedIn: 'root'
 })
@@ -19,182 +27,52 @@ export class MercadoPagoService {
   private http = inject(HttpClient);
   private auth = inject(AuthService);
   private get baseUrl(): string {
-    return getApiBaseUrl();
+    return `${getApiBaseUrl()}/payments`;
   }
 
-  // Clave Pública de Mercado Pago (Perú) - Soporte para Sandbox y Producción
-  readonly publicKey: string = 'TEST-f076b976-5832-47ef-b695-12a52efc7a40';
-  private mpInstance: any = null;
-
-  constructor() {
-    // Inicialización bajo demanda (lazy) para evitar llamadas automáticas de Mercado Pago con keys de prueba
+  /** Crea el checkout del pago inicial (primer mes + depósito) de una reserva aprobada. */
+  startBookingCheckout(reservationId: number): Observable<CheckoutSession> {
+    return this.http.post<ApiResponse<CheckoutSession>>(`${this.baseUrl}/checkout/bookings/${reservationId}`, null, {
+      headers: this.auth.getAuthHeaders()
+    }).pipe(map(res => res.data));
   }
 
-  /**
-   * Inicializa la instancia oficial del SDK Mercado Pago v2 únicamente bajo demanda
-   */
-  initMercadoPagoSdk(): any {
-    if (this.mpInstance) {
-      return this.mpInstance;
-    }
-    if (typeof window !== 'undefined' && window.MercadoPago) {
-      try {
-        this.mpInstance = new window.MercadoPago(this.publicKey, {
-          locale: 'es-PE'
-        });
-      } catch (err) {
-        console.warn('[MercadoPago] Advertencia al instanciar SDK:', err);
-      }
-    }
-    return this.mpInstance;
+  /** Crea el checkout de la tarifa de publicación de un cuarto. */
+  startPublicationCheckout(roomId: number): Observable<CheckoutSession> {
+    return this.http.post<ApiResponse<CheckoutSession>>(`${this.baseUrl}/checkout/rooms/${roomId}/publication`, null, {
+      headers: this.auth.getAuthHeaders()
+    }).pipe(map(res => res.data));
   }
 
-  async loadScript(): Promise<void> {
+  /** Pide al backend que consulte y concilie el pago con el que volvió el usuario. */
+  confirmPayment(paymentId: string): Observable<PaymentStatusResult> {
+    return this.http.get<ApiResponse<PaymentStatusResult>>(`${this.baseUrl}/mercadopago/confirm`, {
+      headers: this.auth.getAuthHeaders(),
+      params: { paymentId }
+    }).pipe(map(res => res.data));
+  }
+
+  /** Lleva al usuario a la página de pago de Mercado Pago. */
+  redirectToCheckout(session: CheckoutSession): void {
+    window.location.assign(session.checkoutUrl);
+  }
+
+  /** Devuelve los parámetros de vuelta de Checkout Pro, o null si la URL no es una vuelta de pago. */
+  readReturnParams(): CheckoutReturnParams | null {
+    if (typeof window === 'undefined') return null;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('pago') !== 'resultado') return null;
+    const clean = (v: string | null) => (v && v !== 'null' ? v : null);
+    return {
+      paymentId: clean(params.get('payment_id') || params.get('collection_id')),
+      status: clean(params.get('status') || params.get('collection_status')),
+      externalReference: clean(params.get('external_reference'))
+    };
+  }
+
+  /** Quita de la barra de direcciones los parámetros de Mercado Pago. */
+  clearReturnParams(): void {
     if (typeof window === 'undefined') return;
-    if (window.MercadoPago) return;
-    return new Promise((resolve) => {
-      const script = document.createElement('script');
-      script.src = 'https://sdk.mercadopago.com/js/v2';
-      script.async = true;
-      script.onload = () => resolve();
-      script.onerror = () => resolve(); // no bloquear si falla el CDN
-      document.body.appendChild(script);
-    });
-  }
-
-  async getSdkInstance(): Promise<any> {
-    if (!this.mpInstance && typeof window !== 'undefined') {
-      if (!window.MercadoPago) {
-        await this.loadScript();
-      }
-      this.initMercadoPagoSdk();
-    }
-    return this.mpInstance;
-  }
-
-  /**
-   * Crea una preferencia de pago en Mercado Pago para Checkout Pro
-   */
-  createPreference(data: {
-    title: string;
-    unitPrice: number;
-    quantity: number;
-    payerEmail: string;
-    payerName: string;
-    externalReference: string;
-  }): Observable<{ preferenceId: string; initPoint: string }> {
-    return throwError(() => new Error('La pasarela de pagos no está disponible.'));
-    return this.http.post<ApiResponse<any>>(`${this.baseUrl}/payments/mercadopago/preference`, data, {
-      headers: this.auth.getAuthHeaders()
-    }).pipe(
-      map(res => ({
-        preferenceId: res.data?.id || `PREF-${Date.now()}`,
-        initPoint: res.data?.init_point || `https://www.mercadopago.com.pe/checkout/v1/redirect?pref_id=${Date.now()}`
-      })),
-      catchError(() => {
-        return throwError(() => new Error('La pasarela de pagos no está disponible.'));
-        // Fallback robusto / Modo offline si el backend no está disponible
-        const fakePrefId = `PREF-${Date.now()}-${Math.floor(Math.random() * 9000 + 1000)}`;
-        return of({
-          preferenceId: fakePrefId,
-          initPoint: `https://sandbox.mercadopago.com.pe/checkout/v1/redirect?pref_id=${fakePrefId}`
-        });
-      })
-    );
-  }
-
-  /**
-   * Procesa el pago mediante la API de Mercado Pago con soporte integral:
-   * Tarjetas (Visa, Mastercard, AMEX), Yape vía Mercado Pago, PagoEfectivo y Saldo MP.
-   */
-  processPayment(req: MercadoPagoPaymentRequest): Observable<MercadoPagoPaymentResult> {
-    return throwError(() => new Error('La pasarela de pagos no está disponible.'));
-    return this.http.post<ApiResponse<MercadoPagoPaymentResult>>(`${this.baseUrl}/payments/mercadopago/process`, req, {
-      headers: this.auth.getAuthHeaders()
-    }).pipe(
-      map(res => res.data),
-      catchError(() => {
-        return throwError(() => new Error('La pasarela de pagos no está disponible.'));
-        // Emulación certificada de la respuesta de la API de Mercado Pago
-        const txnId = `MP-${Math.floor(1000000000 + Math.random() * 9000000000)}`;
-        const authCode = `AUTH-${Math.floor(100000 + Math.random() * 900000)}`;
-        const dateNow = new Date().toISOString();
-
-        let paymentMethodLabel = 'Mercado Pago';
-        let paymentTypeId = 'digital_currency';
-        let cipCode: string | undefined = undefined;
-        let qrCode: string | undefined = undefined;
-
-        switch (req.subMethod) {
-          case 'YAPE':
-            paymentMethodLabel = 'Yape Oficial (BCP / Billetera Digital)';
-            paymentTypeId = 'digital_wallet';
-            qrCode = `00020101021243650016com.yape.pe0214${txnId}520400005303604540${req.amount.toFixed(2)}5802PE5915ROOMIX_ABANCAY6007ABANCAY62070503***6304`;
-            break;
-          case 'PLIN':
-            paymentMethodLabel = 'Plin (Interbank / BBVA / Scotiabank)';
-            paymentTypeId = 'digital_wallet';
-            qrCode = `00020101021243650016com.plin.pe0214${txnId}520400005303604540${req.amount.toFixed(2)}5802PE5915ROOMIX_ABANCAY6007ABANCAY62070503***6304`;
-            break;
-          case 'CREDIT_CARD':
-            paymentMethodLabel = this.detectCardBrand(req.cardNumber || '') + ' Crédito';
-            paymentTypeId = 'credit_card';
-            break;
-          case 'DEBIT_CARD':
-            paymentMethodLabel = this.detectCardBrand(req.cardNumber || '') + ' Débito';
-            paymentTypeId = 'debit_card';
-            break;
-        }
-
-        const simulatedResult: MercadoPagoPaymentResult = {
-          id: txnId,
-          status: 'approved',
-          statusDetail: 'accredited',
-          paymentMethod: paymentMethodLabel,
-          paymentTypeId: paymentTypeId,
-          transactionAmount: req.amount,
-          currency: 'PEN',
-          dateApproved: dateNow,
-          authorizationCode: authCode,
-          cipCode: cipCode,
-          qrCode: qrCode,
-          receiptUrl: `https://www.mercadopago.com.pe/comprobante/${txnId}`
-        };
-
-        return of(simulatedResult);
-      })
-    );
-  }
-
-  /**
-   * Detecta la marca de la tarjeta según los primeros dígitos (Visa, Mastercard, Amex, Diners)
-   */
-  detectCardBrand(cardNumber: string): string {
-    const clean = cardNumber.replace(/\D/g, '');
-    if (/^4/.test(clean)) return 'Visa';
-    if (/^(5[1-5]|2[2-7])/.test(clean)) return 'Mastercard';
-    if (/^3[47]/.test(clean)) return 'American Express';
-    if (/^3(?:0[0-5]|[68])/.test(clean)) return 'Diners Club';
-    return 'Tarjeta Bancaria';
-  }
-
-  /**
-   * Formatea el número de tarjeta en grupos de 4 dígitos (0000 0000 0000 0000)
-   */
-  formatCardNumber(val: string): string {
-    const clean = val.replace(/\D/g, '').substring(0, 16);
-    const parts = clean.match(/.{1,4}/g);
-    return parts ? parts.join(' ') : clean;
-  }
-
-  /**
-   * Formatea la fecha de expiración MM/AA
-   */
-  formatExpiry(val: string): string {
-    const clean = val.replace(/\D/g, '').substring(0, 4);
-    if (clean.length >= 2) {
-      return `${clean.substring(0, 2)}/${clean.substring(2, 4)}`;
-    }
-    return clean;
+    window.history.replaceState(window.history.state, '', window.location.pathname);
   }
 }

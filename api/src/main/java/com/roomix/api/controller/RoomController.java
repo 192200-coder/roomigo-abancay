@@ -12,6 +12,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
+import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -34,6 +35,15 @@ public class RoomController {
             Authentication authentication) {
         RoomResponseDto response = roomService.createRoom(request, authentication.getName());
         return new ResponseEntity<>(ApiResponseDto.success("Habitación publicada exitosamente", response), HttpStatus.CREATED);
+    }
+
+    // Ruta literal: Spring la prioriza sobre /{id}. Antes no existía y el panel del propietario
+    // recibía 400 ("my-rooms" no es un Long), mostrando "No se pudieron cargar tus habitaciones".
+    @GetMapping("/my-rooms")
+    @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
+    @Operation(summary = "Habitaciones del propietario autenticado", description = "Incluye todos los estados (en revisión, disponibles, alquiladas...).")
+    public ResponseEntity<ApiResponseDto<List<RoomResponseDto>>> getMyRooms(Authentication authentication) {
+        return ResponseEntity.ok(ApiResponseDto.success("Habitaciones del propietario", roomService.getRoomsByOwner(authentication.getName())));
     }
 
     @GetMapping("/{id}")

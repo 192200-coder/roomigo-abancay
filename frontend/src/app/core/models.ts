@@ -138,7 +138,12 @@ export interface Booking {
   endDate: string;
   /** Duración contratada en meses (endDate = startDate + months). */
   months?: number;
+  /** Valor total del contrato: renta × meses + depósito. */
   totalPrice: number;
+  /** Primer mes + depósito: lo que se cobra al pagar la reserva aprobada. */
+  initialPayment?: number;
+  /** Estado del pago por Mercado Pago (null si aún no se inició). */
+  paymentStatus?: PaymentStatus | null;
   status: ReservationStatus;
   notes?: string;
   createdAt?: string;
@@ -216,39 +221,34 @@ export interface SendCodeResponse {
 // ==========================================
 export type MercadoPagoSubMethod = 'YAPE' | 'PLIN' | 'CREDIT_CARD' | 'DEBIT_CARD';
 
-export interface MercadoPagoPaymentRequest {
-  title: string;
+export type PaymentStatus = 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED';
+export type PaymentPurpose = 'BOOKING' | 'ROOM_PUBLICATION';
+
+/** Checkout Pro creado por el backend: el frontend redirige a checkoutUrl. */
+export interface CheckoutSession {
+  paymentId: number;
+  purpose: PaymentPurpose;
+  preferenceId: string;
+  checkoutUrl: string;
   amount: number;
-  currency: 'PEN';
-  subMethod: MercadoPagoSubMethod;
-  payerEmail: string;
-  payerName: string;
-  payerDni?: string;
-  cardNumber?: string;
-  cardHolder?: string;
-  cardExpMonth?: string;
-  cardExpYear?: string;
-  cardCvv?: string;
-  installments?: number;
-  yapeOtp?: string;
-  notes?: string;
-  entityType: 'BOOKING' | 'ROOM_PUBLICATION';
-  entityId?: number;
+  currency: string;
 }
 
-export interface MercadoPagoPaymentResult {
-  id: string; // e.g. MP-98421048
-  status: 'approved' | 'in_process' | 'rejected' | 'pending';
-  statusDetail: string;
-  paymentMethod: string;
-  paymentTypeId: string;
-  transactionAmount: number;
+/** Estado de un pago conciliado por el backend con Mercado Pago. */
+export interface PaymentStatusResult {
+  paymentId: number;
+  purpose: PaymentPurpose;
+  reservationId?: number;
+  roomId: number;
+  concept: string;
+  status: PaymentStatus;
+  statusDetail?: string;
+  amount: number;
   currency: string;
-  dateApproved: string;
-  authorizationCode: string;
-  cipCode?: string; // Para PagoEfectivo
-  qrCode?: string;  // Para Yape / QR
-  qrCodeBase64?: string;
-  receiptUrl?: string;
+  paymentMethod: string;
+  /** Número de operación en Mercado Pago. */
+  providerPaymentId?: string;
+  paidAt?: string;
 }
+
 

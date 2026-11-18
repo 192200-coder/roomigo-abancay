@@ -1,63 +1,65 @@
 @if (app.showMpSuccessReceipt()) {
+@if (app.mpReceiptData; as p) {
 <div class="modal-backdrop mp-receipt-backdrop" (click)="app.closeMpReceipt()">
-  <div class="modal-dialog mp-receipt-modal animate-scale-up" (click)="$event.stopPropagation()">
-    <button class="modal-close" (click)="app.closeMpReceipt()"><i class="fa-solid fa-xmark"></i></button>
+  <div class="modal-dialog mp-receipt-modal animate-scale-up" role="dialog" aria-modal="true"
+    aria-labelledby="mp-receipt-title" (click)="$event.stopPropagation()">
+    <button class="modal-close" (click)="app.closeMpReceipt()" aria-label="Cerrar"><i class="fa-solid fa-xmark"></i></button>
 
     <div class="mp-receipt-header">
-      <div class="mp-receipt-check">
-        <i class="fa-solid fa-check"></i>
+      <div class="mp-receipt-check" [class]="'mp-receipt-check rc-' + p.status.toLowerCase()">
+        <i class="fa-solid" [class.fa-check]="p.status === 'COMPLETED'" [class.fa-clock]="p.status === 'PENDING'"
+          [class.fa-xmark]="p.status === 'FAILED'" [class.fa-rotate-left]="p.status === 'REFUNDED'" aria-hidden="true"></i>
       </div>
       <div class="mp-receipt-brand">
-        <i class="fa-solid fa-handshake-angle"></i> <strong>mercado</strong> pago
+        <i class="fa-solid fa-handshake-angle" aria-hidden="true"></i> <strong>mercado</strong> pago
       </div>
-      <h3 class="mp-receipt-title">¡Pago Acreditado Exitosamente!</h3>
-      <p class="mp-receipt-subtitle">Operación procesada en tiempo real mediante la API de Mercado Pago</p>
+      <h3 class="mp-receipt-title" id="mp-receipt-title">{{ title(p.status) }}</h3>
+      <p class="mp-receipt-subtitle">{{ subtitle(p.status) }}</p>
     </div>
 
     <div class="mp-receipt-card">
       <div class="mp-receipt-row highlight-row">
-        <span class="label">Monto Acreditado:</span>
-        <strong class="value text-emerald">S/. {{ app.mpReceiptData?.transactionAmount?.toFixed(2) }} PEN</strong>
+        <span class="label">{{ p.status === 'COMPLETED' ? 'Monto pagado' : 'Monto' }}:</span>
+        <strong class="value rc-num" [class.text-emerald]="p.status === 'COMPLETED'">S/ {{ p.amount | number:'1.2-2' }}</strong>
       </div>
       <div class="mp-receipt-divider"></div>
       <div class="mp-receipt-row">
-        <span class="label">Código de Transacción (ID):</span>
-        <span class="value font-mono"><strong>{{ app.mpReceiptData?.id }}</strong></span>
+        <span class="label">Concepto:</span>
+        <span class="value">{{ p.concept }}</span>
+      </div>
+      @if (p.providerPaymentId) {
+      <div class="mp-receipt-row">
+        <span class="label">N.° de operación:</span>
+        <span class="value font-mono rc-num"><strong>{{ p.providerPaymentId }}</strong></span>
+      </div>
+      }
+      <div class="mp-receipt-row">
+        <span class="label">Medio de pago:</span>
+        <span class="value">{{ methodLabel(p.paymentMethod) }}</span>
       </div>
       <div class="mp-receipt-row">
-        <span class="label">Código de Autorización:</span>
-        <span class="value font-mono">{{ app.mpReceiptData?.authorizationCode }}</span>
+        <span class="label">Estado:</span>
+        <span class="value rc-badge" [class]="'value rc-badge rc-badge-' + p.status.toLowerCase()">{{ statusLabel(p.status) }}</span>
       </div>
+      @if (p.paidAt) {
       <div class="mp-receipt-row">
-        <span class="label">Método de Pago:</span>
-        <span class="value">{{ app.mpReceiptData?.paymentMethod }}</span>
-      </div>
-      <div class="mp-receipt-row">
-        <span class="label">Estado de la Pasarela:</span>
-        <span class="value status-badge-approved"><i class="fa-solid fa-circle-check"></i> Aprobado (Acreditado)</span>
-      </div>
-      <div class="mp-receipt-row">
-        <span class="label">Fecha y Hora:</span>
-        <span class="value">{{ app.mpReceiptData?.dateApproved | date:'medium' }}</span>
-      </div>
-      @if (app.mpReceiptData?.cipCode) {
-      <div class="mp-receipt-row">
-        <span class="label">Código CIP PagoEfectivo:</span>
-        <strong class="value text-indigo">{{ app.mpReceiptData?.cipCode }}</strong>
+        <span class="label">Fecha:</span>
+        <span class="value rc-num">{{ p.paidAt | date:'d MMM y, HH:mm':'':'es-PE' }}</span>
       </div>
       }
     </div>
 
-    <div class="mp-guarantee-box">
-      <i class="fa-solid fa-shield-halved text-electric-blue"></i>
-      <p>Esta transacción está asegurada y certificada bajo el programa de <strong>Protección al Comprador</strong> de Mercado Pago Perú.</p>
-    </div>
+    @if (p.status === 'COMPLETED' && p.purpose === 'BOOKING') {
+    <p class="rc-note"><i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+      Pagaste el primer mes y el depósito. Coordina la entrega de llaves con el propietario; los meses siguientes se pagan directamente a él.</p>
+    }
 
-    <div class="modal-actions modal-actions-center" style="margin-top: 1.25rem;">
+    <div class="modal-actions modal-actions-center rc-actions">
       <button class="btn btn-mp-checkout btn-full" (click)="app.closeMpReceipt()">
-        <i class="fa-solid fa-check-double"></i> Entendido, Continuar en RoomiGo
+        Continuar en RoomiGo
       </button>
     </div>
   </div>
 </div>
+}
 }

@@ -262,3 +262,28 @@ app-tenant-dashboard .sidebar-sub-btn.active {
   font-weight: 700;
 }
 /* Tarjeta informativa resumen */
+
+/* Pago con Mercado Pago: acción principal en su propia fila (no compite con las secundarias) */
+.booking-pay-row:empty {
+  display: none;
+}
+
+.booking-pay-row {
+  display: flex;
+  margin-top: 12px;
+}
+
+.booking-pay-row .btn-pay-mp {
+  flex: 1;
+  justify-content: center;
+  gap: 8px;
+  font-feature-settings: 'tnum';
+}
+
+.booking-pay-row .btn-pay-mp:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.booking-pay-row .badge {
+  gap: 6px;
+}

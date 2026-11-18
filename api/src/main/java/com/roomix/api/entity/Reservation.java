@@ -49,8 +49,13 @@ public class Reservation {
     @Builder.Default
     private ReservationStatus status = ReservationStatus.PENDING;
 
+    /** Valor total del contrato: renta × meses + depósito. */
     @Column(name = "total_price", nullable = false, precision = 10, scale = 2)
     private BigDecimal totalPrice;
+
+    /** Monto que se cobra por Mercado Pago al pagar la reserva: primer mes + depósito. */
+    @Column(name = "initial_payment", nullable = false, precision = 10, scale = 2)
+    private BigDecimal initialPayment;
 
     @Column(columnDefinition = "TEXT")
     private String notes;

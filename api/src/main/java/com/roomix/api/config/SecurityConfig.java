@@ -50,7 +50,6 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/rooms", "/api/v1/rooms/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/properties", "/api/v1/properties/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/reviews", "/api/v1/reviews/**").permitAll()
-                        .requestMatchers(HttpMethod.GET, "/api/v1/payments/methods").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/payments/mercadopago/webhook").permitAll()
                         .requestMatchers("/api/v1/payments/**").authenticated()
                         .requestMatchers("/error").permitAll()

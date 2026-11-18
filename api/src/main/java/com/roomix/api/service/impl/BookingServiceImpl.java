@@ -59,6 +59,8 @@ public class BookingServiceImpl implements BookingService {
         BigDecimal totalPrice = room.getPricePerMonth()
                 .multiply(BigDecimal.valueOf(months))
                 .add(room.getDepositPrice());
+        // Lo que se cobra al pagar la reserva aprobada: primer mes + depósito
+        BigDecimal initialPayment = room.getPricePerMonth().add(room.getDepositPrice());
 
         Reservation reservation = Reservation.builder()
                 .room(room)
@@ -67,6 +69,7 @@ public class BookingServiceImpl implements BookingService {
                 .endDate(endDate)
                 .months(months)
                 .totalPrice(totalPrice)
+                .initialPayment(initialPayment)
                 .status(ReservationStatus.PENDING)
                 .notes(request.getNotes())
                 .build();
@@ -133,11 +136,10 @@ public class BookingServiceImpl implements BookingService {
 
         reservation.setStatus(status);
 
-        if (status == ReservationStatus.CONFIRMED) {
-            Room room = reservation.getRoom();
-            room.setStatus(RoomStatus.RENTED);
-            roomRepository.save(room);
-        } else if (status == ReservationStatus.REJECTED || status == ReservationStatus.CANCELLED) {
+        // Al aprobar (CONFIRMED) el cuarto sigue publicado: pasa a RENTED recién cuando el
+        // inquilino paga por Mercado Pago (ver PaymentServiceImpl). Las fechas ya quedan
+        // protegidas porque existsOverlappingReservation considera reservas confirmadas.
+        if (status == ReservationStatus.REJECTED || status == ReservationStatus.CANCELLED) {
             Room room = reservation.getRoom();
             room.setStatus(RoomStatus.AVAILABLE);
             roomRepository.save(room);

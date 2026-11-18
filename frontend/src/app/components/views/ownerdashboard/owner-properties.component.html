@@ -30,8 +30,12 @@
               </div></td>
               <td class="inventory-price">S/ {{ room.pricePerMonth | number:'1.0-2' }}</td>
               <td><span class="inventory-status" [class.is-pending]="room.status === 'PENDING_APPROVAL'"
-                [class.is-rejected]="room.status === 'REJECTED'">{{ statusLabel(room.status) }}</span></td>
+                [class.is-rejected]="room.status === 'REJECTED'">{{ statusLabel(room.status) }}</span>
+                <small class="inventory-fee" [class.is-paid]="room.publicationFeePaid">{{ room.publicationFeePaid ? 'Publicación pagada' : 'Publicación sin pagar' }}</small></td>
               <td><div class="inventory-actions">
+                @if (!room.publicationFeePaid) {
+                <button type="button" class="inventory-pay" [disabled]="app.isPaying('room', room.id)" (click)="app.payPublication(room)">{{ app.isPaying('room', room.id) ? 'Abriendo Mercado Pago…' : 'Pagar publicación' }}</button>
+                }
                 <button type="button" (click)="app.openOwnerEditRoomModal(room)">Editar</button>
                 <button type="button" (click)="app.openRoomDetails(room)">Ver ficha</button>
                 <button type="button" class="inventory-remove" (click)="app.openOwnerDeleteRoomModal(room)">Quitar</button>

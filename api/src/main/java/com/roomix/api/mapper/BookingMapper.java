@@ -23,6 +23,8 @@ public class BookingMapper {
                 .endDate(reservation.getEndDate())
                 .months(reservation.getMonths())
                 .totalPrice(reservation.getTotalPrice())
+                .initialPayment(reservation.getInitialPayment())
+                .paymentStatus(reservation.getPayment() != null ? reservation.getPayment().getStatus() : null)
                 .status(reservation.getStatus())
                 .notes(reservation.getNotes())
                 .createdAt(reservation.getCreatedAt())

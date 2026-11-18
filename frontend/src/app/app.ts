@@ -42,8 +42,7 @@ import {
   Review,
   UserRole,
   AdminStats,
-  MercadoPagoSubMethod,
-  MercadoPagoPaymentResult
+  PaymentStatusResult
 } from './core/models';
 
 import { ViewEncapsulation } from '@angular/core';
@@ -165,22 +164,7 @@ export class App implements OnInit {
   readonly bookingMinMonths = BOOKING_MIN_MONTHS;
   readonly bookingMaxMonths = BOOKING_MAX_MONTHS;
   bookingNotes = '';
-  bookingPaymentMethod: string = 'MERCADO_PAGO';
-  bookingPaymentRef = '';
   bookingSubmitting = false;
-
-  // Billeteras Digitales Booking Fields (Yape / Plin / Tarjetas)
-  mpBookingSubMethod: MercadoPagoSubMethod = 'YAPE';
-  mpCardNumber = '';
-  mpCardHolder = '';
-  mpCardExp = '';
-  mpCardCvv = '';
-  mpCardDni = '';
-  mpInstallments = 1;
-  mpYapeOtp = '';
-  mpCipGenerated = false;
-  mpGeneratedCip = '';
-  mpQrActive = true;
 
   // Billeteras Digitales Oficiales (Yape & Plin) configurables por Administrador
   readonly yapeQrImage = signal<string>(
@@ -196,15 +180,12 @@ export class App implements OnInit {
     localStorage.getItem('roomix_wallet_beneficiary') || 'Roomix Abancay Oficial'
   );
 
-  // Comprobantes de Pago (Vouchers)
-  publishVoucherImage = '';
-  publishVoucherFileName = '';
-  bookingVoucherImage = '';
-  bookingVoucherFileName = '';
-
-  // Modal Comprobante Oficial de Mercado Pago
+  // Pagos con Mercado Pago Checkout Pro: comprobante al volver de la pasarela
   readonly showMpSuccessReceipt = signal<boolean>(false);
-  mpReceiptData: MercadoPagoPaymentResult | null = null;
+  mpReceiptData: PaymentStatusResult | null = null;
+  /** Checkout que se está creando ('booking-12' / 'room-5'); evita dobles clics. */
+  payingTargetId: string | null = null;
+  confirmingPayment = false;
 
   // Review Form State
   reviewRating = 5;
@@ -344,110 +325,6 @@ export class App implements OnInit {
     this.showToast('Datos de Billeteras actualizados correctamente', 'success');
   }
 
-  onPublishVoucherSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      const file = input.files[0];
-      this.publishVoucherFileName = file.name;
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        this.publishVoucherImage = e.target?.result as string;
-        this.showToast(`Comprobante adjuntado: ${file.name}`, 'info');
-      };
-      reader.readAsDataURL(file);
-    }
-  }
-
-  onBookingVoucherSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    if (input.files && input.files[0]) {
-      const file = input.files[0];
-      this.bookingVoucherFileName = file.name;
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        this.bookingVoucherImage = e.target?.result as string;
-        this.showToast(`Comprobante adjuntado: ${file.name}`, 'info');
-      };
-      reader.readAsDataURL(file);
-    }
-  }
-
-  sendPublishVoucherWhatsApp(): void {
-    const currentUser = this.auth.currentUser();
-    const ownerName = `${currentUser?.firstName || 'Propietario'} ${currentUser?.lastName || ''}`.trim();
-    const ownerPhone = currentUser?.phone || 'Sin número registrado';
-    const method = this.mpPublishSubMethod === 'PLIN' ? 'Plin' : 'Yape';
-    const cleanPhone = this.walletPhone().replace(/\D/g, '') || '983456789';
-    const targetPhone = cleanPhone.startsWith('51') ? cleanPhone : `51${cleanPhone}`;
-
-    const text = 
-`🏠 *COMPROBANTE DE PUBLICACIÓN - ROOMIX ABANCAY* 🏠
-
-*DATOS DE LA HABITACIÓN:*
-• *Título:* ${this.newRoomTitle || 'Habitación en Abancay'}
-• *Dirección:* ${this.manualPropertyAddress || 'Abancay, Apurímac'}
-• *Precio:* S/. ${this.newRoomPrice} /mes
-• *Garantía:* S/. ${this.newRoomDeposit}
-• *Tipo:* ${this.newRoomType}
-• *Baño:* ${this.newRoomBathroom ? 'Privado' : 'Compartido'}
-• *Capacidad:* ${this.newRoomCapacity} persona(s)
-• *Servicios:* ${this.newRoomWifi ? 'WiFi incluido, ' : ''}${this.newRoomPets ? 'Acepta mascotas' : 'Sin mascotas'}
-
-*DATOS DEL PAGO:*
-• *Tarifa:* S/. ${this.publicationFee.toFixed(2)} PEN
-• *Billetera:* ${method}
-• *Destino:* ${this.walletBeneficiary()} (${this.walletPhone()})
-
-*PROPIETARIO:*
-• *Nombre:* ${ownerName}
-• *Celular:* ${ownerPhone}
-• *Email:* ${currentUser?.email || ''}
-
-_Hola Administrador de Roomix Abancay, acabo de realizar el pago de la tarifa mediante ${method}. Adjunto mi comprobante para la verificación y publicación de mi cuarto._`;
-
-    const url = `https://wa.me/${targetPhone}?text=${encodeURIComponent(text)}`;
-    window.open(url, '_blank');
-  }
-
-  sendBookingVoucherWhatsApp(): void {
-    const room = this.selectedRoom();
-    if (!room) return;
-
-    const currentUser = this.auth.currentUser();
-    const tenantName = `${currentUser?.firstName || 'Inquilino'} ${currentUser?.lastName || ''}`.trim();
-    const tenantPhone = currentUser?.phone || 'Sin número registrado';
-    const method = this.mpBookingSubMethod === 'PLIN' ? 'Plin' : 'Yape';
-    const totalAmount = this.calculateBookingTotal();
-    const targetPhone = (room.ownerPhone ? room.ownerPhone.replace(/\D/g, '') : '') || this.walletPhone().replace(/\D/g, '') || '983456789';
-    const formattedPhone = targetPhone.startsWith('51') ? targetPhone : `51${targetPhone}`;
-
-    const text = 
-`📋 *COMPROBANTE DE RESERVA - ROOMIX ABANCAY* 📋
-
-*HABITACIÓN RESERVADA:*
-• *Cuarto:* ${room.title}
-• *Dirección:* ${room.propertyAddress || 'Abancay, Apurímac'}
-• *Precio Mensual:* S/. ${room.pricePerMonth}
-• *Garantía:* S/. ${room.depositPrice}
-• *Estadía:* ${this.bookingStartDate} al ${this.bookingEndDate} (${this.bookingMonths} ${this.bookingMonths === 1 ? 'mes' : 'meses'})
-• *Total Abonado:* S/. ${totalAmount.toFixed(2)} PEN
-
-*INQUILINO:*
-• *Nombre:* ${tenantName}
-• *Teléfono:* ${tenantPhone}
-• *Email:* ${currentUser?.email || 'inquilino@gmail.com'}
-• *Mensaje:* ${this.bookingNotes || 'Sin notas adicionales'}
-
-*PAGO:*
-• *Billetera:* ${method}
-• *Receptor:* ${this.walletBeneficiary()} (${this.walletPhone()})
-
-_Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi comprobante para confirmar mi estadía en Roomix Abancay._`;
-
-    const url = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(text)}`;
-    window.open(url, '_blank');
-  }
-
   getRoomsForProperty(propertyId: number): Room[] {
     return this.ownerRooms().filter(r => r.propertyId === propertyId);
   }
@@ -474,20 +351,10 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
   newRoomWifi = true;
   newRoomPets = false;
   newRoomImageUrl = 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80';
-  newRoomPaymentMethod: string = 'MERCADO_PAGO';
-  newRoomPaymentRef = '';
   readonly publicationFee: number = 3.00;
   newRoomSubmitting = false;
 
   // Billeteras Digitales Publicación Fields (Yape / Plin / Tarjetas)
-  mpPublishSubMethod: MercadoPagoSubMethod = 'YAPE';
-  mpPublishCardNumber = '';
-  mpPublishCardHolder = '';
-  mpPublishCardExp = '';
-  mpPublishCardCvv = '';
-  mpPublishCardDni = '';
-  mpPublishInstallments = 1;
-  mpPublishYapeOtp = '';
 
   // General Administrator Mode State (Abancay)
   readonly pendingRooms = signal<Room[]>([]);
@@ -579,6 +446,9 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
 
     // Load initial rooms for Abancay
     this.loadRooms();
+
+    // ¿Volvemos de Mercado Pago? Confirmar el pago con el backend
+    this.handlePaymentReturn();
   }
 
   // ==========================================
@@ -791,7 +661,6 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
     }
     this.selectedRoom.set(room);
     this.showDetailModal.set(false);
-    this.bookingPaymentRef = '';
     this.showBookingModal.set(true);
   }
 
@@ -804,19 +673,6 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
     this.bookingStartDate = tomorrowIsoDate();
     this.bookingMonths = BOOKING_MIN_MONTHS;
     this.bookingNotes = '';
-    this.bookingPaymentMethod = 'MERCADO_PAGO';
-    this.mpBookingSubMethod = 'YAPE';
-    this.bookingVoucherImage = '';
-    this.bookingVoucherFileName = '';
-    this.mpCardNumber = '';
-    this.mpCardHolder = '';
-    this.mpCardExp = '';
-    this.mpCardCvv = '';
-    this.mpCardDni = '';
-    this.mpInstallments = 1;
-    this.mpYapeOtp = '';
-    this.mpCipGenerated = false;
-    this.bookingPaymentRef = '';
     this.selectedRoom.set(null);
   }
 
@@ -843,6 +699,13 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
     const room = this.selectedRoom();
     if (!room) return 0;
     return Math.round((this.calculateBookingRent() + room.depositPrice) * 100) / 100;
+  }
+
+  /** Lo que se cobra por Mercado Pago cuando el propietario aprueba: primer mes + depósito. */
+  calculateBookingInitialPayment(): number {
+    const room = this.selectedRoom();
+    if (!room) return 0;
+    return Math.round((room.pricePerMonth + room.depositPrice) * 100) / 100;
   }
 
   private validateBookingSelection(): boolean {
@@ -878,102 +741,6 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
       error: err => {
         this.bookingSubmitting = false;
         this.showToast(err.error?.message || 'No se pudo enviar la solicitud. Verifica la conexión.', 'error');
-      }
-    });
-  }
-
-  submitBooking(): void {
-    const room = this.selectedRoom();
-    if (!room) return;
-
-    if (!this.validateBookingSelection()) return;
-
-    // Validaciones específicas de Mercado Pago según método elegido
-    if (this.mpBookingSubMethod === 'CREDIT_CARD' || this.mpBookingSubMethod === 'DEBIT_CARD') {
-      const cleanNum = this.mpCardNumber.replace(/\s+/g, '');
-      if (cleanNum.length < 15) {
-        this.showToast('Ingresa los 16 dígitos de tu tarjeta para procesar con Mercado Pago', 'error');
-        return;
-      }
-      if (!this.mpCardHolder.trim()) {
-        this.showToast('Ingresa el nombre del titular como figura en la tarjeta', 'error');
-        return;
-      }
-      if (!this.mpCardExp.trim() || !/^\d{2}\/\d{2}$/.test(this.mpCardExp.trim())) {
-        this.showToast('Ingresa la fecha de expiración en formato MM/AA (ej. 08/28)', 'error');
-        return;
-      }
-      if (!this.mpCardCvv.trim() || this.mpCardCvv.trim().length < 3) {
-        this.showToast('Ingresa el código CVV de seguridad (3 o 4 dígitos)', 'error');
-        return;
-      }
-      if (!this.mpCardDni.trim() || this.mpCardDni.trim().length < 8) {
-        this.showToast('Ingresa el DNI del titular para validación PCI de Mercado Pago', 'error');
-        return;
-      }
-    } else if (this.mpBookingSubMethod === 'YAPE') {
-      if (this.mpYapeOtp && !/^\d{6}$/.test(this.mpYapeOtp.trim())) {
-        this.showToast('El código de aprobación de Yape debe tener exactamente 6 dígitos', 'error');
-        return;
-      }
-    }
-
-    this.bookingSubmitting = true;
-    const totalAmount = this.calculateBookingTotal();
-    const currentUser = this.auth.currentUser();
-
-    // Procesar con la API de Mercado Pago
-    this.mpService.processPayment({
-      title: `Reserva RoomiGo: ${room.title} (Abancay)`,
-      amount: totalAmount,
-      currency: 'PEN',
-      subMethod: this.mpBookingSubMethod,
-      payerEmail: currentUser?.email || 'inquilino@roomix.com',
-      payerName: `${currentUser?.firstName || 'Inquilino'} ${currentUser?.lastName || 'RoomiGo'}`.trim(),
-      payerDni: this.mpCardDni || '74829103',
-      cardNumber: this.mpCardNumber,
-      cardHolder: this.mpCardHolder,
-      cardExpMonth: this.mpCardExp.split('/')[0] || '12',
-      cardExpYear: this.mpCardExp.split('/')[1] || '28',
-      cardCvv: this.mpCardCvv,
-      installments: this.mpInstallments,
-      yapeOtp: this.mpYapeOtp,
-      notes: this.bookingNotes,
-      entityType: 'BOOKING',
-      entityId: room.id
-    }).subscribe({
-      next: (mpResult: MercadoPagoPaymentResult) => {
-        this.bookingPaymentRef = mpResult.id;
-        const payNotes = `[Mercado Pago: ${mpResult.paymentMethod} | Ref: ${mpResult.id} | Auth: ${mpResult.authorizationCode}] ${this.bookingNotes || ''}`.trim();
-
-        this.api.createBooking({
-          roomId: room.id,
-          startDate: this.bookingStartDate,
-          months: this.bookingMonths,
-          notes: payNotes
-        }).subscribe({
-          next: res => {
-            this.bookingSubmitting = false;
-            this.closeBookingModal();
-            this.mpReceiptData = mpResult;
-            this.showMpSuccessReceipt.set(true);
-            this.showToast(`¡Solicitud enviada al propietario (${mpResult.id})!`, 'success');
-            // La habitación se mantiene visible en el Landing Page hasta que el propietario confirme
-            this.loadRooms();
-            this.loadOwnerData();
-            this.loadTenantBookings();
-            this.activeTab.set('my-bookings');
-          },
-          error: err => {
-            this.bookingSubmitting = false;
-            const msg = err.error?.message || 'Error al procesar la reserva';
-            this.showToast(msg, 'error');
-          }
-        });
-      },
-      error: () => {
-        this.bookingSubmitting = false;
-        this.showToast('Error al conectar con la pasarela de Mercado Pago. Intenta nuevamente.', 'error');
       }
     });
   }
@@ -1100,7 +867,6 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
       this.showToast('Debes ser propietario para publicar habitaciones', 'error');
       return;
     }
-    this.newRoomPaymentRef = '';
     this.newRoomImages = [];
     this.newRoomImageUrlInput = '';
     this.manualPropertyTitle = '';
@@ -1132,17 +898,12 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
     this.newRoomSize = 18;
     this.newRoomWifi = true;
     this.newRoomPets = false;
-    this.newRoomPaymentMethod = 'YAPE';
-    this.newRoomPaymentRef = '';
     this.newRoomImages = [];
     this.newRoomImageUrlInput = '';
     this.manualPropertyTitle = '';
     this.manualPropertyAddress = '';
     this.manualPropertyDistrict = 'Tamburco';
     this.newRoomPropertyMode = 'select';
-    this.mpPublishSubMethod = 'YAPE';
-    this.publishVoucherImage = '';
-    this.publishVoucherFileName = '';
   }
 
   onSelectRoomPhotos(event: Event): void {
@@ -1204,115 +965,6 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
     this.cdr.detectChanges();
   }
 
-  submitNewRoom(): void {
-    if (!this.newRoomTitle.trim()) {
-      this.showToast('El título de la habitación es obligatorio', 'error');
-      return;
-    }
-
-    // Validaciones Mercado Pago para publicación
-    if (this.mpPublishSubMethod === 'CREDIT_CARD' || this.mpPublishSubMethod === 'DEBIT_CARD') {
-      const cleanNum = this.mpPublishCardNumber.replace(/\s+/g, '');
-      if (cleanNum.length < 15) {
-        this.showToast('Ingresa los 16 dígitos de la tarjeta para pagar la publicación', 'error');
-        return;
-      }
-      if (!this.mpPublishCardHolder.trim()) {
-        this.showToast('Ingresa el nombre del titular de la tarjeta', 'error');
-        return;
-      }
-      if (!this.mpPublishCardExp.trim() || !/^\d{2}\/\d{2}$/.test(this.mpPublishCardExp.trim())) {
-        this.showToast('Ingresa la fecha de expiración MM/AA (ej. 09/27)', 'error');
-        return;
-      }
-      if (!this.mpPublishCardCvv.trim() || this.mpPublishCardCvv.trim().length < 3) {
-        this.showToast('Ingresa el código de seguridad CVV', 'error');
-        return;
-      }
-      if (!this.mpPublishCardDni.trim() || this.mpPublishCardDni.trim().length < 8) {
-        this.showToast('Ingresa el DNI del titular para procesar con Mercado Pago', 'error');
-        return;
-      }
-    } else if (this.mpPublishSubMethod === 'YAPE' || this.mpPublishSubMethod === 'PLIN') {
-      if (this.mpPublishYapeOtp && !/^\d{6}$/.test(this.mpPublishYapeOtp.trim())) {
-        this.showToast('El código de aprobación debe tener 6 números', 'error');
-        return;
-      }
-    }
-
-    const mainImg = this.newRoomImages.length > 0 
-      ? this.newRoomImages[0] 
-      : (this.newRoomImageUrl.trim() || 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80');
-
-    this.newRoomSubmitting = true;
-    const currentUser = this.auth.currentUser();
-
-    // Procesar tarifa de publicación (S/. 15.00) mediante la API de Mercado Pago
-    this.mpService.processPayment({
-      title: `Tarifa de Publicación: ${this.newRoomTitle.trim()} (Abancay)`,
-      amount: this.publicationFee,
-      currency: 'PEN',
-      subMethod: this.mpPublishSubMethod,
-      payerEmail: currentUser?.email || '',
-      payerName: `${currentUser?.firstName || 'Propietario'} ${currentUser?.lastName || ''}`.trim(),
-      payerDni: this.mpPublishCardDni || '',
-      cardNumber: this.mpPublishCardNumber,
-      cardHolder: this.mpPublishCardHolder,
-      cardExpMonth: this.mpPublishCardExp.split('/')[0] || '12',
-      cardExpYear: this.mpPublishCardExp.split('/')[1] || '28',
-      cardCvv: this.mpPublishCardCvv,
-      installments: this.mpPublishInstallments,
-      yapeOtp: this.mpPublishYapeOtp,
-      entityType: 'ROOM_PUBLICATION'
-    }).subscribe({
-      next: (mpResult: MercadoPagoPaymentResult) => {
-        this.newRoomPaymentRef = mpResult.id;
-
-        // Modo Inmueble Manual: Primero crea la propiedad en Abancay y luego el cuarto
-        if (this.newRoomPropertyMode === 'manual') {
-          if (!this.manualPropertyTitle.trim() || !this.manualPropertyAddress.trim()) {
-            this.newRoomSubmitting = false;
-            this.showToast('Ingresa el nombre del inmueble y la dirección exacta en Abancay', 'error');
-            return;
-          }
-          this.api.createProperty({
-            title: this.manualPropertyTitle.trim(),
-            description: `Inmueble ubicado en ${this.manualPropertyDistrict}, Abancay`,
-            address: `${this.manualPropertyAddress.trim()} (${this.manualPropertyDistrict})`,
-            city: 'Abancay',
-            country: 'Perú'
-          }).subscribe({
-            next: pRes => {
-              if (pRes.success && pRes.data) {
-                this.newRoomPropertyId = pRes.data.id;
-                this.loadOwnerData();
-                this.executeCreateRoom(pRes.data.id, mainImg, mpResult);
-              } else {
-                this.newRoomSubmitting = false;
-                this.showToast('Error al registrar el inmueble manual', 'error');
-              }
-            },
-            error: err => {
-              this.newRoomSubmitting = false;
-              this.showToast(err.error?.message || 'Error al crear el inmueble manual', 'error');
-            }
-          });
-        } else {
-          if (!this.newRoomPropertyId) {
-            this.newRoomSubmitting = false;
-            this.showToast('Selecciona una propiedad de Abancay o escribe una manualmente', 'error');
-            return;
-          }
-          this.executeCreateRoom(this.newRoomPropertyId, mainImg, mpResult);
-        }
-      },
-      error: () => {
-        this.newRoomSubmitting = false;
-        this.showToast('Error al procesar el pago con Mercado Pago. Intenta nuevamente.', 'error');
-      }
-    });
-  }
-
   submitRoomWithoutPayment(): void {
     if (this.newRoomSubmitting) return;
     if (!this.newRoomTitle.trim()) {
@@ -1363,7 +1015,7 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
     this.executeCreateRoom(this.newRoomPropertyId, mainImg);
   }
 
-  private executeCreateRoom(propertyId: number, mainImg: string, mpResult?: MercadoPagoPaymentResult): void {
+  private executeCreateRoom(propertyId: number, mainImg: string): void {
 
     this.api.createRoom({
       propertyId: propertyId,
@@ -1384,10 +1036,6 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
         this.newRoomSubmitting = false;
         if (res.success) {
           this.closeNewRoomModal();
-          if (mpResult) {
-            this.mpReceiptData = mpResult;
-            this.showMpSuccessReceipt.set(true);
-          }
           this.showToast('Cuarto enviado para revisión del administrador. Aún no aparece publicado.', 'success');
           this.loadRooms();
           this.loadOwnerData();
@@ -1403,61 +1051,100 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
     });
   }
 
-  // ==========================================
-  // MERCADO PAGO INPUT FORMATTERS & HELPERS
-  // ==========================================
-  onMpCardNumberInput(event: Event, target: 'booking' | 'publish'): void {
-    const input = event.target as HTMLInputElement;
-    const formatted = this.mpService.formatCardNumber(input.value);
-    if (target === 'booking') {
-      this.mpCardNumber = formatted;
-    } else {
-      this.mpPublishCardNumber = formatted;
-    }
-    input.value = formatted;
-  }
-
-  onMpCardExpInput(event: Event, target: 'booking' | 'publish'): void {
-    const input = event.target as HTMLInputElement;
-    const formatted = this.mpService.formatExpiry(input.value);
-    if (target === 'booking') {
-      this.mpCardExp = formatted;
-    } else {
-      this.mpPublishCardExp = formatted;
-    }
-    input.value = formatted;
-  }
-
-  onMpDniInput(event: Event, target: 'booking' | 'publish'): void {
-    const input = event.target as HTMLInputElement;
-    const digitsOnly = input.value.replace(/\D/g, '').slice(0, 8);
-    if (target === 'booking') {
-      this.mpCardDni = digitsOnly;
-    } else {
-      this.mpPublishCardDni = digitsOnly;
-    }
-    input.value = digitsOnly;
-  }
-
-  onMpYapeOtpInput(event: Event, target: 'booking' | 'publish'): void {
-    const input = event.target as HTMLInputElement;
-    const digitsOnly = input.value.replace(/\D/g, '').slice(0, 6);
-    if (target === 'booking') {
-      this.mpYapeOtp = digitsOnly;
-    } else {
-      this.mpPublishYapeOtp = digitsOnly;
-    }
-    input.value = digitsOnly;
-  }
-
   closeMpReceipt(): void {
     this.showMpSuccessReceipt.set(false);
     this.mpReceiptData = null;
   }
 
-  generateCipCode(): void {
-    this.mpCipGenerated = true;
-    this.mpGeneratedCip = `CIP-${Math.floor(10000000 + Math.random() * 90000000)}`;
+  // ==========================================
+  // PAGOS CON MERCADO PAGO (CHECKOUT PRO)
+  // El frontend solo redirige a Mercado Pago y pide al backend confirmar el pago;
+  // nunca decide por sí mismo si un pago fue aprobado.
+  // ==========================================
+
+  /** Una reserva se paga cuando el propietario ya la aprobó y aún no está pagada. */
+  canPayBooking(booking: Booking): boolean {
+    return booking.status === 'CONFIRMED' && booking.paymentStatus !== 'COMPLETED';
+  }
+
+  isPaying(kind: 'booking' | 'room', id: number): boolean {
+    return this.payingTargetId === `${kind}-${id}`;
+  }
+
+  payBooking(booking: Booking): void {
+    if (this.payingTargetId || !this.canPayBooking(booking)) return;
+    this.payingTargetId = `booking-${booking.id}`;
+    this.mpService.startBookingCheckout(booking.id).subscribe({
+      next: session => this.mpService.redirectToCheckout(session),
+      error: err => {
+        this.payingTargetId = null;
+        this.showToast(this.paymentErrorMessage(err), 'error');
+      }
+    });
+  }
+
+  payPublication(room: Room): void {
+    if (this.payingTargetId || room.publicationFeePaid) return;
+    this.payingTargetId = `room-${room.id}`;
+    this.mpService.startPublicationCheckout(room.id).subscribe({
+      next: session => this.mpService.redirectToCheckout(session),
+      error: err => {
+        this.payingTargetId = null;
+        this.showToast(this.paymentErrorMessage(err), 'error');
+      }
+    });
+  }
+
+  /** Vuelta desde Checkout Pro (?pago=resultado&payment_id=...): confirma con el backend y muestra el comprobante. */
+  private handlePaymentReturn(): void {
+    const result = this.mpService.readReturnParams();
+    if (!result) return;
+    this.mpService.clearReturnParams();
+
+    if (!result.paymentId) {
+      this.showToast('No se completó el pago. Puedes intentarlo de nuevo cuando quieras.', 'info');
+      return;
+    }
+    if (!this.auth.isLoggedIn()) {
+      this.showToast('Inicia sesión para ver el resultado de tu pago.', 'info');
+      return;
+    }
+
+    this.confirmingPayment = true;
+    this.mpService.confirmPayment(result.paymentId).subscribe({
+      next: payment => {
+        this.confirmingPayment = false;
+        this.mpReceiptData = payment;
+        this.showMpSuccessReceipt.set(true);
+        if (payment.purpose === 'BOOKING') {
+          this.activeTab.set('my-bookings');
+          this.loadTenantBookings();
+        } else {
+          this.activeTab.set('owner-panel');
+          this.ownerTab.set('properties');
+          this.loadOwnerData();
+        }
+        this.loadRooms();
+        const messages: Record<string, [string, 'success' | 'error' | 'info']> = {
+          COMPLETED: ['¡Pago acreditado por Mercado Pago!', 'success'],
+          PENDING: ['Tu pago está pendiente. Te avisaremos cuando Mercado Pago lo acredite.', 'info'],
+          FAILED: ['El pago no fue aprobado. Puedes intentarlo con otro medio de pago.', 'error'],
+          REFUNDED: ['Este pago fue reembolsado.', 'info']
+        };
+        const [text, type] = messages[payment.status] || messages['PENDING'];
+        this.showToast(text, type);
+      },
+      error: err => {
+        this.confirmingPayment = false;
+        this.showToast(this.paymentErrorMessage(err), 'error');
+      }
+    });
+  }
+
+  private paymentErrorMessage(err: any): string {
+    if (err?.status === 503) return 'Los pagos en línea aún no están disponibles. Intenta más tarde.';
+    if (err?.status === 502) return 'Mercado Pago no respondió. Intenta nuevamente en unos minutos.';
+    return err?.error?.message || 'No se pudo procesar el pago. Verifica tu conexión.';
   }
 
   // ==========================================
@@ -2276,20 +1963,6 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
 
   setHoverRating(star: number): void {
     this.hoverRating.set(star);
-  }
-
-  // ==========================================
-  // YAPE INPUT FORMATTER (EXACTLY 6 DIGITS)
-  // ==========================================
-  onYapeInput(event: Event, target: 'booking' | 'publish'): void {
-    const input = event.target as HTMLInputElement;
-    const digitsOnly = input.value.replace(/\D/g, '').slice(0, 6);
-    if (target === 'booking') {
-      this.bookingPaymentRef = digitsOnly;
-    } else {
-      this.newRoomPaymentRef = digitsOnly;
-    }
-    input.value = digitsOnly;
   }
 
   // ==========================================

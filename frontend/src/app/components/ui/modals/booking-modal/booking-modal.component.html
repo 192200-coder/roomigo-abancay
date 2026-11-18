@@ -70,181 +70,22 @@
           <span>Depósito de garantía (una sola vez):</span>
           <span class="bm-num">S/ {{ r.depositPrice | number:'1.2-2' }}</span>
         </div>
+        <div class="breakdown-line">
+          <span>Total del contrato:</span>
+          <span class="bm-num">S/ {{ app.calculateBookingTotal() | number:'1.2-2' }}</span>
+        </div>
         <div class="breakdown-divider"></div>
         <div class="breakdown-line total-line">
-          <span>Total a pagar:</span>
-          <span class="total-val text-emerald bm-num">S/ {{ app.calculateBookingTotal() | number:'1.2-2' }}</span>
+          <span>Pago inicial (1.er mes + depósito):</span>
+          <span class="total-val text-emerald bm-num">S/ {{ app.calculateBookingInitialPayment() | number:'1.2-2' }}</span>
         </div>
       </div>
 
       <p class="bm-note">
         <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
-        <span>Esta solicitud no realiza ningún pago. El propietario revisará las fechas y responderá.</span>
+        <span>Enviar la solicitud no cobra nada. Cuando el propietario la apruebe, pagarás el pago inicial con
+          Mercado Pago (Yape, tarjeta o PagoEfectivo); los meses siguientes se pagan al propietario.</span>
       </p>
-      @if (false) {
-      <!-- Pago no disponible hasta integrar una pasarela verificada. -->
-      <div class="mp-gateway-container">
-        <div class="mp-header-row">
-          <div class="mp-brand-badge">
-            <span class="mp-logo-pill">
-              <i class="fa-solid fa-mobile-screen-button"></i> <strong>Yape</strong> & <strong>Plin</strong>
-            </span>
-            <span class="mp-shield-tag"><i class="fa-solid fa-shield-halved"></i> Pago 100% Seguro</span>
-          </div>
-          <span class="mp-guarantee-note">Total a Abonar: S/. {{ app.calculateBookingTotal().toFixed(2) }}</span>
-        </div>
-
-        <div class="mp-selector-tabs">
-          <button type="button" class="mp-tab-btn btn-tab-yape" [class.active]="app.mpBookingSubMethod === 'YAPE'"
-            (click)="app.mpBookingSubMethod = 'YAPE'">
-            <i class="fa-solid fa-qrcode text-purple"></i> Yape Oficial
-          </button>
-          <button type="button" class="mp-tab-btn btn-tab-plin" [class.active]="app.mpBookingSubMethod === 'PLIN'"
-            (click)="app.mpBookingSubMethod = 'PLIN'">
-            <i class="fa-solid fa-mobile-screen-button text-cyan"></i> Plin Digital
-          </button>
-          <button type="button" class="mp-tab-btn" [class.active]="app.mpBookingSubMethod === 'CREDIT_CARD'"
-            (click)="app.mpBookingSubMethod = 'CREDIT_CARD'">
-            <i class="fa-regular fa-credit-card"></i> Tarjeta
-          </button>
-        </div>
-
-        <!-- SUB-FORM: YAPE CON CÓDIGO QR -->
-        @if (app.mpBookingSubMethod === 'YAPE') {
-        <div class="wallet-qr-display-panel animate-fade-in" style="margin-top: 0.75rem;">
-          <div class="wallet-qr-card wallet-yape-theme">
-            <div class="wallet-qr-image-wrapper">
-              <img [src]="app.yapeQrImage()" alt="Código QR Yape" class="wallet-qr-image">
-              <span class="wallet-badge-overlay yape-badge">Yape BCP</span>
-            </div>
-            <div class="wallet-qr-details">
-              <h5>Escanea y Paga con Yape</h5>
-              <div class="wallet-meta-item">
-                <i class="fa-solid fa-phone"></i>
-                <span>Celular Yape: <strong>{{ app.walletPhone() }}</strong></span>
-              </div>
-              <div class="wallet-meta-item">
-                <i class="fa-solid fa-user-check"></i>
-                <span>Titular: <strong>{{ app.walletBeneficiary() }}</strong></span>
-              </div>
-              <div class="wallet-meta-item">
-                <i class="fa-solid fa-money-bill-wave text-emerald"></i>
-                <span>Total: <strong>S/. {{ app.calculateBookingTotal().toFixed(2) }} PEN</strong></span>
-              </div>
-            </div>
-          </div>
-          <div class="form-group voucher-input-compact" style="margin-top: 0.6rem;">
-            <label class="form-label form-label-compact">Código de Aprobación de Yape (6 dígitos - opcional)</label>
-            <input type="text" maxlength="6" inputmode="numeric" class="form-input form-input-compact"
-              [(ngModel)]="app.mpYapeOtp" (input)="app.onMpYapeOtpInput($event, 'booking')"
-              placeholder="Ej. 849201 (6 números)">
-          </div>
-        </div>
-        }
-
-        <!-- SUB-FORM: PLIN CON CÓDIGO QR -->
-        @if (app.mpBookingSubMethod === 'PLIN') {
-        <div class="wallet-qr-display-panel animate-fade-in" style="margin-top: 0.75rem;">
-          <div class="wallet-qr-card wallet-plin-theme">
-            <div class="wallet-qr-image-wrapper">
-              <img [src]="app.plinQrImage()" alt="Código QR Plin" class="wallet-qr-image">
-              <span class="wallet-badge-overlay plin-badge">Plin Interbank/BBVA</span>
-            </div>
-            <div class="wallet-qr-details">
-              <h5>Escanea y Paga con Plin</h5>
-              <div class="wallet-meta-item">
-                <i class="fa-solid fa-phone"></i>
-                <span>Celular Plin: <strong>{{ app.walletPhone() }}</strong></span>
-              </div>
-              <div class="wallet-meta-item">
-                <i class="fa-solid fa-user-check"></i>
-                <span>Titular: <strong>{{ app.walletBeneficiary() }}</strong></span>
-              </div>
-              <div class="wallet-meta-item">
-                <i class="fa-solid fa-money-bill-wave text-emerald"></i>
-                <span>Total: <strong>S/. {{ app.calculateBookingTotal().toFixed(2) }} PEN</strong></span>
-              </div>
-            </div>
-          </div>
-          <div class="form-group voucher-input-compact" style="margin-top: 0.6rem;">
-            <label class="form-label form-label-compact">Código de Aprobación de Plin (opcional)</label>
-            <input type="text" maxlength="6" inputmode="numeric" class="form-input form-input-compact"
-              [(ngModel)]="app.mpYapeOtp" (input)="app.onMpYapeOtpInput($event, 'booking')"
-              placeholder="Ej. 529104">
-          </div>
-        </div>
-        }
-
-        <!-- SUB-FORM: TARJETA DE CRÉDITO O DÉBITO -->
-        @if (app.mpBookingSubMethod === 'CREDIT_CARD' || app.mpBookingSubMethod === 'DEBIT_CARD') {
-        <div class="mp-card-form animate-fade-in">
-          <div class="form-group" style="margin-bottom: 0.6rem;">
-            <label class="form-label form-label-compact">Número de Tarjeta *</label>
-            <div class="mp-input-with-icon">
-              <i class="fa-regular fa-credit-card mp-input-icon"></i>
-              <input type="text" class="form-input form-input-compact" maxlength="19"
-                [(ngModel)]="app.mpCardNumber" (input)="app.onMpCardNumberInput($event, 'booking')"
-                placeholder="0000 0000 0000 0000">
-            </div>
-          </div>
-
-          <div class="form-row-2" style="margin-bottom: 0.6rem;">
-            <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label form-label-compact">Nombre en la Tarjeta *</label>
-              <input type="text" class="form-input form-input-compact" [(ngModel)]="app.mpCardHolder"
-                placeholder="Ej. JUAN PEREZ">
-            </div>
-            <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label form-label-compact">DNI / Documento *</label>
-              <input type="text" maxlength="8" class="form-input form-input-compact"
-                [(ngModel)]="app.mpCardDni" (input)="app.onMpDniInput($event, 'booking')"
-                placeholder="Ej. 74829103">
-            </div>
-          </div>
-
-          <div class="form-row-2" style="margin-bottom: 0.6rem;">
-            <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label form-label-compact">Vencimiento (MM/AA) *</label>
-              <input type="text" maxlength="5" class="form-input form-input-compact"
-                [(ngModel)]="app.mpCardExp" (input)="app.onMpCardExpInput($event, 'booking')"
-                placeholder="MM/AA (ej. 08/28)">
-            </div>
-            <div class="form-group" style="margin-bottom: 0;">
-              <label class="form-label form-label-compact">CVV (3-4 dígitos) *</label>
-              <input type="password" maxlength="4" class="form-input form-input-compact"
-                [(ngModel)]="app.mpCardCvv" placeholder="•••">
-            </div>
-          </div>
-        </div>
-        }
-
-        <!-- SUBIDA DE COMPROBANTE Y ENVÍO POR WHATSAPP -->
-        <div class="voucher-action-section" style="margin-top: 0.85rem;">
-          <div class="voucher-upload-row">
-            <label class="btn-attach-voucher">
-              <i class="fa-solid fa-file-invoice-dollar"></i>
-              <span>Adjuntar Comprobante (Voucher)</span>
-              <input type="file" accept="image/*" (change)="app.onBookingVoucherSelected($event)" hidden>
-            </label>
-
-            @if (app.bookingVoucherImage) {
-            <div class="voucher-preview-chip">
-              <img [src]="app.bookingVoucherImage" alt="Comprobante" class="voucher-thumb">
-              <span class="voucher-file-title"><i class="fa-solid fa-circle-check text-emerald"></i> {{ app.bookingVoucherFileName }}</span>
-            </div>
-            }
-          </div>
-
-          <!-- BOTÓN OFICIAL DE WHATSAPP CON TODOS LOS DATOS DEL CUARTO -->
-          <button type="button" class="btn btn-whatsapp-voucher-full" (click)="app.sendBookingVoucherWhatsApp()"
-            title="Enviar comprobante con todos los datos de la reserva por WhatsApp al Propietario">
-            <i class="fa-brands fa-whatsapp"></i>
-            <span>Enviar Comprobante</span>
-          </button>
-        </div>
-      </div>
-
-      }
       <div class="form-group" style="margin-top: 0.6rem; margin-bottom: 0.6rem;">
         <label class="form-label form-label-compact">Mensaje adicional para el propietario (opcional)</label>
         <textarea class="form-textarea form-textarea-compact" rows="2" [(ngModel)]="app.bookingNotes"

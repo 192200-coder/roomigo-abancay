@@ -99,6 +99,16 @@ public class RoomServiceImpl implements RoomService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<RoomResponseDto> getRoomsByOwner(String ownerEmail) {
+        User owner = userRepository.findByEmail(ownerEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+        return roomRepository.findByPropertyOwnerId(owner.getId(), Pageable.unpaged())
+                .map(roomMapper::toDto)
+                .getContent();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public PageResponseDto<RoomResponseDto> searchRooms(RoomFilterDto filter, Pageable pageable) {
         Page<Room> page = roomRepository.findAll(RoomSpecification.getRoomsByFilters(filter), pageable);
         return PageResponseDto.fromPage(page.map(roomMapper::toDto));

@@ -1,20 +1,13 @@
 package com.roomix.api.controller;
 
 import com.roomix.api.dto.common.ApiResponseDto;
-import com.roomix.api.dto.request.MercadoPagoPaymentRequestDto;
-import com.roomix.api.dto.response.MercadoPagoPaymentResponseDto;
-import com.roomix.api.entity.Payment;
-import com.roomix.api.entity.Reservation;
-import com.roomix.api.entity.Room;
-import com.roomix.api.entity.enums.PaymentStatus;
-import com.roomix.api.entity.enums.ReservationStatus;
-import com.roomix.api.entity.enums.RoomStatus;
-import com.roomix.api.repository.PaymentRepository;
-import com.roomix.api.repository.ReservationRepository;
-import com.roomix.api.repository.RoomRepository;
+import com.roomix.api.dto.response.CheckoutResponseDto;
+import com.roomix.api.dto.response.PaymentStatusDto;
+import com.roomix.api.exception.PaymentGatewayException;
+import com.roomix.api.payment.WebhookSignatureValidator;
+import com.roomix.api.service.PaymentService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -22,175 +15,106 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Random;
 
-@Slf4j
+/**
+ * Pagos con Mercado Pago (Checkout Pro).
+ *
+ * <p>Flujo: el frontend pide un checkout, redirige al usuario a Mercado Pago y, al volver,
+ * llama a /confirm. El webhook es la vía de respaldo (pagos que se acreditan más tarde,
+ * pestañas cerradas). Ambas vías consultan el pago a la API de Mercado Pago antes de aplicarlo.
+ */
 @RestController
 @RequestMapping("/api/v1/payments")
 @RequiredArgsConstructor
-@Tag(name = "Pasarela Mercado Pago", description = "Endpoints de integración con Mercado Pago (Tarjetas, Yape, PagoEfectivo, Saldo MP)")
+@Slf4j
+@Tag(name = "Pagos", description = "Integración con Mercado Pago Checkout Pro")
 public class PaymentController {
 
-    private boolean paymentProviderConfigured() {
-        // La implementación actual solo genera respuestas simuladas; no procesa pagos reales.
-        return false;
+    private final PaymentService paymentService;
+    private final WebhookSignatureValidator signatureValidator;
+
+    @PostMapping("/checkout/bookings/{reservationId}")
+    @Operation(summary = "Iniciar el pago de una reserva aprobada (primer mes + depósito)")
+    public ResponseEntity<ApiResponseDto<CheckoutResponseDto>> startBookingCheckout(
+            @PathVariable Long reservationId, Authentication authentication) {
+        CheckoutResponseDto checkout = paymentService.startBookingCheckout(reservationId, authentication.getName());
+        return ResponseEntity.ok(ApiResponseDto.success("Checkout de Mercado Pago creado", checkout));
     }
 
-    private final ReservationRepository reservationRepository;
-    private final RoomRepository roomRepository;
-    private final PaymentRepository paymentRepository;
-
-    @GetMapping("/methods")
-    @Operation(summary = "Obtener métodos de pago habilitados en Mercado Pago Perú")
-    public ResponseEntity<ApiResponseDto<List<Map<String, Object>>>> getAvailableMethods() {
-        List<Map<String, Object>> methods = List.of(
-                Map.of("id", "CREDIT_CARD", "name", "Tarjetas de Crédito", "description", "Visa, Mastercard, AMEX hasta 12 cuotas", "badge", "Instantáneo"),
-                Map.of("id", "DEBIT_CARD", "name", "Tarjetas de Débito", "description", "Visa Débito, Mastercard Débito", "badge", "Instantáneo"),
-                Map.of("id", "YAPE", "name", "Yape con Mercado Pago", "description", "Aprobación directa con QR o código", "badge", "Sin comisiones"),
-                Map.of("id", "PAGO_EFECTIVO", "name", "PagoEfectivo", "description", "Banca por internet (BCP, BBVA, Interbank) y agentes autorizados", "badge", "Código CIP"),
-                Map.of("id", "WALLET", "name", "Saldo en Mercado Pago", "description", "1-clic con tu cuenta Mercado Pago", "badge", "Protegido")
-        );
-        return ResponseEntity.ok(ApiResponseDto.success("Métodos de pago Mercado Pago obtenidos", methods));
+    @PostMapping("/checkout/rooms/{roomId}/publication")
+    @Operation(summary = "Iniciar el pago de la tarifa de publicación de un cuarto")
+    public ResponseEntity<ApiResponseDto<CheckoutResponseDto>> startPublicationCheckout(
+            @PathVariable Long roomId, Authentication authentication) {
+        CheckoutResponseDto checkout = paymentService.startPublicationCheckout(roomId, authentication.getName());
+        return ResponseEntity.ok(ApiResponseDto.success("Checkout de Mercado Pago creado", checkout));
     }
 
-    @PostMapping("/mercadopago/preference")
-    @Operation(summary = "Crear preferencia de pago en Mercado Pago", description = "Genera preferenceId e initPoint para el Checkout de Mercado Pago.")
-    public ResponseEntity<ApiResponseDto<MercadoPagoPaymentResponseDto>> createPreference(
-            @RequestBody Map<String, Object> req) {
-        if (!paymentProviderConfigured()) {
-            throw new com.roomix.api.exception.BadRequestException("La pasarela de pagos todavía no está disponible.");
-        }
-        String title = (String) req.getOrDefault("title", "Alquiler RoomiGo Abancay");
-        Object priceObj = req.get("unitPrice");
-        java.math.BigDecimal amount = priceObj != null ? new java.math.BigDecimal(priceObj.toString()) : java.math.BigDecimal.valueOf(15.00);
-
-        String prefId = "PREF-MP-" + System.currentTimeMillis() + "-" + (1000 + new Random().nextInt(9000));
-        String initPoint = "https://www.mercadopago.com.pe/checkout/v1/redirect?pref_id=" + prefId;
-
-        MercadoPagoPaymentResponseDto response = MercadoPagoPaymentResponseDto.builder()
-                .preferenceId(prefId)
-                .initPoint(initPoint)
-                .transactionAmount(amount)
-                .currency("PEN")
-                .status("pending")
-                .paymentMethod("Mercado Pago Checkout Pro")
-                .build();
-
-        return ResponseEntity.ok(ApiResponseDto.success("Preferencia de Mercado Pago creada con éxito", response));
+    @GetMapping("/mercadopago/confirm")
+    @Operation(summary = "Confirmar un pago al volver de Checkout Pro",
+            description = "Consulta el pago en Mercado Pago, lo concilia y devuelve su estado.")
+    public ResponseEntity<ApiResponseDto<PaymentStatusDto>> confirmReturn(
+            @RequestParam String paymentId, Authentication authentication) {
+        PaymentStatusDto status = paymentService.confirmReturn(paymentId, authentication.getName());
+        return ResponseEntity.ok(ApiResponseDto.success("Estado del pago actualizado", status));
     }
 
-    @PostMapping("/mercadopago/process")
-    @org.springframework.transaction.annotation.Transactional
-    @Operation(summary = "Procesar pago completo con Mercado Pago", description = "Valida y acredita el pago mediante la API unificada de Mercado Pago.")
-    public ResponseEntity<ApiResponseDto<MercadoPagoPaymentResponseDto>> processPayment(
-            @Valid @RequestBody MercadoPagoPaymentRequestDto req,
-            Authentication authentication) {
-
-        if (!paymentProviderConfigured()) {
-            throw new com.roomix.api.exception.BadRequestException("La pasarela de pagos todavía no está disponible.");
-        }
-
-        String userEmail = authentication != null ? authentication.getName() : req.getPayerEmail();
-        log.info("Procesando pago Mercado Pago para: {}, Método: {}, Monto: {} PEN", userEmail, req.getSubMethod(), req.getAmount());
-
-        long randomTxnSuffix = 1000000000L + (long)(new Random().nextDouble() * 8999999999L);
-        String txnId = "MP-" + randomTxnSuffix;
-        String authCode = "AUTH-" + (100000 + new Random().nextInt(900000));
-        LocalDateTime now = LocalDateTime.now();
-
-        String paymentMethodLabel;
-        String paymentTypeId;
-        String cipCode = null;
-        String qrCode = null;
-
-        switch (req.getSubMethod()) {
-            case "CREDIT_CARD" -> {
-                paymentMethodLabel = "Tarjeta de Crédito (Mercado Pago)";
-                paymentTypeId = "credit_card";
-            }
-            case "DEBIT_CARD" -> {
-                paymentMethodLabel = "Tarjeta de Débito (Mercado Pago)";
-                paymentTypeId = "debit_card";
-            }
-            case "YAPE" -> {
-                paymentMethodLabel = "Yape vía Mercado Pago";
-                paymentTypeId = "digital_wallet";
-                qrCode = "00020101021243650016com.mercadopago0214" + txnId + "520400005303604540" + req.getAmount() + "5802PE5915ROOMIGO_ABANCAY6007ABANCAY62070503***6304";
-            }
-            case "PAGO_EFECTIVO" -> {
-                paymentMethodLabel = "PagoEfectivo CIP (Mercado Pago)";
-                paymentTypeId = "bank_transfer";
-                cipCode = "CIP-" + (10000000 + new Random().nextInt(90000000));
-            }
-            default -> {
-                paymentMethodLabel = "Saldo Mercado Pago";
-                paymentTypeId = "account_money";
-            }
-        }
-
-        // Si el pago corresponde a una reserva de cuarto existente
-        if ("BOOKING".equalsIgnoreCase(req.getEntityType()) && req.getEntityId() != null) {
-            reservationRepository.findById(req.getEntityId()).ifPresent(reservation -> {
-                reservation.setStatus(ReservationStatus.CONFIRMED);
-                Room room = reservation.getRoom();
-                if (room != null) {
-                    room.setStatus(RoomStatus.RENTED);
-                    roomRepository.save(room);
-                }
-                reservationRepository.save(reservation);
-
-                Payment payment = Payment.builder()
-                        .reservation(reservation)
-                        .amount(req.getAmount())
-                        .currency("PEN")
-                        .paymentMethod("MERCADO_PAGO_" + req.getSubMethod())
-                        .transactionCode(txnId)
-                        .status(PaymentStatus.COMPLETED)
-                        .paidAt(now)
-                        .build();
-                paymentRepository.save(payment);
-            });
-        }
-
-        // Si el pago corresponde a la tarifa de publicación de habitación por propietario
-        if ("ROOM_PUBLICATION".equalsIgnoreCase(req.getEntityType()) && req.getEntityId() != null) {
-            roomRepository.findById(req.getEntityId()).ifPresent(room -> {
-                room.setPublicationFeePaid(true);
-                room.setPaymentMethod("MERCADO_PAGO_" + req.getSubMethod());
-                room.setPaymentReference(txnId);
-                roomRepository.save(room);
-            });
-        }
-
-        MercadoPagoPaymentResponseDto response = MercadoPagoPaymentResponseDto.builder()
-                .id(txnId)
-                .status("approved")
-                .statusDetail("accredited")
-                .paymentMethod(paymentMethodLabel)
-                .paymentTypeId(paymentTypeId)
-                .transactionAmount(req.getAmount())
-                .currency("PEN")
-                .dateApproved(now)
-                .authorizationCode(authCode)
-                .cipCode(cipCode)
-                .qrCode(qrCode)
-                .receiptUrl("https://www.mercadopago.com.pe/comprobante/" + txnId)
-                .build();
-
-        return new ResponseEntity<>(ApiResponseDto.success("¡Pago acreditado exitosamente por Mercado Pago!", response), HttpStatus.OK);
-    }
-
+    /**
+     * Webhook de Mercado Pago. Acepta el formato actual (type=payment&data.id=...) y el IPN
+     * antiguo (topic=payment&id=...). Responde 2xx rápido; ante un fallo al consultar la API
+     * responde 5xx para que Mercado Pago reintente.
+     */
     @PostMapping("/mercadopago/webhook")
-    @Operation(summary = "Webhook de notificaciones de Mercado Pago (IPN)")
-    public ResponseEntity<Map<String, Object>> handleWebhook(@RequestBody(required = false) Map<String, Object> payload) {
-        log.info("Webhook recibido de Mercado Pago: {}", payload);
-        Map<String, Object> resp = new HashMap<>();
-        resp.put("status", "received");
-        resp.put("timestamp", LocalDateTime.now());
-        return ResponseEntity.ok(resp);
+    @Operation(summary = "Webhook de notificaciones de Mercado Pago")
+    public ResponseEntity<Map<String, Object>> handleWebhook(
+            @RequestParam(name = "type", required = false) String type,
+            @RequestParam(name = "topic", required = false) String topic,
+            @RequestParam(name = "data.id", required = false) String queryDataId,
+            @RequestParam(name = "id", required = false) String legacyId,
+            @RequestHeader(name = "x-signature", required = false) String signature,
+            @RequestHeader(name = "x-request-id", required = false) String requestId,
+            @RequestBody(required = false) Map<String, Object> body) {
+
+        String eventType = firstNonBlank(type, topic, body != null ? asString(body.get("type")) : null);
+        String paymentId = firstNonBlank(queryDataId, bodyDataId(body), "payment".equals(topic) ? legacyId : null);
+
+        if (!"payment".equals(eventType) || paymentId == null) {
+            return ResponseEntity.ok(Map.of("status", "ignored"));
+        }
+
+        WebhookSignatureValidator.Result check = signatureValidator.validate(signature, requestId, queryDataId != null ? queryDataId : paymentId);
+        if (check == WebhookSignatureValidator.Result.INVALID) {
+            log.warn("Webhook de Mercado Pago con firma inválida para el pago {}; se rechaza.", paymentId);
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("status", "invalid_signature"));
+        }
+        if (check == WebhookSignatureValidator.Result.MISSING) {
+            log.info("Webhook de Mercado Pago sin firma verificable para el pago {}; se verifica consultando la API.", paymentId);
+        }
+
+        try {
+            paymentService.handlePaymentNotification(paymentId);
+        } catch (PaymentGatewayException ex) {
+            log.warn("No se pudo procesar el webhook del pago {}: {}", paymentId, ex.getMessage());
+            return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(Map.of("status", "retry"));
+        }
+        return ResponseEntity.ok(Map.of("status", "processed"));
+    }
+
+    private static String bodyDataId(Map<String, Object> body) {
+        if (body != null && body.get("data") instanceof Map<?, ?> data) {
+            return asString(data.get("id"));
+        }
+        return null;
+    }
+
+    private static String asString(Object value) {
+        return value == null ? null : String.valueOf(value);
+    }
+
+    private static String firstNonBlank(String... values) {
+        for (String v : values) {
+            if (v != null && !v.isBlank()) return v;
+        }
+        return null;
     }
 }

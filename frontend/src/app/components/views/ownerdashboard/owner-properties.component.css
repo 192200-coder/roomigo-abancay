@@ -29,3 +29,7 @@ button:active { transform: scale(.97); }
   .inventory-panel { padding: 16px; }
   .inventory-filters { grid-template-columns: 1fr; }
 }
+.inventory-pay { color: #047857; }
+.inventory-pay:disabled { color: #64748b; cursor: progress; text-decoration: none; }
+.inventory-fee { display: block; margin-top: 4px; font-size: 11px; color: #82551c; }
+.inventory-fee.is-paid { color: #087f63; }
