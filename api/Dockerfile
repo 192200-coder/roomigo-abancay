@@ -1,10 +1,10 @@
 # ==============================================================================
 # ROOMIGO ABANCAY - DOCKERFILE FOR RENDER.COM & PRODUCTION
-# Multi-stage build para Spring Boot 3.3.4 (Java 25)
+# Multi-stage build para Spring Boot 4.0.6 (Java 25)
 # ==============================================================================
 
-# Paso 1: Etapa de Compilación con Maven y Temurin JDK 17
-FROM maven:3.9.6-eclipse-temurin-25 AS builder
+# Paso 1: Etapa de Compilación con Maven y Temurin JDK 25
+FROM maven:3.9-eclipse-temurin-25 AS builder
 WORKDIR /build
 
 # Copiar descriptor de dependencias para aprovechar la caché de capas Docker
@@ -15,7 +15,7 @@ RUN mvn dependency:go-offline -B
 COPY src ./src
 RUN mvn clean package -DskipTests -B
 
-# Paso 2: Imagen Ligera de Ejecución (JRE 17 Alpine/Jammy)
+# Paso 2: Imagen Ligera de Ejecución (JRE 25 Jammy)
 FROM eclipse-temurin:25-jre-jammy
 WORKDIR /app
 
