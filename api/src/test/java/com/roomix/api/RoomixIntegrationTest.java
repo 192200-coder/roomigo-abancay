@@ -260,14 +260,34 @@ class RoomixIntegrationTest {
 
     @Test
     @Order(6)
+    void shouldRejectBookingWithInvalidMonths() throws Exception {
+        for (int invalidMonths : new int[]{0, 13}) {
+            BookingRequestDto bookingRequest = BookingRequestDto.builder()
+                    .roomId(roomId)
+                    .startDate(LocalDate.now().plusDays(1))
+                    .months(invalidMonths)
+                    .build();
+
+            mockMvc.perform(post("/api/v1/bookings")
+                            .header("Authorization", "Bearer " + tenantToken)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(objectMapper.writeValueAsString(bookingRequest)))
+                    .andExpect(status().isBadRequest());
+        }
+    }
+
+    @Test
+    @Order(7)
     void shouldCreateBookingAsTenant() throws Exception {
+        LocalDate startDate = LocalDate.now().plusDays(1);
         BookingRequestDto bookingRequest = BookingRequestDto.builder()
                 .roomId(roomId)
-                .startDate(LocalDate.now().plusDays(1))
-                .endDate(LocalDate.now().plusDays(31))
+                .startDate(startDate)
+                .months(3)
                 .notes("Estudiante universitario, estancia tranquila")
                 .build();
 
+        // 3 meses × S/ 850 + depósito S/ 850 = S/ 3400
         MvcResult result = mockMvc.perform(post("/api/v1/bookings")
                         .header("Authorization", "Bearer " + tenantToken)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -275,6 +295,9 @@ class RoomixIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.data.id").isNotEmpty())
                 .andExpect(jsonPath("$.data.status").value("PENDING"))
+                .andExpect(jsonPath("$.data.months").value(3))
+                .andExpect(jsonPath("$.data.endDate").value(startDate.plusMonths(3).toString()))
+                .andExpect(jsonPath("$.data.totalPrice").value(3400.0))
                 .andReturn();
 
         String responseJson = result.getResponse().getContentAsString();
@@ -282,7 +305,7 @@ class RoomixIntegrationTest {
     }
 
     @Test
-    @Order(7)
+    @Order(8)
     void shouldConfirmBookingAsOwner() throws Exception {
         mockMvc.perform(patch("/api/v1/bookings/" + bookingId + "/status")
                         .header("Authorization", "Bearer " + ownerToken)
@@ -292,7 +315,7 @@ class RoomixIntegrationTest {
     }
 
     @Test
-    @Order(8)
+    @Order(9)
     void shouldCreateReviewAsTenant() throws Exception {
         ReviewRequestDto reviewRequest = ReviewRequestDto.builder()
                 .bookingId(bookingId)
@@ -310,7 +333,7 @@ class RoomixIntegrationTest {
     }
 
     @Test
-    @Order(9)
+    @Order(10)
     void shouldGetReviewsForRoom() throws Exception {
         mockMvc.perform(get("/api/v1/reviews/room/" + roomId))
                 .andExpect(status().isOk())

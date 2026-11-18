@@ -11,45 +11,76 @@
       <div class="booking-header-icon-box"><i class="fa-solid fa-cash-register text-emerald"></i></div>
       <div class="booking-header-text">
         <h3 class="booking-modal-title">Solicitar reserva</h3>
-        <p class="booking-modal-sub">{{ r.title }} • S/. {{ r.pricePerMonth }}/mes (Abancay)</p>
+        <p class="booking-modal-sub">{{ r.title }} • <span class="bm-num">S/ {{ r.pricePerMonth | number:'1.0-2' }}</span>/mes</p>
       </div>
     </div>
 
     <div class="modal-body modal-booking-body">
-      <div class="form-row form-row-compact">
-        <div class="form-group">
-          <label class="form-label form-label-compact">Fecha Inicio (Check-in)</label>
-          <input type="date" class="form-input form-input-compact" [(ngModel)]="app.bookingStartDate">
+      <div class="bm-period">
+        <div class="bm-field">
+          <label class="bm-label" for="bm-start">Fecha de inicio</label>
+          <input id="bm-start" type="date" class="form-input form-input-compact bm-date"
+            [min]="app.bookingMinStartDate" [(ngModel)]="app.bookingStartDate">
         </div>
 
-        <div class="form-group">
-          <label class="form-label form-label-compact">Fecha Fin (Check-out)</label>
-          <input type="date" class="form-input form-input-compact" [(ngModel)]="app.bookingEndDate">
+        <div class="bm-field">
+          <span class="bm-label" id="bm-months-label">Duración del alquiler</span>
+          <div class="bm-stepper" role="group" aria-labelledby="bm-months-label">
+            <button type="button" class="bm-step-btn" aria-label="Quitar un mes"
+              [disabled]="app.bookingMonths <= app.bookingMinMonths"
+              (click)="app.setBookingMonths(app.bookingMonths - 1)">
+              <i class="fa-solid fa-minus" aria-hidden="true"></i>
+            </button>
+            <output class="bm-step-value" aria-live="polite">
+              <strong>{{ app.bookingMonths }}</strong> {{ app.bookingMonths === 1 ? 'mes' : 'meses' }}
+            </output>
+            <button type="button" class="bm-step-btn" aria-label="Agregar un mes"
+              [disabled]="app.bookingMonths >= app.bookingMaxMonths"
+              (click)="app.setBookingMonths(app.bookingMonths + 1)">
+              <i class="fa-solid fa-plus" aria-hidden="true"></i>
+            </button>
+          </div>
         </div>
       </div>
 
-      <!-- Price Breakdown Calculation Card Compact -->
+      <div class="bm-presets" role="group" aria-label="Duraciones frecuentes">
+        @for (m of app.bookingMonthPresets; track m) {
+        <button type="button" class="bm-preset" [class.is-active]="app.bookingMonths === m"
+          [attr.aria-pressed]="app.bookingMonths === m" (click)="app.setBookingMonths(m)">
+          {{ m === 12 ? '1 año' : (m === 1 ? '1 mes' : m + ' meses') }}
+        </button>
+        }
+      </div>
+
+      @if (app.bookingEndDate) {
+      <p class="bm-end-date">
+        <i class="fa-regular fa-calendar-check" aria-hidden="true"></i>
+        Del <strong>{{ app.bookingStartDate | date:'d MMM y':'':'es-PE' }}</strong>
+        al <strong>{{ app.bookingEndDate | date:'d MMM y':'':'es-PE' }}</strong>
+      </p>
+      }
+
+      <!-- Desglose: renta mensual × meses + depósito único -->
       <div class="breakdown-box breakdown-box-compact glass-card">
         <div class="breakdown-line">
-          <span>Días de estadía:</span>
-          <strong>{{ app.calculateStayDays() }} días</strong>
+          <span>Renta (S/ {{ r.pricePerMonth | number:'1.2-2' }} × {{ app.bookingMonths }} {{ app.bookingMonths === 1 ? 'mes' : 'meses' }}):</span>
+          <span class="bm-num">S/ {{ app.calculateBookingRent() | number:'1.2-2' }}</span>
         </div>
         <div class="breakdown-line">
-          <span>Renta mensual proporcional:</span>
-          <span>S/. {{ ((r.pricePerMonth / 30) * app.calculateStayDays()).toFixed(2) }}</span>
-        </div>
-        <div class="breakdown-line">
-          <span>Depósito de garantía:</span>
-          <span>S/. {{ r.depositPrice }}</span>
+          <span>Depósito de garantía (una sola vez):</span>
+          <span class="bm-num">S/ {{ r.depositPrice | number:'1.2-2' }}</span>
         </div>
         <div class="breakdown-divider"></div>
         <div class="breakdown-line total-line">
-          <span>Total a Pagar en Soles:</span>
-          <span class="total-val text-emerald">S/. {{ app.calculateBookingTotal().toFixed(2) }} PEN</span>
+          <span>Total a pagar:</span>
+          <span class="total-val text-emerald bm-num">S/ {{ app.calculateBookingTotal() | number:'1.2-2' }}</span>
         </div>
       </div>
 
-      <p>Esta solicitud no realiza ningún pago. El propietario revisará las fechas y responderá.</p>
+      <p class="bm-note">
+        <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+        <span>Esta solicitud no realiza ningún pago. El propietario revisará las fechas y responderá.</span>
+      </p>
       @if (false) {
       <!-- Pago no disponible hasta integrar una pasarela verificada. -->
       <div class="mp-gateway-container">

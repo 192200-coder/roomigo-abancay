@@ -19,6 +19,7 @@ public class BookingResponseDto {
     private UserResponseDto tenant;
     private LocalDate startDate;
     private LocalDate endDate;
+    private Integer months;
     private BigDecimal totalPrice;
     private ReservationStatus status;
     private String notes;

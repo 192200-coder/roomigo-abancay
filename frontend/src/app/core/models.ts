@@ -136,6 +136,8 @@ export interface Booking {
   tenant: User;
   startDate: string;
   endDate: string;
+  /** Duración contratada en meses (endDate = startDate + months). */
+  months?: number;
   totalPrice: number;
   status: ReservationStatus;
   notes?: string;
@@ -145,7 +147,8 @@ export interface Booking {
 export interface BookingRequest {
   roomId: number;
   startDate: string;
-  endDate: string;
+  /** Duración del alquiler en meses (1–12). El backend calcula la fecha de fin. */
+  months: number;
   notes?: string;
 }
 

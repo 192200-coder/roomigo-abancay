@@ -8,7 +8,7 @@ import { App } from '../../../../app';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './booking-modal.component.html',
-  styleUrls: []
+  styleUrls: ['./booking-modal.component.css']
 })
 export class BookingModalComponent {
   constructor(@Inject(forwardRef(() => App)) public app: App) {}

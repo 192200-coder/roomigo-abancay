@@ -40,6 +40,10 @@ public class Reservation {
     @Column(name = "end_date", nullable = false)
     private LocalDate endDate;
 
+    /** Duración contratada en meses; endDate = startDate + months. */
+    @Column(nullable = false)
+    private Integer months;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     @Builder.Default

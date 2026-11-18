@@ -21,6 +21,7 @@ public class BookingMapper {
                 .tenant(userMapper.toDto(reservation.getTenant()))
                 .startDate(reservation.getStartDate())
                 .endDate(reservation.getEndDate())
+                .months(reservation.getMonths())
                 .totalPrice(reservation.getTotalPrice())
                 .status(reservation.getStatus())
                 .notes(reservation.getNotes())

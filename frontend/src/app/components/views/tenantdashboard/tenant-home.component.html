@@ -24,6 +24,7 @@
         <dl>
           <div><dt>Inicio</dt><dd>{{ current.startDate | date:'dd/MM/yyyy' }}</dd></div>
           <div><dt>Fin</dt><dd>{{ current.endDate | date:'dd/MM/yyyy' }}</dd></div>
+          @if (current.months) {<div><dt>Duración</dt><dd>{{ current.months }} {{ current.months === 1 ? 'mes' : 'meses' }}</dd></div>}
           <div><dt>Monto total</dt><dd>S/ {{ current.totalPrice | number:'1.0-2' }}</dd></div>
         </dl>
         <button type="button" (click)="app.openRoomDetails(current.room)">Ver vivienda</button>

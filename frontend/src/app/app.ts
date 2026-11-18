@@ -28,6 +28,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { RoomixApiService } from './core/roomix-api.service';
+import { BOOKING_MAX_MONTHS, BOOKING_MIN_MONTHS, addMonthsIso, clampBookingMonths, tomorrowIsoDate } from './core/booking-dates';
 import { AuthService } from './core/auth.service';
 import { MercadoPagoService } from './core/mercado-pago.service';
 import { FavoritesService } from './core/favorites.service';
@@ -157,8 +158,12 @@ export class App implements OnInit {
   authResetSuccessMessage = '';
 
   // Booking Form State con Pasarela Integral de Mercado Pago (Perú)
+  // Reserva por meses: el inquilino elige fecha de inicio + duración; la fecha de fin se calcula.
   bookingStartDate = '';
-  bookingEndDate = '';
+  bookingMonths = 1;
+  readonly bookingMonthPresets = [1, 3, 6, 12];
+  readonly bookingMinMonths = BOOKING_MIN_MONTHS;
+  readonly bookingMaxMonths = BOOKING_MAX_MONTHS;
   bookingNotes = '';
   bookingPaymentMethod: string = 'MERCADO_PAGO';
   bookingPaymentRef = '';
@@ -424,7 +429,7 @@ _Hola Administrador de Roomix Abancay, acabo de realizar el pago de la tarifa me
 • *Dirección:* ${room.propertyAddress || 'Abancay, Apurímac'}
 • *Precio Mensual:* S/. ${room.pricePerMonth}
 • *Garantía:* S/. ${room.depositPrice}
-• *Estadía:* ${this.bookingStartDate} al ${this.bookingEndDate} (${this.calculateStayDays()} días)
+• *Estadía:* ${this.bookingStartDate} al ${this.bookingEndDate} (${this.bookingMonths} ${this.bookingMonths === 1 ? 'mes' : 'meses'})
 • *Total Abonado:* S/. ${totalAmount.toFixed(2)} PEN
 
 *INQUILINO:*
@@ -568,15 +573,9 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
   ) {}
 
   ngOnInit(): void {
-    // Set default dates for booking (tomorrow to +1 month)
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const nextMonth = new Date(today);
-    nextMonth.setDate(nextMonth.getDate() + 31);
-
-    this.bookingStartDate = tomorrow.toISOString().split('T')[0];
-    this.bookingEndDate = nextMonth.toISOString().split('T')[0];
+    // Reserva por defecto: desde mañana, por 1 mes
+    this.bookingStartDate = tomorrowIsoDate();
+    this.bookingMonths = BOOKING_MIN_MONTHS;
 
     // Load initial rooms for Abancay
     this.loadRooms();
@@ -802,13 +801,8 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
   }
 
   resetBookingForm(): void {
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const nextMonth = new Date(today);
-    nextMonth.setDate(nextMonth.getDate() + 31);
-    this.bookingStartDate = tomorrow.toISOString().split('T')[0];
-    this.bookingEndDate = nextMonth.toISOString().split('T')[0];
+    this.bookingStartDate = tomorrowIsoDate();
+    this.bookingMonths = BOOKING_MIN_MONTHS;
     this.bookingNotes = '';
     this.bookingPaymentMethod = 'MERCADO_PAGO';
     this.mpBookingSubMethod = 'YAPE';
@@ -826,32 +820,50 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
     this.selectedRoom.set(null);
   }
 
-  calculateStayDays(): number {
-    if (!this.bookingStartDate || !this.bookingEndDate) return 30;
-    const start = new Date(this.bookingStartDate);
-    const end = new Date(this.bookingEndDate);
-    const diff = (end.getTime() - start.getTime()) / (1000 * 3600 * 24);
-    return diff > 0 ? Math.round(diff) : 1;
+  /** Fecha mínima seleccionable como inicio (el backend exige una fecha futura). */
+  get bookingMinStartDate(): string {
+    return tomorrowIsoDate();
+  }
+
+  /** Fecha de fin calculada: inicio + N meses (mismo criterio que el backend). */
+  get bookingEndDate(): string {
+    return addMonthsIso(this.bookingStartDate, this.bookingMonths);
+  }
+
+  setBookingMonths(months: number): void {
+    this.bookingMonths = clampBookingMonths(months);
+  }
+
+  calculateBookingRent(): number {
+    const room = this.selectedRoom();
+    return room ? room.pricePerMonth * this.bookingMonths : 0;
   }
 
   calculateBookingTotal(): number {
     const room = this.selectedRoom();
     if (!room) return 0;
-    const days = this.calculateStayDays();
-    const dailyRate = room.pricePerMonth / 30;
-    return Math.round((dailyRate * days + room.depositPrice) * 100) / 100;
+    return Math.round((this.calculateBookingRent() + room.depositPrice) * 100) / 100;
+  }
+
+  private validateBookingSelection(): boolean {
+    if (!this.bookingStartDate || this.bookingStartDate < this.bookingMinStartDate) {
+      this.showToast('Elige una fecha de inicio a partir de mañana.', 'error');
+      return false;
+    }
+    if (this.bookingMonths < BOOKING_MIN_MONTHS || this.bookingMonths > BOOKING_MAX_MONTHS) {
+      this.showToast(`El alquiler debe ser de ${BOOKING_MIN_MONTHS} a ${BOOKING_MAX_MONTHS} meses.`, 'error');
+      return false;
+    }
+    return true;
   }
 
   submitBookingRequest(): void {
     const room = this.selectedRoom();
     if (!room || this.bookingSubmitting) return;
-    if (!this.bookingStartDate || !this.bookingEndDate || this.bookingEndDate <= this.bookingStartDate) {
-      this.showToast('Selecciona fechas válidas; la fecha de fin debe ser posterior a la de inicio.', 'error');
-      return;
-    }
+    if (!this.validateBookingSelection()) return;
     this.bookingSubmitting = true;
     this.api.createBooking({ roomId: room.id, startDate: this.bookingStartDate,
-      endDate: this.bookingEndDate, notes: this.bookingNotes }).subscribe({
+      months: this.bookingMonths, notes: this.bookingNotes }).subscribe({
       next: res => {
         this.bookingSubmitting = false;
         if (!res.success) {
@@ -874,15 +886,7 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
     const room = this.selectedRoom();
     if (!room) return;
 
-    if (!this.bookingStartDate || !this.bookingEndDate) {
-      this.showToast('Selecciona fechas válidas de inicio y fin', 'error');
-      return;
-    }
-
-    if (new Date(this.bookingEndDate) <= new Date(this.bookingStartDate)) {
-      this.showToast('La fecha de fin debe ser posterior a la de inicio', 'error');
-      return;
-    }
+    if (!this.validateBookingSelection()) return;
 
     // Validaciones específicas de Mercado Pago según método elegido
     if (this.mpBookingSubMethod === 'CREDIT_CARD' || this.mpBookingSubMethod === 'DEBIT_CARD') {
@@ -945,7 +949,7 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
         this.api.createBooking({
           roomId: room.id,
           startDate: this.bookingStartDate,
-          endDate: this.bookingEndDate,
+          months: this.bookingMonths,
           notes: payNotes
         }).subscribe({
           next: res => {

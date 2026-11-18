@@ -21,8 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.time.temporal.ChronoUnit;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -38,9 +37,9 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional
     public BookingResponseDto createBooking(BookingRequestDto request, String tenantEmail) {
-        if (!request.getEndDate().isAfter(request.getStartDate())) {
-            throw new BadRequestException("La fecha de fin debe ser posterior a la fecha de inicio");
-        }
+        int months = request.getMonths();
+        LocalDate startDate = request.getStartDate();
+        LocalDate endDate = startDate.plusMonths(months);
 
         Room room = roomRepository.findById(request.getRoomId())
                 .orElseThrow(() -> new ResourceNotFoundException("Habitación no encontrada"));
@@ -49,22 +48,24 @@ public class BookingServiceImpl implements BookingService {
             throw new BadRequestException("La habitación no se encuentra disponible para reserva");
         }
 
-        if (reservationRepository.existsOverlappingReservation(room.getId(), request.getStartDate(), request.getEndDate())) {
+        if (reservationRepository.existsOverlappingReservation(room.getId(), startDate, endDate)) {
             throw new ConflictException("Ya existe una reserva confirmada o pendiente para esta habitación en las fechas seleccionadas.");
         }
 
         User tenant = userRepository.findByEmail(tenantEmail)
                 .orElseThrow(() -> new ResourceNotFoundException("Inquilino no encontrado"));
 
-        long days = ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate());
-        BigDecimal dailyRate = room.getPricePerMonth().divide(BigDecimal.valueOf(30), 2, RoundingMode.HALF_UP);
-        BigDecimal totalPrice = dailyRate.multiply(BigDecimal.valueOf(days)).add(room.getDepositPrice());
+        // Total = renta mensual × meses contratados + depósito de garantía (una sola vez)
+        BigDecimal totalPrice = room.getPricePerMonth()
+                .multiply(BigDecimal.valueOf(months))
+                .add(room.getDepositPrice());
 
         Reservation reservation = Reservation.builder()
                 .room(room)
                 .tenant(tenant)
-                .startDate(request.getStartDate())
-                .endDate(request.getEndDate())
+                .startDate(startDate)
+                .endDate(endDate)
+                .months(months)
                 .totalPrice(totalPrice)
                 .status(ReservationStatus.PENDING)
                 .notes(request.getNotes())
