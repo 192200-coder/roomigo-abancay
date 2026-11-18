@@ -22,7 +22,6 @@ import {
   getMockProperties,
   getMockReviews,
   addMockReview,
-  filterMockRoomsList,
   getMockAdminStats,
   INITIAL_MOCK_ROOMS,
   INITIAL_MOCK_PROPERTIES
@@ -60,6 +59,7 @@ export class RoomixApiService {
 
     if (filter) {
       if (filter.city) params = params.set('city', filter.city);
+      if (filter.district) params = params.set('district', filter.district);
       if (filter.minPrice != null) params = params.set('minPrice', filter.minPrice.toString());
       if (filter.maxPrice != null) params = params.set('maxPrice', filter.maxPrice.toString());
       if (filter.roomType) params = params.set('roomType', filter.roomType);
@@ -69,16 +69,7 @@ export class RoomixApiService {
       if (filter.minRating != null) params = params.set('minRating', filter.minRating.toString());
     }
 
-    return this.http.get<ApiResponse<PageResponse<Room>>>(`${this.baseUrl}/rooms/search`, { params }).pipe(
-      catchError(() => {
-        const mockPaged = filterMockRoomsList(filter, page, size);
-        return of({
-          success: true,
-          message: 'Habitaciones cargadas correctamente (modo offline Abancay)',
-          data: mockPaged
-        });
-      })
-    );
+    return this.http.get<ApiResponse<PageResponse<Room>>>(`${this.baseUrl}/rooms/search`, { params });
   }
 
   getRoomById(id: number): Observable<ApiResponse<Room>> {
@@ -97,45 +88,7 @@ export class RoomixApiService {
   createRoom(request: RoomRequest): Observable<ApiResponse<Room>> {
     return this.http.post<ApiResponse<Room>>(`${this.baseUrl}/rooms`, request, {
       headers: this.auth.getAuthHeaders()
-    }).pipe(
-      catchError(() => {
-        const rooms = getMockRooms();
-        const newRoom: Room = {
-          id: Date.now(),
-          propertyId: request.propertyId || 1,
-          propertyCity: 'Abancay',
-          propertyAddress: 'Abancay, Apurímac',
-          title: request.title,
-          description: request.description,
-          pricePerMonth: request.pricePerMonth,
-          depositPrice: request.depositPrice,
-          roomType: request.roomType,
-          status: 'AVAILABLE',
-          privateBathroom: request.privateBathroom,
-          capacity: request.capacity,
-          sizeSqm: request.sizeSqm || 18,
-          offersWifi: request.offersWifi,
-          acceptsPets: request.acceptsPets,
-          mainImageUrl: request.mainImageUrl || 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80',
-          averageRating: 5.0,
-          totalReviews: 0,
-          publicationFeePaid: true,
-          paymentMethod: (request as any).paymentMethod || 'YAPE',
-          paymentReference: (request as any).paymentReference || 'N/A',
-          ownerName: `${this.auth.currentUser()?.firstName || 'Propietario'} ${this.auth.currentUser()?.lastName || ''}`.trim(),
-          ownerEmail: this.auth.currentUser()?.email || '',
-          ownerPhone: this.auth.currentUser()?.phone || '',
-          createdAt: new Date().toISOString()
-        };
-        rooms.unshift(newRoom);
-        saveMockRooms(rooms);
-        return of({
-          success: true,
-          message: 'Habitación registrada y publicada con éxito',
-          data: newRoom
-        });
-      })
-    );
+    });
   }
 
   updateRoomStatus(id: number, status: string): Observable<ApiResponse<Room>> {
@@ -166,42 +119,19 @@ export class RoomixApiService {
   getMyProperties(): Observable<ApiResponse<Property[]>> {
     return this.http.get<ApiResponse<Property[]>>(`${this.baseUrl}/properties/my-properties`, {
       headers: this.auth.getAuthHeaders()
-    }).pipe(
-      catchError(() => {
-        return of({
-          success: true,
-          message: 'Propiedades cargadas',
-          data: getMockProperties()
-        });
-      })
-    );
+    });
+  }
+
+  getMyRooms(): Observable<ApiResponse<Room[]>> {
+    return this.http.get<ApiResponse<Room[]>>(`${this.baseUrl}/rooms/my-rooms`, {
+      headers: this.auth.getAuthHeaders()
+    });
   }
 
   createProperty(request: PropertyRequest): Observable<ApiResponse<Property>> {
     return this.http.post<ApiResponse<Property>>(`${this.baseUrl}/properties`, request, {
       headers: this.auth.getAuthHeaders()
-    }).pipe(
-      catchError(() => {
-        const props = getMockProperties();
-        const newProp: Property = {
-          id: Date.now(),
-          title: request.title,
-          description: request.description,
-          address: request.address,
-          city: request.city || 'Abancay',
-          country: request.country || 'Perú',
-          latitude: request.latitude,
-          longitude: request.longitude,
-          createdAt: new Date().toISOString()
-        };
-        props.push(newProp);
-        return of({
-          success: true,
-          message: 'Propiedad creada con éxito',
-          data: newProp
-        });
-      })
-    );
+    });
   }
 
   // ==========================================
@@ -210,34 +140,7 @@ export class RoomixApiService {
   createBooking(request: BookingRequest): Observable<ApiResponse<Booking>> {
     return this.http.post<ApiResponse<Booking>>(`${this.baseUrl}/bookings`, request, {
       headers: this.auth.getAuthHeaders()
-    }).pipe(
-      catchError(() => {
-        const room = getMockRooms().find(r => r.id === request.roomId) || INITIAL_MOCK_ROOMS[0];
-        const newBooking: Booking = {
-          id: Date.now(),
-          room,
-          tenant: {
-            id: 99,
-            firstName: 'Valeria',
-            lastName: 'Torres',
-            email: 'inquilino@roomix.com',
-            role: 'ROLE_TENANT',
-            status: 'ACTIVE'
-          },
-          startDate: request.startDate,
-          endDate: request.endDate,
-          totalPrice: room.pricePerMonth,
-          status: 'CONFIRMED',
-          notes: request.notes,
-          createdAt: new Date().toISOString()
-        };
-        return of({
-          success: true,
-          message: 'Reserva registrada con éxito',
-          data: newBooking
-        });
-      })
-    );
+    });
   }
 
   getTenantBookings(): Observable<ApiResponse<Booking[]>> {
@@ -273,15 +176,7 @@ export class RoomixApiService {
     return this.http.patch<ApiResponse<Booking>>(`${this.baseUrl}/bookings/${bookingId}/status`, null, {
       headers: this.auth.getAuthHeaders(),
       params
-    }).pipe(
-      catchError(() => {
-        return of({
-          success: true,
-          message: 'Estado de reserva actualizado a ' + status,
-          data: {} as Booking
-        });
-      })
-    );
+    });
   }
 
   // ==========================================
@@ -328,16 +223,7 @@ export class RoomixApiService {
   getPendingRooms(): Observable<ApiResponse<Room[]>> {
     return this.http.get<ApiResponse<Room[]>>(`${this.baseUrl}/admin/rooms/pending`, {
       headers: this.auth.getAuthHeaders()
-    }).pipe(
-      catchError(() => {
-        const pending = getMockRooms().filter(r => r.status === 'PENDING_APPROVAL');
-        return of({
-          success: true,
-          message: 'Habitaciones pendientes',
-          data: pending
-        });
-      })
-    );
+    });
   }
 
   getAllRoomsAdmin(): Observable<ApiResponse<Room[]>> {
@@ -357,21 +243,7 @@ export class RoomixApiService {
   approveRoom(id: number): Observable<ApiResponse<Room>> {
     return this.http.patch<ApiResponse<Room>>(`${this.baseUrl}/admin/rooms/${id}/approve`, null, {
       headers: this.auth.getAuthHeaders()
-    }).pipe(
-      catchError(() => {
-        const rooms = getMockRooms();
-        const room = rooms.find(r => r.id === id);
-        if (room) {
-          room.status = 'AVAILABLE';
-          saveMockRooms(rooms);
-        }
-        return of({
-          success: true,
-          message: 'Habitación aprobada exitosamente',
-          data: room || ({} as Room)
-        });
-      })
-    );
+    });
   }
 
   rejectRoom(id: number, reason?: string): Observable<ApiResponse<Room>> {

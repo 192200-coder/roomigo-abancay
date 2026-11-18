@@ -1,6 +1,6 @@
 package com.roomix.api;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.roomix.api.dto.request.*;
 import com.roomix.api.entity.enums.RoomType;
 import com.roomix.api.entity.enums.UserRole;
@@ -9,10 +9,11 @@ import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestMethodOrder;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MvcResult;
 
 import java.math.BigDecimal;
@@ -24,6 +25,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@TestPropertySource(properties = {
+        "spring.datasource.url=jdbc:h2:mem:roomix;MODE=PostgreSQL;DB_CLOSE_DELAY=-1",
+        "spring.datasource.driver-class-name=org.h2.Driver",
+        "spring.datasource.username=sa",
+        "spring.datasource.password=",
+        "spring.jpa.hibernate.ddl-auto=create-drop",
+        "app.jwt.secret=VGhpc0lzQVN0cm9uZ1Rlc3RTZWNyZXRGb3JKV1QxMjM0NTY3OA=="
+})
 @TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 class RoomixIntegrationTest {
 
@@ -48,13 +57,55 @@ class RoomixIntegrationTest {
     private static Long bookingId;
 
     @Test
+    void shouldRejectUnconfiguredSocialVerification() throws Exception {
+        String payload = "{\"email\":\"test@example.com\",\"code\":\"123456\",\"provider\":\"GOOGLE\"}";
+        mockMvc.perform(post("/api/v1/auth/social/verify").contentType(MediaType.APPLICATION_JSON).content(payload))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("El acceso social no está disponible. Usa correo y contraseña."));
+    }
+
+    @Test
+    void shouldRegisterWithoutOptionalPhoneAndRejectDuplicate() throws Exception {
+        RegisterRequestDto request = RegisterRequestDto.builder()
+                .firstName("Maria")
+                .lastName("Inquilina")
+                .email("registro." + java.util.UUID.randomUUID() + "@test.com")
+                .password("Password123!")
+                .role(UserRole.ROLE_TENANT)
+                .build();
+
+        String payload = objectMapper.writeValueAsString(request);
+        mockMvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON).content(payload))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.data.accessToken").isNotEmpty());
+        mockMvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON).content(payload))
+                .andExpect(status().isConflict());
+        mockMvc.perform(post("/api/v1/auth/login").contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(LoginRequestDto.builder()
+                                .email(request.getEmail()).password(request.getPassword()).build())))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.data.accessToken").isNotEmpty());
+    }
+
+    @Test
+    void shouldRejectPublicAdminRegistration() throws Exception {
+        RegisterRequestDto request = RegisterRequestDto.builder()
+                .firstName("Maria").lastName("Prueba")
+                .email("admin." + java.util.UUID.randomUUID() + "@test.com")
+                .password("Password123!").role(UserRole.ROLE_ADMIN).build();
+        mockMvc.perform(post("/api/v1/auth/register").contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     @Order(1)
     void shouldRegisterAndLoginOwner() throws Exception {
         RegisterRequestDto ownerRegister = RegisterRequestDto.builder()
                 .firstName("Carlos")
                 .lastName("Propietario")
                 .email(OWNER_EMAIL)
-                .password("password123")
+                .password("Password123!")
                 .phone("+51987654321")
                 .role(UserRole.ROLE_OWNER)
                 .build();
@@ -67,7 +118,7 @@ class RoomixIntegrationTest {
 
         LoginRequestDto ownerLogin = LoginRequestDto.builder()
                 .email(OWNER_EMAIL)
-                .password("password123")
+                .password("Password123!")
                 .build();
 
         MvcResult result = mockMvc.perform(post("/api/v1/auth/login")
@@ -88,7 +139,7 @@ class RoomixIntegrationTest {
                 .firstName("Ana")
                 .lastName("Inquilina")
                 .email(TENANT_EMAIL)
-                .password("password123")
+                .password("Password123!")
                 .phone("+51912345678")
                 .role(UserRole.ROLE_TENANT)
                 .build();
@@ -101,7 +152,7 @@ class RoomixIntegrationTest {
 
         LoginRequestDto tenantLogin = LoginRequestDto.builder()
                 .email(TENANT_EMAIL)
-                .password("password123")
+                .password("Password123!")
                 .build();
 
         MvcResult result = mockMvc.perform(post("/api/v1/auth/login")
@@ -156,6 +207,8 @@ class RoomixIntegrationTest {
                 .sizeSqm(18.5)
                 .offersWifi(true)
                 .acceptsPets(false)
+                .paymentMethod("MERCADO_PAGO")
+                .paymentReference("referencia-no-verificada")
                 .build();
 
         MvcResult result = mockMvc.perform(post("/api/v1/rooms")
@@ -165,6 +218,7 @@ class RoomixIntegrationTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.data.id").isNotEmpty())
                 .andExpect(jsonPath("$.data.status").value("PENDING_APPROVAL"))
+                .andExpect(jsonPath("$.data.publicationFeePaid").value(false))
                 .andReturn();
 
         String responseJson = result.getResponse().getContentAsString();
@@ -173,7 +227,7 @@ class RoomixIntegrationTest {
         // Iniciar sesión como Administrador del sistema para aprobar la habitación
         LoginRequestDto adminLogin = LoginRequestDto.builder()
                 .email("admin@roomix.com")
-                .password("admin123")
+                .password("Admin123!")
                 .build();
 
         MvcResult adminLoginResult = mockMvc.perform(post("/api/v1/auth/login")
@@ -188,7 +242,8 @@ class RoomixIntegrationTest {
         mockMvc.perform(patch("/api/v1/admin/rooms/" + roomId + "/approve")
                         .header("Authorization", "Bearer " + adminToken))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.data.status").value("AVAILABLE"));
+                .andExpect(jsonPath("$.data.status").value("AVAILABLE"))
+                .andExpect(jsonPath("$.data.publicationFeePaid").value(false));
     }
 
     @Test

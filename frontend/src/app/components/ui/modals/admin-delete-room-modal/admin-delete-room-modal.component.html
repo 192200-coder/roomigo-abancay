@@ -1,29 +1,53 @@
-<!-- =========================================================================
-     MODAL: ELIMINAR ANUNCIO (ADMIN CRUD CONFIRMACIÓN)
-     ========================================================================= -->
+<!-- Modal de confirmación para eliminar un anuncio desde administración. -->
 @if (app.showAdminDeleteModal(); as isOpen) {
 @if (app.adminDeletingRoom; as room) {
-<div class="modal-backdrop" (click)="app.closeAdminDeleteModal()">
-  <div class="modal-dialog modal-sm animate-scale-up" (click)="$event.stopPropagation()">
-    <button class="modal-close" (click)="app.closeAdminDeleteModal()"><i class="fa-solid fa-xmark"></i></button>
+<div class="modal-backdrop admin-delete-backdrop" role="presentation" (click)="app.closeAdminDeleteModal()">
+  <div class="modal-dialog modal-sm admin-delete-dialog animate-scale-up" role="dialog" aria-modal="true"
+    aria-labelledby="admin-delete-title" aria-describedby="admin-delete-description" (click)="$event.stopPropagation()">
+    <div class="admin-delete-accent" aria-hidden="true"></div>
+    <button class="modal-close admin-delete-close" type="button" aria-label="Cerrar confirmación"
+      (click)="app.closeAdminDeleteModal()">
+      <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+    </button>
 
-    <div class="modal-body text-center" style="padding-top: 1.5rem;">
-      <div class="delete-warning-icon">
-        <i class="fa-solid fa-triangle-exclamation text-rose"></i>
+    <div class="admin-delete-content">
+      <div class="admin-delete-icon" aria-hidden="true">
+        <i class="fa-solid fa-trash-can"></i>
       </div>
-      <h3 class="delete-modal-title">¿Eliminar este Anuncio?</h3>
-      <p class="delete-modal-desc">
-        Estás a punto de eliminar la publicación <strong>"{{ room.title }}"</strong> (ID: {{ room.id }}). Esta acción
-        borrará el anuncio definitivamente de la base de datos de Abancay.
-      </p>
 
-      <div class="modal-actions modal-actions-center">
-        <button class="btn btn-secondary" (click)="app.closeAdminDeleteModal()">Cancelar</button>
-        <button class="btn btn-danger" [disabled]="app.adminDeletingLoading" (click)="app.executeAdminDeleteRoom()">
+      <div class="admin-delete-copy">
+        <span class="admin-delete-eyebrow">Acción permanente</span>
+        <h3 id="admin-delete-title">¿Eliminar este anuncio?</h3>
+        <p id="admin-delete-description">
+          Esta publicación dejará de estar disponible para los inquilinos y se eliminará de la base de datos.
+        </p>
+      </div>
+
+      <div class="admin-delete-room" aria-label="Anuncio seleccionado">
+        <div class="admin-delete-room-icon" aria-hidden="true">
+          <i class="fa-solid fa-house"></i>
+        </div>
+        <div class="admin-delete-room-info">
+          <strong>{{ room.title }}</strong>
+          <span>ID de anuncio · {{ room.id }}</span>
+        </div>
+      </div>
+
+      <div class="admin-delete-notice" role="note">
+        <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+        <span>Esta acción no se puede deshacer.</span>
+      </div>
+
+      <div class="admin-delete-actions">
+        <button class="btn btn-secondary admin-delete-cancel" type="button" (click)="app.closeAdminDeleteModal()">
+          Cancelar
+        </button>
+        <button class="btn btn-danger admin-delete-confirm" type="button" [disabled]="app.adminDeletingLoading"
+          (click)="app.executeAdminDeleteRoom()">
           @if (app.adminDeletingLoading) {
-          <i class="fa-solid fa-spinner fa-spin"></i> Eliminando...
+          <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Eliminando...
           } @else {
-          <i class="fa-solid fa-trash-can"></i> Sí, Eliminar Anuncio
+          <i class="fa-solid fa-trash-can" aria-hidden="true"></i> Eliminar anuncio
           }
         </button>
       </div>

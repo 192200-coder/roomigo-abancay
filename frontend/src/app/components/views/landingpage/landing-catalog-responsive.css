@@ -1,0 +1,9 @@
+@media (max-width: 760px) {
+  .rg-room-image {
+    height: 220px;
+  }
+
+  .rg-room-details {
+    min-height: 0;
+  }
+}

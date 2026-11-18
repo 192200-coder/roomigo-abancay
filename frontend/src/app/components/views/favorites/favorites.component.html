@@ -1,0 +1,58 @@
+<section class="rg-favorites">
+  <header class="rg-favorites__header">
+    <p class="rg-favorites__eyebrow">TU LISTA PERSONAL</p>
+    <h1>Habitaciones que te gustan.</h1>
+    <p>Guarda tus opciones y vuelve a ellas cuando quieras.</p>
+  </header>
+
+  <div class="rg-favorites__content">
+    @if (favorites.rooms().length === 0) {
+      <div class="rg-favorites__empty">
+        <span class="rg-favorites__empty-icon"><i class="fa-regular fa-heart" aria-hidden="true"></i></span>
+        <h2>Aún no tienes favoritos</h2>
+        <p>Presiona el corazón en una habitación para guardarla aquí.</p>
+        <button type="button" class="rg-favorites__browse" (click)="app.onSearchRoomsClick()">
+          Explorar habitaciones <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+        </button>
+      </div>
+    } @else {
+      <div class="rg-favorites__toolbar">
+        <p><strong>{{ favorites.count() }}</strong> {{ favorites.count() === 1 ? 'habitación guardada' : 'habitaciones guardadas' }}</p>
+        <button type="button" (click)="app.switchTab('catalog')">Seguir explorando</button>
+      </div>
+      <div class="rg-favorites__grid">
+        @for (room of favorites.rooms(); track room.id) {
+          <article class="rg-favorite-card">
+            <button type="button" class="rg-favorite-card__photo" (click)="app.openRoomPage(room)"
+              [attr.aria-label]="'Ver ' + room.title">
+              @if (room.mainImageUrl) {
+                <img [src]="room.mainImageUrl" [alt]="room.title" loading="lazy">
+              } @else {
+                <span class="rg-favorite-card__placeholder"><i class="fa-regular fa-image" aria-hidden="true"></i></span>
+              }
+              <span class="rg-favorite-card__status">Disponible</span>
+            </button>
+            <button type="button" class="rg-favorite-card__remove" (click)="app.toggleFavorite(room)"
+              [attr.aria-label]="'Quitar ' + room.title + ' de favoritos'" title="Quitar de favoritos">
+              <i class="fa-solid fa-heart" aria-hidden="true"></i>
+            </button>
+            <div class="rg-favorite-card__body">
+              <p class="rg-favorite-card__location">
+                <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
+                {{ room.propertyAddress || 'Ubicación por confirmar' }} · {{ room.propertyCity || 'Abancay' }}
+              </p>
+              <button type="button" class="rg-favorite-card__title" (click)="app.openRoomPage(room)">{{ room.title }}</button>
+              <p class="rg-favorite-card__features">
+                {{ room.capacity }} {{ room.capacity === 1 ? 'persona' : 'personas' }}
+                <span aria-hidden="true">·</span>
+                {{ room.privateBathroom ? 'Baño privado' : 'Baño compartido' }}
+                @if (room.sizeSqm) { <span aria-hidden="true">·</span> {{ room.sizeSqm }} m² }
+              </p>
+              <p class="rg-favorite-card__price"><strong>S/ {{ room.pricePerMonth | number:'1.0-0' }}</strong><span> / mes</span></p>
+            </div>
+          </article>
+        }
+      </div>
+    }
+  </div>
+</section>

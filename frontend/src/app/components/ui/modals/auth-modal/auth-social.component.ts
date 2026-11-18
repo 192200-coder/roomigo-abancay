@@ -1,0 +1,15 @@
+import { Component, Inject, forwardRef } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
+import { App } from '../../../../app';
+
+@Component({
+  selector: 'app-auth-social',
+  standalone: true,
+  imports: [CommonModule, FormsModule],
+  templateUrl: './auth-social.component.html',
+  host: { style: 'display: contents' }
+})
+export class AuthSocialComponent {
+  constructor(@Inject(forwardRef(() => App)) public app: App) {}
+}

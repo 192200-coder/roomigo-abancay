@@ -8,6 +8,7 @@ import com.roomix.api.entity.User;
 import com.roomix.api.entity.enums.UserRole;
 import com.roomix.api.entity.enums.UserStatus;
 import com.roomix.api.exception.ConflictException;
+import com.roomix.api.exception.BadRequestException;
 import com.roomix.api.exception.ResourceNotFoundException;
 import com.roomix.api.mapper.UserMapper;
 import com.roomix.api.repository.RoleRepository;
@@ -53,6 +54,9 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public AuthResponseDto register(RegisterRequestDto request) {
+        if (request.getRole() != UserRole.ROLE_OWNER && request.getRole() != UserRole.ROLE_TENANT) {
+            throw new BadRequestException("Solo se permite el registro de inquilinos y propietarios.");
+        }
         String cleanEmail = request.getEmail().toLowerCase().trim();
         if (userRepository.existsByEmail(cleanEmail)) {
             throw new ConflictException("El correo electrónico ya se encuentra registrado.");
@@ -119,6 +123,9 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public SendCodeResponseDto sendSocialVerificationCode(SocialSendCodeRequestDto request) {
+        if (!isSocialAuthSecurelyConfigured()) {
+            throw new BadRequestException("El acceso social no está disponible. Usa correo y contraseña.");
+        }
         String email = request.getEmail().toLowerCase().trim();
         String code = String.format("%06d", new SecureRandom().nextInt(1_000_000));
         String provider = request.getProvider() != null ? request.getProvider().toUpperCase() : "GOOGLE";
@@ -153,6 +160,9 @@ public class AuthServiceImpl implements AuthService {
     @Override
     @Transactional
     public AuthResponseDto verifySocialCode(SocialVerifyCodeRequestDto request) {
+        if (!isSocialAuthSecurelyConfigured()) {
+            throw new BadRequestException("El acceso social no está disponible. Usa correo y contraseña.");
+        }
         String email = request.getEmail().toLowerCase().trim();
         String inputCode = request.getCode().trim();
 
@@ -228,5 +238,9 @@ public class AuthServiceImpl implements AuthService {
                 .tokenType("Bearer")
                 .user(userMapper.toDto(user))
                 .build();
+    }
+
+    private boolean isSocialAuthSecurelyConfigured() {
+        return false;
     }
 }

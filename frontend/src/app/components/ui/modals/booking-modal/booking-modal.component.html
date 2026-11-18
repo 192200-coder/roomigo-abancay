@@ -10,7 +10,7 @@
     <div class="modal-header modal-booking-header">
       <div class="booking-header-icon-box"><i class="fa-solid fa-cash-register text-emerald"></i></div>
       <div class="booking-header-text">
-        <h3 class="booking-modal-title">Pasarela de Pago y Reserva</h3>
+        <h3 class="booking-modal-title">Solicitar reserva</h3>
         <p class="booking-modal-sub">{{ r.title }} • S/. {{ r.pricePerMonth }}/mes (Abancay)</p>
       </div>
     </div>
@@ -49,7 +49,9 @@
         </div>
       </div>
 
-      <!-- ==================== BILLETERAS DIGITALES (YAPE & PLIN) ==================== -->
+      <p>Esta solicitud no realiza ningún pago. El propietario revisará las fechas y responderá.</p>
+      @if (false) {
+      <!-- Pago no disponible hasta integrar una pasarela verificada. -->
       <div class="mp-gateway-container">
         <div class="mp-header-row">
           <div class="mp-brand-badge">
@@ -211,6 +213,7 @@
         </div>
       </div>
 
+      }
       <div class="form-group" style="margin-top: 0.6rem; margin-bottom: 0.6rem;">
         <label class="form-label form-label-compact">Mensaje adicional para el propietario (opcional)</label>
         <textarea class="form-textarea form-textarea-compact" rows="2" [(ngModel)]="app.bookingNotes"
@@ -219,11 +222,11 @@
 
       <div class="modal-actions modal-actions-compact">
         <button class="btn btn-secondary btn-sm" (click)="app.closeBookingModal()">Cancelar</button>
-        <button class="btn btn-primary btn-sm" [disabled]="app.bookingSubmitting" (click)="app.submitBooking()">
+        <button class="btn btn-primary btn-sm" [disabled]="app.bookingSubmitting" (click)="app.submitBookingRequest()">
           @if (app.bookingSubmitting) {
           <i class="fa-solid fa-spinner fa-spin"></i> Registrando reserva...
           } @else {
-          <i class="fa-solid fa-circle-check"></i> Confirmar Reserva (S/. {{ app.calculateBookingTotal().toFixed(2) }})
+          <i class="fa-solid fa-circle-check"></i> Enviar solicitud
           }
         </button>
       </div>

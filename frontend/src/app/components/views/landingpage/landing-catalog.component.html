@@ -1,0 +1,89 @@
+<section class="rg-trust-strip" aria-label="Ventajas de buscar en RoomiGo">
+    <div class="rg-shell rg-trust-grid">
+      <div class="rg-trust-item">
+        <img src="/figma/landing/map-pinned.svg" alt="">
+        <span><strong>Hecho para Abancay</strong><small>Zonas y referencias que conoces.</small></span>
+      </div>
+      <div class="rg-trust-item">
+        <img src="/figma/landing/messages.svg" alt="">
+        <span><strong>Personas, no intermediarios</strong><small>Habla con quien ofrece el inmueble.</small></span>
+      </div>
+      <div class="rg-trust-item">
+        <img src="/figma/landing/shield-check.svg" alt="">
+        <span><strong>Información a la vista</strong><small>Condiciones claras antes de decidir.</small></span>
+      </div>
+    </div>
+  </section>
+
+  <section class="rg-section rg-featured-section" id="cuartos-section">
+    <div class="rg-shell">
+      <div class="rg-section-heading rg-section-heading--split">
+        <div>
+          <p class="rg-eyebrow">ESPACIOS PARA TU DÍA A DÍA</p>
+          <h2>Imagínate viviendo aquí.</h2>
+          <p>Explora inmuebles publicados en Abancay. Precios mensuales, sin sorpresas.</p>
+        </div>
+        <button class="rg-button rg-button--outline" type="button" (click)="app.onSearchRoomsClick()">
+          Ver todos los inmuebles
+          <img src="/figma/landing/arrow-right.svg" alt="">
+        </button>
+      </div>
+
+      @if (app.loadingRooms()) {
+      <div class="rg-empty-state" id="cuartos-catalog-grid" role="status">
+        <span class="rg-loading-indicator"></span>
+        <p>Buscando opciones para ti en Abancay…</p>
+      </div>
+      } @else if (app.rooms().length === 0) {
+      <div class="rg-empty-state" id="cuartos-catalog-grid">
+        <img src="/figma/landing/search-outline.svg" alt="">
+        <div>
+          <h3>Aún no hay inmuebles disponibles con estos filtros</h3>
+          <p>Prueba otra zona o vuelve a consultar más adelante.</p>
+        </div>
+        <button class="rg-button rg-button--outline" type="button" (click)="app.resetFilters()">Ver todas las opciones</button>
+      </div>
+      } @else {
+      <div class="rg-room-grid" id="cuartos-catalog-grid">
+        @for (room of app.rooms().slice(0, 6); track room.id; let roomIndex = $index) {
+        <article class="rg-room-card" (click)="app.openRoomDetails(room)" style="cursor: pointer;">
+          <div class="rg-room-image">
+            <img
+              [src]="room.mainImageUrl || roomFallbackImages[roomIndex % roomFallbackImages.length]"
+              [alt]="'Habitación: ' + room.title"
+              loading="lazy">
+            <button class="rg-room-heart" type="button" (click)="app.toggleFavorite(room); $event.stopPropagation()"
+              [class.is-favorite]="app.isFavorite(room.id)"
+              [attr.aria-label]="app.isFavorite(room.id) ? 'Quitar ' + room.title + ' de favoritos' : 'Guardar ' + room.title + ' en favoritos'"
+              [attr.aria-pressed]="app.isFavorite(room.id)">
+              <i [class]="app.isFavorite(room.id) ? 'fa-solid fa-heart' : 'fa-regular fa-heart'" aria-hidden="true"></i>
+            </button>
+            @if (!room.mainImageUrl) {
+            <span class="rg-reference-photo">Foto referencial</span>
+            }
+          </div>
+          <div class="rg-room-details">
+            <p class="rg-room-location">{{ room.propertyAddress || (room.propertyDistrict ? (room.propertyDistrict + ', Abancay') : (room.propertyCity || 'Abancay')) }}</p>
+            <h3>{{ room.title }}</h3>
+            <p class="rg-room-meta">
+              <span>{{ app.getRoomTypeName(room.roomType) }}</span>
+              @if (room.privateBathroom) { <span>Baño privado</span> }
+              @if (room.sizeSqm) { <span>{{ room.sizeSqm }} m²</span> }
+            </p>
+            <div class="rg-room-price-row">
+              <p><strong>S/ {{ room.pricePerMonth | number:'1.0-0' }}</strong><span>/ mes</span></p>
+              <button
+                class="rg-room-open"
+                type="button"
+                [attr.aria-label]="'Ver detalles de ' + room.title"
+                (click)="app.openRoomDetails(room); $event.stopPropagation()">
+                <img src="/figma/landing/arrow-up-right.svg" alt="">
+              </button>
+            </div>
+          </div>
+        </article>
+        }
+      </div>
+      }
+    </div>
+  </section>

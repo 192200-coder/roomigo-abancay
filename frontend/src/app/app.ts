@@ -4,6 +4,8 @@ import { TenantDashboardComponent } from './components/views/tenantdashboard/ten
 import { OwnerDashboardComponent } from './components/views/ownerdashboard/ownerdashboard.component';
 import { AdminDashboardComponent } from './components/views/admindashboard/admindashboard.component';
 import { RoomCatalogComponent } from './components/views/roomcatalog/roomcatalog.component';
+import { PropertyDetailComponent } from './components/views/property-detail/property-detail.component';
+import { SignInComponent } from './components/views/signin/signin.component';
 import { ToastComponent } from './shared/components/toast/toast.component';
 import { NavbarComponent } from './components/layout/navbar/navbar.component';
 import { MobileNavDrawerComponent } from './components/layout/mobile-nav-drawer/mobile-nav-drawer.component';
@@ -20,6 +22,7 @@ import { OwnerDeleteRoomModalComponent } from './components/ui/modals/owner-dele
 import { MpReceiptModalComponent } from './components/ui/modals/mp-receipt-modal/mp-receipt-modal.component';
 import { EditProfileModalComponent } from './components/ui/modals/edit-profile-modal/edit-profile-modal.component';
 import { SettingsModalComponent } from './components/ui/modals/settings-modal/settings-modal.component';
+import { FavoritesComponent } from './components/views/favorites/favorites.component';
 import { Component, OnInit, signal, computed, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -27,6 +30,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { RoomixApiService } from './core/roomix-api.service';
 import { AuthService } from './core/auth.service';
 import { MercadoPagoService } from './core/mercado-pago.service';
+import { FavoritesService } from './core/favorites.service';
 import { MapSectionComponent } from './components/ui/map-section/map-section.component';
 import {
   Room,
@@ -52,6 +56,9 @@ import { ViewEncapsulation } from '@angular/core';
     NavbarComponent,
     MobileNavDrawerComponent,
     LandingPageComponent,
+    RoomCatalogComponent,
+    PropertyDetailComponent,
+    SignInComponent,
     TenantDashboardComponent,
     OwnerDashboardComponent,
     AdminDashboardComponent,
@@ -67,6 +74,7 @@ import { ViewEncapsulation } from '@angular/core';
     MpReceiptModalComponent,
     EditProfileModalComponent,
     SettingsModalComponent,
+    FavoritesComponent,
     AuthModalComponent,
     FooterComponent
   ],
@@ -75,7 +83,7 @@ import { ViewEncapsulation } from '@angular/core';
 })
 export class App implements OnInit {
   // Navigation & View
-  readonly activeTab = signal<'explore' | 'my-bookings' | 'owner-panel' | 'admin-panel'>('explore');
+  readonly activeTab = signal<'explore' | 'catalog' | 'favorites' | 'room-detail' | 'sign-in' | 'my-bookings' | 'owner-panel' | 'admin-panel'>('explore');
 
   // Rooms State
   readonly rooms = signal<Room[]>([]);
@@ -88,7 +96,7 @@ export class App implements OnInit {
   selectedCity = '';
   selectedDistrict = '';
   selectedRoomType: RoomType | '' = '';
-  maxPrice: number = 700;
+  maxPrice: number = 1200;
   filterBathroom = false;
   filterWifi = false;
   filterPets = false;
@@ -201,6 +209,7 @@ export class App implements OnInit {
 
   // Owner Panel State
   readonly myProperties = signal<Property[]>([]);
+  readonly ownerRooms = signal<Room[]>([]);
   readonly ownerBookings = signal<Booking[]>([]);
   readonly tenantBookings = signal<Booking[]>([]);
 
@@ -211,7 +220,7 @@ export class App implements OnInit {
   readonly tenantFilter = signal<'ALL' | 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'EXPLORE'>('ALL');
 
   // Owner Panel Functional Tabs & Filters
-  readonly ownerTab = signal<'requests' | 'properties' | 'stats' | 'explore'>('requests');
+  readonly ownerTab = signal<'requests' | 'properties' | 'stats' | 'explore'>('properties');
   readonly ownerBookingFilter = signal<'ALL' | 'PENDING' | 'CONFIRMED' | 'REJECTED'>('ALL');
 
   get filteredTenantBookings(): Booking[] {
@@ -221,11 +230,23 @@ export class App implements OnInit {
     return list.filter(b => b.status === filter);
   }
 
+  getTenantConfirmedBookingTotal(): number {
+    return this.tenantBookings()
+      .filter(booking => booking.status === 'CONFIRMED')
+      .reduce((total, booking) => total + booking.totalPrice, 0);
+  }
+
   get filteredOwnerBookings(): Booking[] {
     const filter = this.ownerBookingFilter();
     const list = this.ownerBookings();
     if (filter === 'ALL') return list;
     return list.filter(b => b.status === filter);
+  }
+
+  getOwnerConfirmedBookingTotal(): number {
+    return this.ownerBookings()
+      .filter(booking => booking.status === 'CONFIRMED')
+      .reduce((total, booking) => total + booking.totalPrice, 0);
   }
 
   getOwnerStatusCount(status: 'CONFIRMED' | 'PENDING' | 'REJECTED'): number {
@@ -252,14 +273,22 @@ export class App implements OnInit {
   }
 
   contactOwnerWhatsApp(phone?: string, roomTitle?: string): void {
-    const raw = phone ? phone.replace(/[^0-9]/g, '') : '983456789';
+    const raw = phone ? phone.replace(/[^0-9]/g, '') : '';
+    if (!raw) {
+      this.showToast('El propietario no ha registrado un teléfono de contacto.', 'error');
+      return;
+    }
     const num = raw.startsWith('51') ? raw : '51' + raw;
     const msg = encodeURIComponent(`Hola, te contacto desde Roomix Abancay respecto a mi reserva confirmada de la habitación: ${roomTitle || 'en Abancay'}.`);
     window.open(`https://wa.me/${num}?text=${msg}`, '_blank');
   }
 
   contactTenantWhatsApp(phone?: string, tenantName?: string, roomTitle?: string): void {
-    const raw = phone ? phone.replace(/[^0-9]/g, '') : '983456789';
+    const raw = phone ? phone.replace(/[^0-9]/g, '') : '';
+    if (!raw) {
+      this.showToast('El inquilino no ha registrado un teléfono de contacto.', 'error');
+      return;
+    }
     const num = raw.startsWith('51') ? raw : '51' + raw;
     const msg = encodeURIComponent(`Hola ${tenantName || ''}, te escribo desde Roomix Abancay respecto a tu solicitud de alquiler para ${roomTitle || 'la habitación'}.`);
     window.open(`https://wa.me/${num}?text=${msg}`, '_blank');
@@ -415,7 +444,7 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
   }
 
   getRoomsForProperty(propertyId: number): Room[] {
-    return this.rooms().filter(r => r.propertyId === propertyId);
+    return this.ownerRooms().filter(r => r.propertyId === propertyId);
   }
 
   // New Room Form State con Pasarela de Pago Obligatoria (Yape / Plin)
@@ -532,6 +561,7 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
     public auth: AuthService,
     private api: RoomixApiService,
     public mpService: MercadoPagoService,
+    public favorites: FavoritesService,
     private sanitizer: DomSanitizer,
     private cdr: ChangeDetectorRef,
     private ngZone: NgZone
@@ -558,8 +588,7 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
   loadRooms(): void {
     this.loadingRooms.set(true);
 
-    const filter: RoomFilter = {};
-    if (this.selectedCity.trim()) filter.city = this.selectedCity.trim();
+    const filter: RoomFilter = { city: this.selectedCity.trim() || 'Abancay' };
     if (this.selectedRoomType) filter.roomType = this.selectedRoomType as RoomType;
     if (this.maxPrice < 1500) filter.maxPrice = this.maxPrice;
     if (this.filterBathroom) filter.privateBathroom = true;
@@ -571,20 +600,29 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
         if (res.success && res.data) {
           let list = (res.data.content || []).filter(r => r.status === 'AVAILABLE');
           if (this.searchKeyword.trim()) {
-            const kw = this.searchKeyword.toLowerCase();
-            list = list.filter(r => 
-              r.title.toLowerCase().includes(kw) || 
-              r.description?.toLowerCase().includes(kw) ||
-              r.propertyAddress?.toLowerCase().includes(kw) ||
-              r.propertyCity?.toLowerCase().includes(kw)
-            );
+            const terms = this.normalizeSearchText(this.searchKeyword).split(' ').filter(Boolean);
+            list = list.filter(room => {
+              const searchableText = this.normalizeSearchText([
+                room.title,
+                room.description,
+                room.propertyAddress,
+                room.propertyCity,
+                room.propertyDistrict,
+                'Abancay Apurimac'
+              ].filter(Boolean).join(' '));
+              return terms.every(term => searchableText.includes(term));
+            });
           }
           if (this.selectedDistrict) {
-            const dist = this.selectedDistrict.toLowerCase();
+            const dist = this.normalizeSearchText(this.selectedDistrict);
             list = list.filter(r => 
-              r.title.toLowerCase().includes(dist) ||
-              r.description?.toLowerCase().includes(dist) ||
-              r.propertyAddress?.toLowerCase().includes(dist)
+              this.normalizeSearchText([
+                r.title,
+                r.description,
+                r.propertyAddress,
+                r.propertyCity,
+                r.propertyDistrict
+              ].filter(Boolean).join(' ')).includes(dist)
             );
           }
           this.rooms.set(list);
@@ -598,6 +636,10 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
     });
   }
 
+  private normalizeSearchText(value: string): string {
+    return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, ' ').trim();
+  }
+
   applyChipFilter(chip: string): void {
     this.activeChip = chip;
     this.searchKeyword = '';
@@ -607,25 +649,33 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
     this.filterBathroom = false;
     this.filterWifi = false;
     this.filterPets = false;
-    this.maxPrice = 700;
+    this.maxPrice = 1200;
 
     if (chip === 'unamba') {
       this.searchKeyword = 'UNAMBA';
       this.selectedDistrict = 'Tamburco';
     } else if (chip === 'centro') {
       this.searchKeyword = 'Centro';
+      this.selectedDistrict = 'Centro';
     } else if (chip === 'utea') {
       this.searchKeyword = 'UTEA';
     } else if (chip === 'tamburco') {
       this.selectedDistrict = 'Tamburco';
     } else if (chip === 'patibamba') {
       this.searchKeyword = 'Patibamba';
+      this.selectedDistrict = 'Patibamba';
+    } else if (chip === 'americas' || chip === 'fonavi') {
+      this.searchKeyword = 'Américas';
+      this.selectedDistrict = 'Americas/Fonavi';
     } else if (chip === 'bathroom') {
       this.filterBathroom = true;
     } else if (chip === 'wifi') {
       this.filterWifi = true;
     } else if (chip === 'cheap') {
       this.maxPrice = 300;
+    } else if (chip === 'all') {
+      this.searchKeyword = '';
+      this.selectedDistrict = '';
     }
 
     this.loadRooms();
@@ -636,7 +686,7 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
     this.selectedCity = '';
     this.selectedDistrict = '';
     this.selectedRoomType = '';
-    this.maxPrice = 700;
+    this.maxPrice = 1200;
     this.filterBathroom = false;
     this.filterWifi = false;
     this.filterPets = false;
@@ -652,6 +702,19 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
       case 'SHARED': return 'Compartida';
       default: return type || 'Habitación';
     }
+  }
+
+  isFavorite(roomId: number): boolean {
+    return this.favorites.isFavorite(roomId);
+  }
+
+  toggleFavorite(room: Room): void {
+    const wasFavorite = this.favorites.isFavorite(room.id);
+    if (!this.favorites.toggle(room)) {
+      this.showToast('No se pudo guardar el favorito en este dispositivo', 'error');
+      return;
+    }
+    this.showToast(wasFavorite ? 'Habitación eliminada de favoritos' : 'Habitación guardada en favoritos', 'success');
   }
 
   getRoomStatusName(status?: string): string {
@@ -684,6 +747,18 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
   openRoomDetails(room: Room): void {
     this.selectedRoom.set(room);
     this.showDetailModal.set(true);
+    this.loadRoomReviews(room);
+  }
+
+  openRoomPage(room: Room): void {
+    this.selectedRoom.set(room);
+    this.showDetailModal.set(false);
+    this.activeTab.set('room-detail');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    this.loadRoomReviews(room);
+  }
+
+  private loadRoomReviews(room: Room): void {
     this.api.getReviewsByRoom(room.id).subscribe({
       next: res => {
         if (res.success) {
@@ -765,6 +840,34 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
     const days = this.calculateStayDays();
     const dailyRate = room.pricePerMonth / 30;
     return Math.round((dailyRate * days + room.depositPrice) * 100) / 100;
+  }
+
+  submitBookingRequest(): void {
+    const room = this.selectedRoom();
+    if (!room || this.bookingSubmitting) return;
+    if (!this.bookingStartDate || !this.bookingEndDate || this.bookingEndDate <= this.bookingStartDate) {
+      this.showToast('Selecciona fechas válidas; la fecha de fin debe ser posterior a la de inicio.', 'error');
+      return;
+    }
+    this.bookingSubmitting = true;
+    this.api.createBooking({ roomId: room.id, startDate: this.bookingStartDate,
+      endDate: this.bookingEndDate, notes: this.bookingNotes }).subscribe({
+      next: res => {
+        this.bookingSubmitting = false;
+        if (!res.success) {
+          this.showToast(res.message || 'No se pudo enviar la solicitud.', 'error');
+          return;
+        }
+        this.closeBookingModal();
+        this.showToast('Solicitud enviada. Espera la respuesta del propietario.', 'success');
+        this.activeTab.set('my-bookings');
+        this.loadTenantBookings();
+      },
+      error: err => {
+        this.bookingSubmitting = false;
+        this.showToast(err.error?.message || 'No se pudo enviar la solicitud. Verifica la conexión.', 'error');
+      }
+    });
   }
 
   submitBooking(): void {
@@ -941,6 +1044,14 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
   // ==========================================
   loadOwnerData(): void {
     if (!this.auth.isOwner()) return;
+
+    this.api.getMyRooms().subscribe({
+      next: res => { if (res.success) this.ownerRooms.set(res.data || []); },
+      error: () => {
+        this.ownerRooms.set([]);
+        this.showToast('No se pudieron cargar tus habitaciones. Intenta actualizar el panel.', 'error');
+      }
+    });
 
     this.api.getMyProperties().subscribe({
       next: res => {
@@ -1198,9 +1309,57 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
     });
   }
 
+  submitRoomWithoutPayment(): void {
+    if (this.newRoomSubmitting) return;
+    if (!this.newRoomTitle.trim()) {
+      this.showToast('El título de la habitación es obligatorio', 'error');
+      return;
+    }
+    if (this.newRoomImages.some(image => image.startsWith('blob:'))) {
+      this.showToast('Espera a que terminen de cargar las fotografías.', 'info');
+      return;
+    }
+    const mainImg = this.newRoomImages[0] || this.newRoomImageUrl.trim() ||
+      'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80';
+    if (this.newRoomPropertyMode === 'manual') {
+      if (!this.manualPropertyTitle.trim() || !this.manualPropertyAddress.trim()) {
+        this.showToast('Ingresa el nombre del inmueble y la dirección.', 'error');
+        return;
+      }
+      this.newRoomSubmitting = true;
+      this.api.createProperty({
+        title: this.manualPropertyTitle.trim(),
+        description: `Inmueble ubicado en ${this.manualPropertyDistrict}, Abancay`,
+        address: `${this.manualPropertyAddress.trim()} (${this.manualPropertyDistrict})`,
+        city: 'Abancay', country: 'Perú'
+      }).subscribe({
+        next: res => {
+          if (!res.success || !res.data) {
+            this.newRoomSubmitting = false;
+            this.showToast(res.message || 'No se pudo crear el inmueble.', 'error');
+            return;
+          }
+          this.newRoomPropertyId = res.data.id;
+          this.newRoomPropertyMode = 'select';
+          this.loadOwnerData();
+          this.executeCreateRoom(res.data.id, mainImg);
+        },
+        error: err => {
+          this.newRoomSubmitting = false;
+          this.showToast(err.error?.message || 'No se pudo crear el inmueble.', 'error');
+        }
+      });
+      return;
+    }
+    if (!this.newRoomPropertyId) {
+      this.showToast('Selecciona un inmueble o crea uno nuevo.', 'error');
+      return;
+    }
+    this.newRoomSubmitting = true;
+    this.executeCreateRoom(this.newRoomPropertyId, mainImg);
+  }
+
   private executeCreateRoom(propertyId: number, mainImg: string, mpResult?: MercadoPagoPaymentResult): void {
-    const paymentRef = mpResult ? mpResult.id : (this.newRoomPaymentRef || `MP-${Date.now()}`);
-    const methodStr = mpResult ? `MERCADO_PAGO_${this.mpPublishSubMethod}` : 'MERCADO_PAGO';
 
     this.api.createRoom({
       propertyId: propertyId,
@@ -1215,9 +1374,7 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
       offersWifi: this.newRoomWifi,
       acceptsPets: this.newRoomPets,
       mainImageUrl: mainImg,
-      imageUrls: this.newRoomImages,
-      paymentMethod: methodStr,
-      paymentReference: paymentRef
+      imageUrls: this.newRoomImages
     }).subscribe({
       next: res => {
         this.newRoomSubmitting = false;
@@ -1227,9 +1384,11 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
             this.mpReceiptData = mpResult;
             this.showMpSuccessReceipt.set(true);
           }
-          this.showToast(`¡Pago de S/. ${this.publicationFee.toFixed(2)} verificado (${paymentRef})! Anuncio publicado.`, 'success');
+          this.showToast('Cuarto enviado para revisión del administrador. Aún no aparece publicado.', 'success');
           this.loadRooms();
           this.loadOwnerData();
+        } else {
+          this.showToast(res.message || 'No se pudo registrar el cuarto.', 'error');
         }
       },
       error: err => {
@@ -1480,6 +1639,10 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
       const matchSt = st === 'ALL' || r.status === st;
       return matchKw && matchSt;
     });
+  }
+
+  adminRoomStatusCount(status: Room['status']): number {
+    return this.adminAllRooms().filter(room => room.status === status).length;
   }
 
   get adminReportStats() {
@@ -2094,6 +2257,12 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
     this.currentMapUrl.set(`https://maps.google.com/maps?q=${encoded}&t=&z=${zoom}&ie=UTF8&iwloc=&output=embed`);
   }
 
+  exploreMapZone(zone: string): void {
+    this.selectMapZone(zone);
+    this.applyChipFilter(zone);
+    this.scrollToSection('cuartos-section');
+  }
+
   // ==========================================
   // STAR RATING METHODS
   // ==========================================
@@ -2166,15 +2335,49 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
     this.authRememberMe = false;
   }
 
+  sanitizeAuthPhone(value: string): string {
+    return (value || '').replace(/\D/g, '').slice(0, 9);
+  }
+
+  authPasswordHasMinLength(): boolean {
+    return this.authPassword.length >= 8;
+  }
+
+  authPasswordHasUppercase(): boolean {
+    return /[A-ZÁÉÍÓÚÜÑ]/.test(this.authPassword);
+  }
+
+  authPasswordHasNumber(): boolean {
+    return /\d/.test(this.authPassword);
+  }
+
+  authPasswordHasSpecialCharacter(): boolean {
+    return /[^A-Za-zÁÉÍÓÚÜÑáéíóúüñ\d\s]/.test(this.authPassword);
+  }
+
+  authPasswordIsValid(): boolean {
+    return this.authPasswordHasMinLength()
+      && this.authPasswordHasUppercase()
+      && this.authPasswordHasNumber()
+      && this.authPasswordHasSpecialCharacter();
+  }
+
+  authPasswordsMatch(): boolean {
+    return Boolean(this.authConfirmPassword) && this.authPassword === this.authConfirmPassword;
+  }
+
   submitAuth(): void {
     this.authError = '';
     this.authSuccessMessage = '';
     const emailVal = this.authEmail.trim();
     const passwordVal = this.authPassword;
+    const isRegister = this.authMode() === 'register';
 
     // Validación rápida e instantánea de campos requeridos
     if (!emailVal && !passwordVal) {
-      this.authError = 'Por favor ingresa tu correo y contraseña.';
+      this.authError = isRegister
+        ? 'Por favor ingresa tu correo y contraseña para crear tu cuenta.'
+        : 'Por favor ingresa tu correo y contraseña.';
       return;
     }
     if (!emailVal) {
@@ -2193,12 +2396,30 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
     }
 
     if (this.authMode() === 'register') {
-      if (!this.authFirstName.trim() || !this.authLastName.trim()) {
+      const firstName = this.authFirstName.trim();
+      const lastName = this.authLastName.trim();
+      if (!firstName || !lastName) {
         this.authError = 'Por favor ingresa tu nombre y apellido.';
+        return;
+      }
+      if (firstName.length < 2 || lastName.length < 2) {
+        this.authError = 'El nombre y el apellido deben tener al menos 2 caracteres.';
+        return;
+      }
+      if (firstName.length > 50 || lastName.length > 50) {
+        this.authError = 'El nombre y el apellido no pueden superar los 50 caracteres.';
         return;
       }
       if (passwordVal.length < 8) {
         this.authError = 'La contraseña debe tener al menos 8 caracteres.';
+        return;
+      }
+      if (!this.authPasswordIsValid()) {
+        this.authError = 'La contraseña debe tener 8 caracteres e incluir una mayúscula, un número y un símbolo.';
+        return;
+      }
+      if (this.authPhone && this.sanitizeAuthPhone(this.authPhone).length !== 9) {
+        this.authError = 'El celular debe contener exactamente 9 dígitos de Perú.';
         return;
       }
       if (!this.authConfirmPassword) {
@@ -2239,31 +2460,36 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
         }
       });
     } else {
-      // Registrar cuenta sin iniciar sesión de golpe: dirige al login con la cuenta creada
-      const targetEmail = emailVal;
       this.auth.register({
         firstName: this.authFirstName.trim(),
         lastName: this.authLastName.trim(),
-        email: targetEmail,
+        email: emailVal,
         password: passwordVal,
         phone: this.authPhone.trim() || undefined,
         role: this.authRole
-      }, false).subscribe({
+      }, true).subscribe({
         next: res => {
           this.authLoading = false;
-          if (res.success) {
-            this.resetAuthForm();
-            this.authMode.set('login');
-            this.authEmail = targetEmail;
-            this.authPassword = '';
-            this.authSuccessMessage = '¡Cuenta creada con éxito! Ingresa tu contraseña para acceder al sistema.';
-            this.showToast('¡Cuenta creada exitosamente! Por favor inicia sesión para acceder.', 'success');
+          if (res.success && res.data) {
+            this.closeAuth();
+            this.showToast(`¡Bienvenido a RoomiGo, ${res.data.user.firstName}!`, 'success');
+            if (this.auth.isOwner()) {
+              this.activeTab.set('owner-panel');
+              this.loadOwnerData();
+            } else {
+              this.activeTab.set('my-bookings');
+              this.loadTenantBookings();
+            }
+          } else {
+            this.authError = res.message || 'No se pudo completar el registro. Inténtalo nuevamente.';
           }
         },
         error: err => {
           this.authLoading = false;
           const details = err.error?.errors?.join(', ');
-          this.authError = details || err.error?.message || 'Error al registrar la cuenta';
+          this.authError = err.status === 409
+            ? (err.error?.message || 'Este correo ya está registrado. Inicia sesión o utiliza otro correo.')
+            : (details || err.error?.message || 'Error al registrar la cuenta');
         }
       });
     }
@@ -2381,51 +2607,7 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
   }
 
   selectGoogleAccount(email: string, name: string, role?: UserRole): void {
-    this.socialLoading = true;
-    this.socialError = '';
-    const cleanEmail = (email || '').trim().toLowerCase();
-    if (!cleanEmail || !cleanEmail.includes('@')) {
-      this.socialLoading = false;
-      this.socialError = 'Por favor ingresa un correo electrónico de Google válido.';
-      return;
-    }
-    const cleanName = (name || '').trim();
-    const parts = cleanName ? cleanName.split(' ') : cleanEmail.split('@')[0].split('.');
-    const firstName = parts[0] || 'Usuario';
-    const lastName = parts.slice(1).join(' ') || 'Google';
-    const selectedRole: UserRole = role || this.socialRole || this.authRole || 'ROLE_TENANT';
-
-    this.auth.verifySocialCode({
-      email: cleanEmail,
-      code: '123456',
-      provider: 'GOOGLE',
-      firstName,
-      lastName,
-      role: selectedRole
-    }).subscribe({
-      next: (res) => {
-        this.socialLoading = false;
-        this.closeSocialModal();
-        this.closeAuth();
-        const roleLabel = selectedRole === 'ROLE_ADMIN'
-          ? 'Administrador'
-          : (selectedRole === 'ROLE_OWNER' ? 'Propietario' : 'Inquilino');
-        this.showToast(`¡Sesión iniciada con Google (${roleLabel})! Bienvenido, ${firstName}`, 'success');
-        if (this.auth.isAdmin()) {
-          this.activeTab.set('admin-panel');
-          this.loadAdminData();
-        } else if (this.auth.isOwner()) {
-          this.activeTab.set('owner-panel');
-          this.loadOwnerData();
-        } else {
-          this.activeTab.set('explore');
-        }
-      },
-      error: (err) => {
-        this.socialLoading = false;
-        this.socialError = err.error?.message || 'Error al autenticar con Google.';
-      }
-    });
+    this.socialError = 'El acceso con Google aún no está configurado. Usa tu correo y contraseña para registrarte o iniciar sesión.';
   }
 
   loginWithGoogle(): void {
@@ -2654,7 +2836,7 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
   // ==========================================
   // NAVIGATION & TABS
   // ==========================================
-  switchTab(tab: 'explore' | 'my-bookings' | 'owner-panel' | 'admin-panel'): void {
+  switchTab(tab: 'explore' | 'catalog' | 'favorites' | 'room-detail' | 'sign-in' | 'my-bookings' | 'owner-panel' | 'admin-panel'): void {
     this.mobileMenuOpen.set(false);
     this.dashboardDrawerOpen.set(false);
     if (tab === 'my-bookings') {
@@ -2716,26 +2898,42 @@ _Hola, acabo de realizar el pago de mi reserva mediante ${method}. Te adjunto mi
       setTimeout(() => {
         const el = document.getElementById(sectionId);
         if (el) {
-          el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+          this.scrollToElement(el);
         }
       }, 150);
     } else {
       const el = document.getElementById(sectionId);
       if (el) {
-        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        this.scrollToElement(el);
       }
     }
   }
 
   onSearchRoomsClick(): void {
-    const el = document.getElementById('cuartos-catalog-grid') || document.getElementById('cuartos-section');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
+    this.switchTab('catalog');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  submitLandingSearch(): void {
+    this.loadRooms();
+    this.onSearchRoomsClick();
+  }
+
+  openSignInPage(): void {
+    this.switchAuthMode('login');
+    this.switchTab('sign-in');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  private scrollToElement(el: HTMLElement): void {
+    const scrollMarginTop = Number.parseFloat(window.getComputedStyle(el).scrollMarginTop) || 0;
+    const top = window.scrollY + el.getBoundingClientRect().top - scrollMarginTop;
+    window.scrollTo({ top, behavior: 'smooth' });
   }
 
   onPublishPropertyClick(): void {
     if (!this.auth.isLoggedIn()) {
+      this.authRole = 'ROLE_OWNER';
       this.openAuth('register');
       this.showToast('Regístrate o inicia sesión como Propietario para publicar tu inmueble', 'info');
       return;

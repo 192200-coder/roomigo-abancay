@@ -52,8 +52,6 @@ public class RoomServiceImpl implements RoomService {
             throw new UnauthorizedException("No posee permisos para agregar habitaciones a esta propiedad");
         }
 
-        boolean hasPaymentRef = request.getPaymentReference() != null && !request.getPaymentReference().trim().isEmpty();
-
         Room room = Room.builder()
                 .property(property)
                 .title(request.getTitle())
@@ -62,9 +60,9 @@ public class RoomServiceImpl implements RoomService {
                 .depositPrice(request.getDepositPrice())
                 .roomType(request.getRoomType())
                 .status(RoomStatus.PENDING_APPROVAL)
-                .publicationFeePaid(hasPaymentRef)
-                .paymentMethod(request.getPaymentMethod() != null ? request.getPaymentMethod() : "YAPE")
-                .paymentReference(request.getPaymentReference())
+                .publicationFeePaid(false)
+                .paymentMethod(null)
+                .paymentReference(null)
                 .privateBathroom(request.isPrivateBathroom())
                 .capacity(request.getCapacity())
                 .sizeSqm(request.getSizeSqm())
@@ -128,7 +126,6 @@ public class RoomServiceImpl implements RoomService {
         Room room = roomRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Habitación no encontrada"));
         room.setStatus(RoomStatus.AVAILABLE);
-        room.setPublicationFeePaid(true);
         return roomMapper.toDto(roomRepository.save(room));
     }
 

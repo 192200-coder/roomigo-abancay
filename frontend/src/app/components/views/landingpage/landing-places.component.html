@@ -1,0 +1,67 @@
+<section class="rg-section rg-neighborhood-section" id="zonas-section">
+    <div class="rg-shell">
+      <div class="rg-section-heading">
+        <p class="rg-eyebrow">ENCUENTRA TU LUGAR</p>
+        <h2>La zona también hace hogar.</h2>
+        <p>Cerca de tus clases, de tu trabajo o de lo que más te gusta de Abancay.</p>
+      </div>
+      <div class="rg-neighborhood-grid">
+        <button class="rg-neighborhood-card" type="button" (click)="app.applyChipFilter('centro'); app.scrollToSection('cuartos-section')">
+          <span class="rg-neighborhood-image"><img src="/images/landing/neighborhood-center.jpg" alt="Fotografía referencial de una zona urbana" loading="lazy"><span class="rg-reference-photo">Foto de referencia</span></span>
+          <span class="rg-neighborhood-content">
+            <span class="rg-neighborhood-title">Abancay centro <img src="/figma/landing/arrow-up-right.svg" alt=""></span>
+            <strong>Todo a unos pasos</strong>
+            <small>Cerca de UTEA, comercios y servicios</small>
+            <span class="rg-text-link">Explorar zona</span>
+          </span>
+        </button>
+        <button class="rg-neighborhood-card" type="button" (click)="app.applyChipFilter('unamba'); app.scrollToSection('cuartos-section')">
+          <span class="rg-neighborhood-image"><img src="/images/landing/neighborhood-tamburco.jpg" alt="Fotografía referencial de una calle residencial" loading="lazy"><span class="rg-reference-photo">Foto de referencia</span></span>
+          <span class="rg-neighborhood-content">
+            <span class="rg-neighborhood-title">Tamburco <img src="/figma/landing/arrow-up-right.svg" alt=""></span>
+            <strong>Estudia, vive, conecta</strong>
+            <small>Referencias cerca de la UNAMBA</small>
+            <span class="rg-text-link">Explorar zona</span>
+          </span>
+        </button>
+        <button class="rg-neighborhood-card" type="button" (click)="app.applyChipFilter('patibamba'); app.scrollToSection('cuartos-section')">
+          <span class="rg-neighborhood-image"><img src="/images/landing/neighborhood-patibamba.jpg" alt="Fotografía referencial de un inmueble moderno" loading="lazy"><span class="rg-reference-photo">Foto de referencia</span></span>
+          <span class="rg-neighborhood-content">
+            <span class="rg-neighborhood-title">Patibamba <img src="/figma/landing/arrow-up-right.svg" alt=""></span>
+            <strong>Un ritmo más tranquilo</strong>
+            <small>Mercados y parques de barrio</small>
+            <span class="rg-text-link">Explorar zona</span>
+          </span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <section class="rg-section rg-map-section" id="mapa-section">
+  <div class="rg-shell rg-map-layout">
+    <div class="rg-map-copy">
+      <p class="rg-eyebrow">A UN PASO DE LO QUE IMPORTA</p>
+      <h2>Mira dónde empieza tu próxima rutina.</h2>
+      <p>Explora Abancay en el mapa y filtra inmuebles cerca de UNAMBA, UTEA y el centro.</p>
+      <button class="rg-button rg-button--primary" type="button" (click)="app.scrollToSection('cuartos-section')">
+        <img src="/figma/landing/map-pinned-outline.svg" alt="">
+        Ver inmuebles por zona
+      </button>
+      <small>Las ubicaciones son referenciales. Confirma la dirección exacta con el propietario.</small>
+    </div>
+
+    <div class="rg-map-panel">
+      <div class="rg-map-zone-pills" role="group" aria-label="Filtrar mapa por zona">
+        <button class="rg-map-tag" [class.active]="app.activeMapZone() === 'all'" [attr.aria-pressed]="app.activeMapZone() === 'all'" type="button" (click)="app.exploreMapZone('all')">Todo Abancay</button>
+        <button class="rg-map-tag" [class.active]="app.activeMapZone() === 'unamba'" [attr.aria-pressed]="app.activeMapZone() === 'unamba'" type="button" (click)="app.exploreMapZone('unamba')">UNAMBA</button>
+        <button class="rg-map-tag" [class.active]="app.activeMapZone() === 'utea'" [attr.aria-pressed]="app.activeMapZone() === 'utea'" type="button" (click)="app.exploreMapZone('utea')">UTEA</button>
+        <button class="rg-map-tag" [class.active]="app.activeMapZone() === 'centro'" [attr.aria-pressed]="app.activeMapZone() === 'centro'" type="button" (click)="app.exploreMapZone('centro')">Centro</button>
+        <button class="rg-map-tag" [class.active]="app.activeMapZone() === 'patibamba'" [attr.aria-pressed]="app.activeMapZone() === 'patibamba'" type="button" (click)="app.exploreMapZone('patibamba')">Patibamba</button>
+      </div>
+      <div class="rg-map-canvas">
+        <iframe [src]="app.safeMapUrl" title="Mapa interactivo de Abancay en Google Maps" loading="lazy" allowfullscreen referrerpolicy="no-referrer-when-downgrade"></iframe>
+      </div>
+      <p class="rg-map-note">Mapa interactivo de Google · Referencias aproximadas</p>
+    </div>
+  </div>
+</section>

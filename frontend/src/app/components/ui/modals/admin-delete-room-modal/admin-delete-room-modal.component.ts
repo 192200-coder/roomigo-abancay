@@ -7,7 +7,7 @@ import { App } from '../../../../app';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './admin-delete-room-modal.component.html',
-  styleUrls: []
+  styleUrls: ['./admin-delete-room-modal.component.css']
 })
 export class AdminDeleteRoomModalComponent {
   constructor(@Inject(forwardRef(() => App)) public app: App) {}

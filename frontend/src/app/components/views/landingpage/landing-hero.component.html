@@ -1,0 +1,206 @@
+<section class="rg-hero">
+    <div class="rg-shell rg-hero-shell">
+      <div class="rg-hero-grid">
+        <div class="rg-hero-copy">
+          <p class="rg-eyebrow rg-eyebrow--warm">
+            <img src="/figma/landing/map-pin.svg" alt="">
+            TU HOGAR EN ABANCAY, PERÚ
+          </p>
+          <h1>Un nuevo lugar.<br>Tu próxima <span>historia.</span></h1>
+          <p class="rg-hero-description">
+            Encuentra habitaciones y departamentos en Abancay. Compara con calma, conversa directamente y elige dónde vivir.
+          </p>
+          <ul class="rg-hero-benefits">
+            <li><img src="/figma/landing/check.svg" alt="">Precios en soles</li>
+            <li><img src="/figma/landing/check.svg" alt="">Contacto directo</li>
+            <li><img src="/figma/landing/check.svg" alt="">Opciones locales</li>
+          </ul>
+        </div>
+
+        <figure class="rg-hero-image rg-hero-showcase"
+                (mouseenter)="pauseCarousel()"
+                (mouseleave)="resumeCarousel()"
+                aria-roledescription="carousel"
+                aria-label="Habitaciones destacadas en Abancay">
+          
+          <!-- Barra de progreso de rotación automática -->
+          <div class="rg-carousel-timer-bar" [class.is-paused]="isPaused()"></div>
+
+          <!-- Riel de desplazamiento horizontal (Slide hacia la izquierda) -->
+          <div class="rg-carousel-track" [style.transform]="'translateX(-' + (currentIndexSafe() * 100) + '%)'">
+            <div *ngFor="let room of heroRooms(); let i = index"
+                 class="rg-carousel-slide"
+                 [class.is-active]="i === currentIndexSafe()"
+                 (click)="onSelectRoom(room)">
+              
+              <!-- Foto del cuarto -->
+              <img [src]="getRoomImage(room, i)"
+                   [alt]="room.title"
+                   (error)="handleImageError($event, i)"
+                   class="rg-slide-img"
+                   loading="eager">
+
+              <!-- Degradado multicapa para óptima legibilidad -->
+              <div class="rg-slide-scrim"></div>
+
+              <!-- Badges superiores (Destacado según aporte / Verificado + Precio) -->
+              <div class="rg-slide-badges" (click)="$event.stopPropagation()">
+                <div class="rg-hero-badge rg-hero-badge--featured" *ngIf="(room.publicationFeeAmount || 0) >= 15">
+                  <span class="rg-badge-star">★</span>
+                  <span>Destacado Premium</span>
+                </div>
+                <div class="rg-hero-badge rg-hero-badge--standard" *ngIf="(room.publicationFeeAmount || 0) > 0 && (room.publicationFeeAmount || 0) < 15">
+                  <span class="rg-badge-star">★</span>
+                  <span>Destacado</span>
+                </div>
+                <div class="rg-hero-badge rg-hero-badge--verified" *ngIf="!(room.publicationFeeAmount && room.publicationFeeAmount > 0)">
+                  <span class="rg-badge-check">✓</span>
+                  <span>Verificado</span>
+                </div>
+
+                <div class="rg-hero-badge rg-hero-badge--price">
+                  <span class="rg-badge-currency">S/</span>
+                  <span class="rg-badge-amount">{{ room.pricePerMonth | number:'1.0-0' }}</span>
+                  <span class="rg-badge-period">/ mes</span>
+                </div>
+              </div>
+
+              <!-- Leyenda interactiva flotante del cuarto actual -->
+              <figcaption class="rg-carousel-caption" (click)="onSelectRoom(room); $event.stopPropagation()">
+                <div class="rg-caption-icon">
+                  <img src="/figma/landing/house-outline.svg" alt="">
+                </div>
+                <div class="rg-caption-body">
+                  <strong class="rg-caption-title" [title]="room.title">{{ room.title }}</strong>
+                  <div class="rg-caption-details">
+                    <span class="rg-detail-zone">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                      </svg>
+                      {{ room.propertyDistrict || 'Abancay' }}
+                    </span>
+                    <span class="rg-detail-sep">·</span>
+                    <span class="rg-detail-type">{{ app.getRoomTypeName(room.roomType) }}</span>
+                    <ng-container *ngIf="room.privateBathroom">
+                      <span class="rg-detail-sep">·</span>
+                      <span class="rg-detail-extra">Baño privado</span>
+                    </ng-container>
+                  </div>
+                </div>
+                <button type="button" class="rg-caption-cta" (click)="onSelectRoom(room); $event.stopPropagation()" aria-label="Ver cuarto">
+                  <span>Ver cuarto</span>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                  </svg>
+                </button>
+              </figcaption>
+            </div>
+          </div>
+
+          <!-- Flechas de navegación Anterior / Siguiente -->
+          <button type="button"
+                  class="rg-carousel-arrow rg-carousel-arrow--prev"
+                  (click)="prevSlide(); $event.stopPropagation()"
+                  aria-label="Habitación anterior">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+          </button>
+
+          <button type="button"
+                  class="rg-carousel-arrow rg-carousel-arrow--next"
+                  (click)="nextSlide(); $event.stopPropagation()"
+                  aria-label="Habitación siguiente">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="9 18 15 12 9 6"></polyline>
+            </svg>
+          </button>
+
+          <!-- Píldoras indicadoras de diapositiva -->
+          <div class="rg-carousel-dots" (click)="$event.stopPropagation()">
+            <button *ngFor="let r of heroRooms(); let idx = index"
+                    type="button"
+                    class="rg-dot-item"
+                    [class.is-active]="idx === currentIndexSafe()"
+                    (click)="goToSlide(idx)"
+                    [attr.aria-label]="'Ir a cuarto ' + (idx + 1)">
+            </button>
+          </div>
+        </figure>
+      </div>
+
+      <div class="rg-search-panel" id="buscar-inmuebles">
+        <label class="rg-search-field">
+          <span>¿Dónde quieres vivir?</span>
+          <span class="rg-input-wrap">
+            <img src="/figma/landing/map-pin-outline.svg" alt="">
+            <select [(ngModel)]="app.selectedDistrict" (change)="app.loadRooms()" aria-label="Zona de Abancay">
+              <option value="">Todas las zonas de Abancay</option>
+              <option value="Centro">Abancay centro</option>
+              <option value="Tamburco">Tamburco · UNAMBA</option>
+              <option value="Americas/Fonavi">Américas / Fonavi</option>
+              <option value="Condebamba/Aymas">Condebamba / Aymas</option>
+              <option value="Seguro/Illanya">Seguro / Illanya</option>
+              <option value="Victor Acosta/Bosque">Víctor Acosta / Bosque</option>
+              <option value="Senati/Guillermo Diaz">Senati / Guillermo Díaz</option>
+              <option value="Vallecito/Circunvalacion">Vallecito / Circunvalación</option>
+              <option value="Malvinas/San Martin">Malvinas / San Martín</option>
+              <option value="Olivo/Seoane">Olivo / Seoane</option>
+              <option value="Villa Ampay/4 de Noviembre">Villa Ampay / 4 de Noviembre</option>
+              <option value="Patibamba">Patibamba</option>
+            </select>
+          </span>
+        </label>
+
+        <label class="rg-search-field">
+          <span>Tipo de inmueble</span>
+          <span class="rg-input-wrap">
+            <img src="/figma/landing/house-outline.svg" alt="">
+            <select [(ngModel)]="app.selectedRoomType" (change)="app.loadRooms()" aria-label="Tipo de inmueble">
+              <option value="">Habitación o departamento</option>
+              <option value="SINGLE">Habitación individual</option>
+              <option value="DOUBLE">Habitación doble</option>
+              <option value="SUITE">Suite con baño privado</option>
+              <option value="SHARED">Habitación compartida</option>
+            </select>
+          </span>
+        </label>
+
+        <div class="rg-search-field rg-budget-field">
+          <span>Presupuesto máximo</span>
+          <details class="rg-budget-selector">
+            <summary class="rg-input-wrap rg-budget-wrap">
+              <img src="/figma/landing/wallet.svg" alt="">
+              <span>Hasta S/ {{ app.maxPrice | number:'1.0-0' }} al mes</span>
+            </summary>
+            <input
+              class="rg-budget-slider"
+              type="range"
+              min="200"
+              max="1200"
+              step="50"
+              [(ngModel)]="app.maxPrice"
+              (input)="app.loadRooms()"
+              aria-label="Presupuesto máximo mensual">
+          </details>
+        </div>
+
+        <button class="rg-button rg-button--primary rg-search-button" type="button" (click)="app.submitLandingSearch()">
+          <img src="/figma/landing/search.svg" alt="">
+          Buscar inmuebles
+        </button>
+      </div>
+
+      <div class="rg-quick-search">
+        <span>Empieza por aquí:</span>
+        <div>
+          <button type="button" [class.active]="app.activeChip === 'centro'" (click)="app.applyChipFilter('centro'); app.scrollToSection('cuartos-section')">Abancay centro</button>
+          <button type="button" [class.active]="app.activeChip === 'unamba'" (click)="app.applyChipFilter('unamba'); app.scrollToSection('cuartos-section')">Cerca de UNAMBA</button>
+          <button type="button" [class.active]="app.activeChip === 'utea'" (click)="app.applyChipFilter('utea'); app.scrollToSection('cuartos-section')">Cerca de UTEA</button>
+          <button type="button" [class.active]="app.activeChip === 'patibamba'" (click)="app.applyChipFilter('patibamba'); app.scrollToSection('cuartos-section')">Patibamba</button>
+        </div>
+      </div>
+    </div>
+  </section>

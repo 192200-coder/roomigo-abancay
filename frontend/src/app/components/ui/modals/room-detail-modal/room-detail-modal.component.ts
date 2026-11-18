@@ -7,7 +7,7 @@ import { App } from '../../../../app';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './room-detail-modal.component.html',
-  styleUrls: []
+  styleUrls: ['./room-detail-modal.component.css']
 })
 export class RoomDetailModalComponent {
   constructor(@Inject(forwardRef(() => App)) public app: App) {}

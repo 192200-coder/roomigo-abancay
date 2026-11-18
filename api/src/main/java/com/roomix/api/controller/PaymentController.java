@@ -35,6 +35,11 @@ import java.util.Random;
 @Tag(name = "Pasarela Mercado Pago", description = "Endpoints de integración con Mercado Pago (Tarjetas, Yape, PagoEfectivo, Saldo MP)")
 public class PaymentController {
 
+    private boolean paymentProviderConfigured() {
+        // La implementación actual solo genera respuestas simuladas; no procesa pagos reales.
+        return false;
+    }
+
     private final ReservationRepository reservationRepository;
     private final RoomRepository roomRepository;
     private final PaymentRepository paymentRepository;
@@ -56,6 +61,9 @@ public class PaymentController {
     @Operation(summary = "Crear preferencia de pago en Mercado Pago", description = "Genera preferenceId e initPoint para el Checkout de Mercado Pago.")
     public ResponseEntity<ApiResponseDto<MercadoPagoPaymentResponseDto>> createPreference(
             @RequestBody Map<String, Object> req) {
+        if (!paymentProviderConfigured()) {
+            throw new com.roomix.api.exception.BadRequestException("La pasarela de pagos todavía no está disponible.");
+        }
         String title = (String) req.getOrDefault("title", "Alquiler RoomiGo Abancay");
         Object priceObj = req.get("unitPrice");
         java.math.BigDecimal amount = priceObj != null ? new java.math.BigDecimal(priceObj.toString()) : java.math.BigDecimal.valueOf(15.00);
@@ -81,6 +89,10 @@ public class PaymentController {
     public ResponseEntity<ApiResponseDto<MercadoPagoPaymentResponseDto>> processPayment(
             @Valid @RequestBody MercadoPagoPaymentRequestDto req,
             Authentication authentication) {
+
+        if (!paymentProviderConfigured()) {
+            throw new com.roomix.api.exception.BadRequestException("La pasarela de pagos todavía no está disponible.");
+        }
 
         String userEmail = authentication != null ? authentication.getName() : req.getPayerEmail();
         log.info("Procesando pago Mercado Pago para: {}, Método: {}, Monto: {} PEN", userEmail, req.getSubMethod(), req.getAmount());

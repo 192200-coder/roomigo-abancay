@@ -8,6 +8,7 @@ import com.roomix.api.repository.RoleRepository;
 import com.roomix.api.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,6 +30,24 @@ public class DataInitializer implements CommandLineRunner {
     private final PasswordEncoder passwordEncoder;
     private final JdbcTemplate jdbcTemplate;
 
+    @Value("${APP_ADMIN_INITIAL_PASSWORD:}")
+    private String initialAdminPassword;
+
+    @Value("${APP_ADMIN_INITIAL_EMAIL:roger@gmail.com}")
+    private String initialAdminEmail;
+
+    @Value("${APP_ADMIN_INITIAL_FIRST_NAME:Roger}")
+    private String initialAdminFirstName;
+
+    @Value("${APP_ADMIN_INITIAL_LAST_NAME:Roomix}")
+    private String initialAdminLastName;
+
+    @Value("${ROOMIX_PURGE_MOCK_DATA:false}")
+    private boolean purgeMockData;
+
+    @Value("${APP_SUPABASE_RLS_ENABLED:false}")
+    private boolean supabaseRlsEnabled;
+
     @Override
     public void run(String... args) {
         log.info("[SISTEMA] Verificando roles del sistema...");
@@ -47,23 +66,40 @@ public class DataInitializer implements CommandLineRunner {
         Role adminRole = roleRepository.findByName(UserRole.ROLE_ADMIN).orElseThrow();
 
         // 1. Asegurar Usuario Administrador General de la Plataforma
-        userRepository.findByEmail("admin@roomix.com").orElseGet(() -> {
-            User newAdmin = User.builder()
-                    .firstName("Administrador")
-                    .lastName("General")
-                    .email("admin@roomix.com")
-                    .password(passwordEncoder.encode("admin123"))
+        User admin = userRepository.findByEmail(initialAdminEmail).orElse(null);
+        if (admin == null) {
+            admin = userRepository.findByEmail("roger@roomix.com")
+                    .or(() -> userRepository.findByEmail("admin@roomix.com"))
+                    .orElse(null);
+            if (admin != null) {
+                admin.setEmail(initialAdminEmail);
+            }
+        }
+        if (admin == null && (initialAdminPassword == null || initialAdminPassword.isBlank())) {
+            throw new IllegalStateException("APP_ADMIN_INITIAL_PASSWORD es obligatorio para crear el administrador inicial");
+        }
+
+        if (admin == null) {
+            admin = User.builder()
+                    .email(initialAdminEmail)
                     .phone("+51 983 456 789")
                     .profileImage("https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?auto=format&fit=crop&w=400&q=80")
-                    .role(adminRole)
-                    .status(UserStatus.ACTIVE)
                     .build();
-            log.info("[SISTEMA] Usuario Administrador General garantizado: admin@roomix.com");
-            return userRepository.save(newAdmin);
-        });
+        }
+
+        admin.setFirstName(initialAdminFirstName);
+        admin.setLastName(initialAdminLastName);
+        admin.setRole(adminRole);
+        admin.setStatus(UserStatus.ACTIVE);
+        if (initialAdminPassword != null && !initialAdminPassword.isBlank()) {
+            admin.setPassword(passwordEncoder.encode(initialAdminPassword));
+        }
+        userRepository.save(admin);
+        log.info("[SISTEMA] Usuario Administrador General garantizado: {}", initialAdminEmail);
 
         // 2. Limpieza segura y directa de registros de prueba (anti-mock)
-        log.info("[SISTEMA] Purgando registros mock y datos de prueba heredados...");
+        if (purgeMockData) {
+            log.warn("[SISTEMA] ROOMIX_PURGE_MOCK_DATA=true: purgando registros mock y datos de prueba heredados...");
         try {
             jdbcTemplate.execute("DELETE FROM reviews WHERE reservation_id IN (SELECT id FROM reservations WHERE tenant_id IN (SELECT id FROM users WHERE email IN ('propietario@roomix.com', 'inquilino@roomix.com')) OR room_id IN (SELECT r.id FROM rooms r JOIN properties p ON p.id = r.property_id WHERE p.owner_id IN (SELECT id FROM users WHERE email = 'propietario@roomix.com')));");
             jdbcTemplate.execute("DELETE FROM payments WHERE reservation_id IN (SELECT id FROM reservations WHERE tenant_id IN (SELECT id FROM users WHERE email IN ('propietario@roomix.com', 'inquilino@roomix.com')) OR room_id IN (SELECT r.id FROM rooms r JOIN properties p ON p.id = r.property_id WHERE p.owner_id IN (SELECT id FROM users WHERE email = 'propietario@roomix.com')));");
@@ -76,25 +112,29 @@ public class DataInitializer implements CommandLineRunner {
         } catch (Exception ex) {
             log.warn("[AUDITORÍA LIMPIEZA] Aviso al purgar registros de prueba: {}", ex.getMessage());
         }
+        } else {
+            log.info("[SISTEMA] Limpieza mock omitida; habilitar ROOMIX_PURGE_MOCK_DATA solo durante una migracion controlada.");
+        }
 
-        // 3. Aplicar Row Level Security (RLS) y blindaje de esquemas en Supabase
-        log.info("[SEGURIDAD SUPABASE] Habilitando Row Level Security (RLS) en todas las tablas públicas...");
+        // 3. Aplicar Row Level Security (RLS) únicamente cuando Supabase está habilitado.
         java.util.List<String> tables = java.util.List.of(
                 "users", "roles", "verification_codes", "properties", "rooms",
                 "room_images", "amenities", "room_amenities", "reservations",
                 "payments", "reviews", "favorites", "notifications"
         );
 
-        for (String table : tables) {
-            try {
-                jdbcTemplate.execute("ALTER TABLE IF EXISTS public." + table + " ENABLE ROW LEVEL SECURITY;");
-            } catch (Exception ex) {
-                log.warn("[SEGURIDAD SUPABASE] Aviso habilitando RLS en {}: {}", table, ex.getMessage());
+        if (supabaseRlsEnabled) {
+            log.info("[SEGURIDAD SUPABASE] Habilitando Row Level Security (RLS) en todas las tablas públicas...");
+            for (String table : tables) {
+                try {
+                    jdbcTemplate.execute("ALTER TABLE IF EXISTS public." + table + " ENABLE ROW LEVEL SECURITY;");
+                } catch (Exception ex) {
+                    log.warn("[SEGURIDAD SUPABASE] Aviso habilitando RLS en {}: {}", table, ex.getMessage());
+                }
             }
-        }
 
-        try {
-            jdbcTemplate.execute("""
+            try {
+                jdbcTemplate.execute("""
                 DO $$
                 BEGIN
                     IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'anon') THEN
@@ -109,11 +149,14 @@ public class DataInitializer implements CommandLineRunner {
                     END IF;
                 END $$;
                 """);
-            log.info("[SEGURIDAD SUPABASE] Permisos directos de PostgREST revocados. Columnas sensibles protegidas.");
-        } catch (Exception ex) {
-            log.warn("[SEGURIDAD SUPABASE] Aviso al revocar permisos públicos: {}", ex.getMessage());
+                log.info("[SEGURIDAD SUPABASE] Permisos directos de PostgREST revocados. Columnas sensibles protegidas.");
+            } catch (Exception ex) {
+                log.warn("[SEGURIDAD SUPABASE] Aviso al revocar permisos públicos: {}", ex.getMessage());
+            }
+        } else {
+            log.info("[SISTEMA] Configuración de RLS de Supabase omitida; las políticas existentes no se modifican.");
         }
 
-        log.info("[SISTEMA] Base de datos limpia y blindada con RLS lista para operar.");
+        log.info("[SISTEMA] Base de datos lista para operar.");
     }
 }

@@ -1,0 +1,221 @@
+app-tenant-dashboard .rg-dashboard-metric > i {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  font-size: 16px;
+  color: #1264e8;
+  opacity: 0.85;
+}
+/* ==================== TARJETAS DE RESERVAS ==================== */
+app-tenant-dashboard .bookings-grid-uniform {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+  gap: 18px;
+}
+app-tenant-dashboard .booking-card-uniform {
+  background: #ffffff;
+  border: 1px solid #dfe6ef;
+  border-radius: 14px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 2px 6px rgba(9, 44, 97, 0.02), 0 8px 22px rgba(9, 44, 97, 0.035);
+  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+app-tenant-dashboard .booking-card-uniform:hover {
+  box-shadow: 0 4px 12px rgba(9, 44, 97, 0.04), 0 12px 28px rgba(9, 44, 97, 0.06);
+  transform: translateY(-2px);
+}
+app-tenant-dashboard .booking-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+app-tenant-dashboard .booking-id-tag {
+  font-size: 11px;
+  font-weight: 700;
+  color: #1264e8;
+  background: #eaf2ff;
+  padding: 2px 8px;
+  border-radius: 6px;
+  display: inline-block;
+  margin-bottom: 4px;
+}
+app-tenant-dashboard .booking-room-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  color: #092c61;
+  margin: 0 0 4px 0;
+  cursor: pointer;
+  transition: color 180ms ease;
+}
+app-tenant-dashboard .booking-room-title:hover {
+  color: #1264e8;
+}
+app-tenant-dashboard .booking-room-addr {
+  font-size: 12px;
+  color: #66768d;
+  margin: 0;
+}
+/* Badges de estado */
+app-tenant-dashboard .badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+app-tenant-dashboard .badge-confirmed {
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+app-tenant-dashboard .badge-pending {
+  background: #fffbeb;
+  color: #b45309;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+app-tenant-dashboard .badge-rejected {
+  background: #fff1f2;
+  color: #be123c;
+  border: 1px solid rgba(244, 63, 94, 0.25);
+}
+app-tenant-dashboard .booking-meta-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  padding: 12px;
+  background: #f8fafc;
+  border: 1px solid #dfe6ef;
+  border-radius: 10px;
+}
+app-tenant-dashboard .meta-col {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+app-tenant-dashboard .meta-col-label {
+  font-size: 11px;
+  color: #66768d;
+  font-weight: 600;
+}
+app-tenant-dashboard .meta-col-value {
+  font-size: 13px;
+  color: #092c61;
+  font-weight: 700;
+  font-family: 'Outfit', sans-serif;
+  font-feature-settings: 'tnum';
+}
+app-tenant-dashboard .meta-col-price strong {
+  font-size: 15px;
+  color: #047857;
+}
+app-tenant-dashboard .booking-notes-uniform-box {
+  background: #f8fafc;
+  border-left: 3px solid #1264e8;
+  border-radius: 0 8px 8px 0;
+  padding: 10px 12px;
+}
+app-tenant-dashboard .notes-box-header span {
+  font-size: 10px;
+  font-weight: 700;
+  color: #092c61;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+app-tenant-dashboard .notes-text {
+  font-size: 12px;
+  color: #435d7c;
+  margin: 4px 0 0 0;
+  line-height: 1.4;
+}
+app-tenant-dashboard .booking-card-footer {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 4px;
+}
+app-tenant-dashboard .booking-card-footer .btn {
+  flex: 1;
+  padding: 8px 10px;
+  font-size: 12px;
+}
+/* Estado vacío */
+app-tenant-dashboard .empty-state-card {
+  text-align: center;
+  padding: 48px 24px;
+  background: #ffffff;
+  border: 1px solid #dfe6ef;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(9, 44, 97, 0.03);
+}
+app-tenant-dashboard .empty-state-icon-box {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 16px;
+  border-radius: 50%;
+  background: #eaf2ff;
+  color: #1264e8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+}
+app-tenant-dashboard .empty-state-heading {
+  font-family: 'Outfit', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: #092c61;
+  margin: 0 0 8px;
+}
+app-tenant-dashboard .empty-state-text {
+  color: #66768d;
+  font-size: 13px;
+  max-width: 440px;
+  margin: 0 auto 20px;
+  line-height: 1.5;
+}
+app-tenant-dashboard .empty-state-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+}
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 1080px) {
+  app-tenant-dashboard .rg-dashboard-metrics {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 860px) {
+  app-tenant-dashboard .panel-layout-container {
+    flex-direction: column;
+    height: auto;
+    min-height: calc(100vh - 61px);
+    overflow-y: visible;
+  }
+  app-tenant-dashboard .dashboard-vertical-sidebar {
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid #dfe6ef;
+    padding: 16px;
+  }
+  app-tenant-dashboard .sidebar-buttons-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 6px;
+  }
+  app-tenant-dashboard .panel-main-stage {
+    padding: 20px 16px 36px;
+    height: auto;
+    overflow: visible;
+  }
+  app-tenant-dashboard .bookings-grid-uniform {
+    grid-template-columns: 1fr;
+  }
+}

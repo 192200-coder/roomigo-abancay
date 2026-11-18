@@ -7,9 +7,8 @@ import { App } from '../../../app';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './footer.component.html',
-  styleUrls: []
+  styleUrls: ['./footer.component.css']
 })
 export class FooterComponent {
   constructor(@Inject(forwardRef(() => App)) public app: App) {}
 }
-

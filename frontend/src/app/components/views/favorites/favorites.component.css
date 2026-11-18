@@ -1,0 +1,270 @@
+:host {
+  display: block;
+  min-height: 60vh;
+  background: #f5f7fb;
+  color: #142b49;
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+.rg-favorites__header {
+  padding: 38px 24px 32px;
+  background: #eaf2ff;
+  border-bottom: 1px solid #e1eaf7;
+  text-align: center;
+}
+.rg-favorites__eyebrow {
+  margin: 0 0 8px;
+  color: #55739b;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+.rg-favorites__header h1 {
+  margin: 0;
+  color: #142b49;
+  font-family: "Outfit", sans-serif;
+  font-size: clamp(26px, 3vw, 36px);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.18;
+}
+.rg-favorites__header > p:last-child {
+  margin: 9px 0 0;
+  color: #667995;
+  font-size: 13px;
+}
+.rg-favorites__content {
+  width: min(100% - 48px, 1200px);
+  margin: 0 auto;
+  padding: 28px 0 48px;
+}
+.rg-favorites__empty {
+  display: grid;
+  justify-items: center;
+  padding: 56px 24px;
+  border: 1px solid #e1e8f1;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(20, 43, 73, 0.03), 0 8px 24px rgba(20, 43, 73, 0.04);
+  text-align: center;
+}
+.rg-favorites__empty-icon {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  border: 1px solid rgba(18, 100, 232, 0.14);
+  border-radius: 16px;
+  background: rgba(18, 100, 232, 0.07);
+  color: #1264e8;
+  font-size: 21px;
+}
+.rg-favorites__empty h2 {
+  margin: 16px 0 0;
+  font-family: "Outfit", sans-serif;
+  font-size: 20px;
+}
+.rg-favorites__empty p {
+  margin: 7px 0 18px;
+  color: #667995;
+  font-size: 12px;
+}
+.rg-favorites__browse,
+.rg-favorites__toolbar > button {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 14px;
+  border: 1px solid #1264e8;
+  border-radius: 10px;
+  background: #1264e8;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), background 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.rg-favorites__browse:hover,
+.rg-favorites__toolbar > button:hover {
+  background: #0c55c9;
+  transform: translateY(-1px);
+}
+.rg-favorites__browse:active,
+.rg-favorites__toolbar > button:active,
+.rg-favorite-card__remove:active {
+  transform: scale(0.97);
+}
+.rg-favorites__toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.rg-favorites__toolbar p {
+  margin: 0;
+  color: #667995;
+  font-size: 12px;
+}
+.rg-favorites__toolbar strong {
+  color: #142b49;
+  font-feature-settings: "tnum";
+}
+.rg-favorites__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+}
+.rg-favorite-card {
+  position: relative;
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #e1e8f1;
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(20, 43, 73, 0.03), 0 7px 18px rgba(20, 43, 73, 0.045);
+  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.rg-favorite-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 4px rgba(20, 43, 73, 0.04), 0 12px 24px rgba(20, 43, 73, 0.08);
+}
+.rg-favorite-card__photo {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: 184px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  background: #e9eef4;
+  cursor: pointer;
+}
+.rg-favorite-card__photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.rg-favorite-card__placeholder {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  place-items: center;
+  color: #7d8ca2;
+  font-size: 24px;
+}
+.rg-favorite-card__status {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  padding: 5px 8px;
+  border: 1px solid rgba(26, 168, 119, 0.2);
+  border-radius: 999px;
+  background: rgba(236, 253, 245, 0.95);
+  color: #087c57;
+  font-size: 10px;
+  font-weight: 700;
+}
+.rg-favorite-card__remove {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  border: 1px solid rgba(219, 39, 82, 0.14);
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 3px 10px rgba(9, 44, 97, 0.1);
+  color: #d82c54;
+  cursor: pointer;
+  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), background 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.rg-favorite-card__remove:hover {
+  background: #fff1f4;
+  transform: translateY(-1px);
+}
+.rg-favorite-card__body {
+  padding: 13px;
+}
+.rg-favorite-card__location,
+.rg-favorite-card__features {
+  overflow: hidden;
+  margin: 0 0 7px;
+  color: #74849c;
+  font-size: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rg-favorite-card__location i {
+  margin-right: 4px;
+  color: #1264e8;
+}
+.rg-favorite-card__title {
+  display: block;
+  width: 100%;
+  overflow: hidden;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #142b49;
+  cursor: pointer;
+  font-family: "Outfit", sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rg-favorite-card__features {
+  margin: 7px 0;
+}
+.rg-favorite-card__price {
+  margin: 0;
+  color: #74849c;
+  font-size: 10px;
+  font-feature-settings: "tnum";
+}
+.rg-favorite-card__price strong {
+  color: #092c61;
+  font-family: "Outfit", sans-serif;
+  font-size: 19px;
+  font-weight: 800;
+}
+.rg-favorite-card button:focus-visible,
+.rg-favorites__browse:focus-visible,
+.rg-favorites__toolbar > button:focus-visible {
+  outline: 3px solid rgba(18, 100, 232, 0.3);
+  outline-offset: 3px;
+}
+@media (max-width: 800px) {
+  .rg-favorites__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+}
+@media (max-width: 520px) {
+  .rg-favorites__header {
+    padding: 28px 20px 24px;
+  }
+
+  .rg-favorites__content {
+    width: calc(100% - 32px);
+    padding: 20px 0 32px;
+  }
+
+  .rg-favorites__grid {
+    gap: 10px;
+  }
+
+  .rg-favorite-card__photo {
+    height: clamp(130px, 42vw, 180px);
+  }
+
+  .rg-favorite-card__body {
+    padding: 10px;
+  }
+}

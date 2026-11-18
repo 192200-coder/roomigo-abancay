@@ -1,0 +1,51 @@
+.modern-auth-card {
+  border-radius: 24px !important;
+  box-shadow: 0 28px 70px rgba(15, 23, 42, 0.22), 0 6px 18px rgba(15, 23, 42, 0.08) !important;
+}
+
+.auth-heading-section {
+  padding: 28px 32px 16px;
+}
+
+.auth-main-title {
+  letter-spacing: -0.035em !important;
+}
+
+.auth-modal-body {
+  padding: 20px 32px 32px !important;
+}
+
+.auth-modern-input {
+  min-height: 46px;
+  border-radius: 12px !important;
+  transition: border-color 160ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 160ms cubic-bezier(0.16, 1, 0.3, 1), background 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.auth-modern-input:focus {
+  background: #fbfdff;
+}
+
+.auth-field-group {
+  gap: 6px;
+}
+
+.auth-options-row,
+.remember-checkbox-label,
+.auth-forgot-link {
+  font-size: 12px;
+}
+
+.btn-auth-submit {
+  min-height: 48px !important;
+  border-radius: 12px !important;
+}
+
+@media (max-width: 640px) {
+  .auth-heading-section {
+    padding: 24px 20px 12px;
+  }
+
+  .auth-modal-body {
+    padding: 16px 20px 24px !important;
+  }
+}

@@ -8,6 +8,7 @@ import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Component;
+import jakarta.annotation.PostConstruct;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
@@ -20,6 +21,15 @@ public class JwtTokenProvider {
 
     @Value("${app.jwt.expiration-ms}")
     private long jwtExpirationDate;
+
+    @PostConstruct
+    void validateSigningKey() {
+        try {
+            key();
+        } catch (RuntimeException ex) {
+            throw new IllegalStateException("APP_JWT_SECRET debe ser una clave Base64 válida de al menos 32 bytes. Configúrala antes de iniciar el backend.", ex);
+        }
+    }
 
     public String generateToken(Authentication authentication) {
         return generateToken(authentication.getName());

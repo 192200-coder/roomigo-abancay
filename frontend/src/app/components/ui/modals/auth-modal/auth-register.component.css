@@ -1,0 +1,106 @@
+.auth-register-form {
+  display: grid;
+  gap: 14px;
+}
+
+.auth-register-form .auth-field-group {
+  margin-bottom: 0;
+}
+
+.auth-field-hint {
+  display: block;
+  margin-top: -2px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.auth-modern-input.password-valid {
+  border-color: #10b981 !important;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1) !important;
+}
+
+.auth-password-guide {
+  padding: 14px;
+  border: 1px solid rgba(0, 82, 255, 0.14);
+  border-radius: 14px;
+  background: linear-gradient(145deg, #f8fbff 0%, #f1f7ff 100%);
+}
+
+.auth-password-guide__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #1e3a8a;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.auth-password-guide__header span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.auth-password-guide__header i {
+  color: #0052ff;
+}
+
+.auth-password-guide__header strong {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.auth-password-rules {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 12px;
+  margin-top: 12px;
+}
+
+.auth-password-rules span {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 600;
+  transition: color 160ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.auth-password-rules i {
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+.auth-password-rules span.is-valid {
+  color: #047857;
+}
+
+.auth-password-rules span.is-valid i {
+  color: #10b981;
+}
+
+.auth-register-form .role-card {
+  min-height: 92px;
+  border-radius: 14px;
+}
+
+.auth-register-form .role-card:active,
+.auth-register-form .auth-eye-btn:active {
+  transform: scale(0.97);
+}
+
+@media (max-width: 480px) {
+  .auth-password-rules {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-password-guide__header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 5px;
+  }
+}

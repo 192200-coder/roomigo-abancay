@@ -7,7 +7,7 @@ import { App } from '../../../app';
   standalone: true,
   imports: [CommonModule],
   templateUrl: './navbar.component.html',
-  styleUrls: []
+  styleUrls: ['./navbar.component.css', './navbar-styles-1.css']
 })
 export class NavbarComponent {
   constructor(@Inject(forwardRef(() => App)) public app: App) {}

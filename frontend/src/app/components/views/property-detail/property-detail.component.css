@@ -1,0 +1,265 @@
+:host {
+  display: block;
+  color: #142b49;
+  font-family: "Plus Jakarta Sans", sans-serif;
+}
+.rg-detail {
+  min-height: 100%;
+  background: #f5f7fb;
+}
+.rg-detail__container {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 22px 32px 48px;
+}
+.rg-detail-breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-bottom: 20px;
+  color: #74849c;
+  font-size: 10px;
+}
+.rg-detail-breadcrumb button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0;
+  color: #1264e8;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+}
+.rg-detail-breadcrumb button:hover {
+  color: #0c55c9;
+}
+.rg-detail-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 16px;
+}
+.rg-detail-heading__meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  color: #667995;
+  font-size: 10px;
+}
+.rg-detail-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 8px;
+  color: #087c56;
+  background: #effbf6;
+  border: 1px solid rgba(8, 124, 86, 0.14);
+  border-radius: 999px;
+  font-size: 9px;
+  font-weight: 700;
+}
+.rg-detail-status i {
+  width: 5px;
+  height: 5px;
+  background: #1aa877;
+  border-radius: 50%;
+}
+.rg-detail-heading h1 {
+  margin: 0;
+  color: #142b49;
+  font-family: "Outfit", sans-serif;
+  font-size: clamp(25px, 3vw, 34px);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.18;
+}
+.rg-detail-heading > div > p {
+  margin: 8px 0 0;
+  color: #667995;
+  font-size: 11px;
+}
+.rg-detail-heading > div > p i {
+  color: #1264e8;
+}
+.rg-detail-rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px;
+  color: #314967;
+  background: #fff;
+  border: 1px solid #e1e8f1;
+  border-radius: 9px;
+  font-size: 10px;
+  white-space: nowrap;
+}
+.rg-detail-rating i,
+.rg-review__heading span i {
+  color: #e6a233;
+}
+.rg-detail-rating strong {
+  font-feature-settings: "tnum";
+}
+.rg-detail-rating span,
+.rg-detail-no-rating {
+  color: #74849c;
+  font-size: 9px;
+}
+.rg-detail-photo {
+  position: relative;
+  min-height: 280px;
+  overflow: hidden;
+  background: #e9eef5;
+  border: 1px solid #e1e8f1;
+  border-radius: 16px;
+}
+.rg-detail-photo > img {
+  display: block;
+  width: 100%;
+  height: clamp(280px, 38vw, 440px);
+  object-fit: cover;
+}
+.rg-detail-photo__empty {
+  display: flex;
+  min-height: 280px;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 9px;
+  color: #74849c;
+  font-size: 12px;
+}
+.rg-detail-photo__empty i {
+  font-size: 28px;
+}
+.rg-detail-photo__caption {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  padding: 6px 9px;
+  color: #fff;
+  background: rgba(15, 35, 62, 0.72);
+  border-radius: 7px;
+  font-size: 9px;
+  backdrop-filter: blur(6px);
+}
+.rg-detail-columns {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 320px;
+  align-items: start;
+  gap: 18px;
+  margin-top: 18px;
+}
+.rg-detail-main {
+  display: grid;
+  gap: 14px;
+}
+.rg-detail-card,
+.rg-detail-booking {
+  background: #fff;
+  border: 1px solid #e1e8f1;
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(20, 43, 73, 0.025), 0 8px 22px rgba(20, 43, 73, 0.035);
+}
+.rg-detail-card {
+  padding: 20px;
+}
+.rg-detail-overview__title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.rg-detail-icon {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  place-items: center;
+  color: #1264e8;
+  background: #eaf2ff;
+  border-radius: 12px;
+}
+.rg-detail-overview__title h2,
+.rg-detail-owner__copy h2 {
+  margin: 0;
+  color: #142b49;
+  font-family: "Outfit", sans-serif;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+}
+.rg-detail-overview__title p,
+.rg-detail-owner__copy > p:last-child {
+  margin: 4px 0 0;
+  color: #74849c;
+  font-size: 10px;
+}
+.rg-detail-facts {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  margin-top: 18px;
+  padding-top: 15px;
+  border-top: 1px solid #edf1f6;
+}
+.rg-detail-facts > div {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #526782;
+  font-size: 10px;
+}
+.rg-detail-facts i {
+  color: #1264e8;
+}
+.rg-detail-kicker {
+  margin: 0 0 7px;
+  color: #55739b;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+}
+.rg-detail-card > h2,
+.rg-detail-reviews__heading h2 {
+  margin: 0;
+  color: #142b49;
+  font-family: "Outfit", sans-serif;
+  font-size: 18px;
+  letter-spacing: -0.02em;
+  line-height: 1.3;
+}
+.rg-detail-description {
+  margin: 10px 0 0;
+  color: #526782;
+  font-size: 12px;
+  line-height: 1.75;
+  white-space: pre-line;
+}
+.rg-detail-owner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.rg-detail-owner__avatar {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 auto;
+  place-items: center;
+  color: #1264e8;
+  background: #eaf2ff;
+  border-radius: 50%;
+  font-size: 17px;
+}
+.rg-detail-owner__copy {
+  flex: 1;
+}
+.rg-detail-owner__copy .rg-detail-kicker {
+  margin-bottom: 4px;
+}
+.rg-detail-owner__copy h2 {
+  font-size: 15px;
+}

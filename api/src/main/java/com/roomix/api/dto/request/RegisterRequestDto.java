@@ -4,6 +4,7 @@ import com.roomix.api.entity.enums.UserRole;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 
@@ -28,8 +29,10 @@ public class RegisterRequestDto {
 
     @NotBlank(message = "La contraseña es obligatoria")
     @Size(min = 8, message = "La contraseña debe tener al menos 8 caracteres")
+    @Pattern(regexp = "^(?=.*[A-Z])(?=.*\\d)(?=.*[^A-Za-z\\d]).+$", message = "La contraseÃ±a debe incluir una mayÃºscula, un nÃºmero y un carÃ¡cter especial")
     private String password;
 
+    @Pattern(regexp = "^(?:\\+?51)?9\\d{8}$", message = "El telÃ©fono debe contener un nÃºmero mÃ³vil peruano de 9 dÃ­gitos")
     private String phone;
 
     @NotNull(message = "El rol es obligatorio")

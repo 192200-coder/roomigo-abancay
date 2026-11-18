@@ -1,0 +1,37 @@
+@media (max-width: 1100px) {
+  .rg-map-layout {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    column-gap: 32px;
+  }
+}
+
+@media (max-width: 760px) {
+  .rg-neighborhood-image {
+    height: 180px;
+  }
+
+  .rg-neighborhood-content {
+    gap: 8px;
+    padding: 24px;
+  }
+
+  .rg-map-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+  }
+
+  .rg-map-copy {
+    gap: 13px;
+  }
+
+  .rg-map-canvas,
+  .rg-map-canvas iframe {
+    min-height: 340px;
+  }
+}
+
+@media (max-width: 390px) {
+  .rg-map-tag {
+    font-size: 9px;
+  }
+}

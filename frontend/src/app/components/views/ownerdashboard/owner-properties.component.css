@@ -1,0 +1,31 @@
+.inventory-panel { padding: 24px; border: 1px solid #dbe4f0; border-radius: 20px; background: #fff; box-shadow: inset 0 1px 0 #fff; }
+header { margin-bottom: 24px; }
+h3 { margin: 0 0 8px; font: 500 22px/1.2 'Outfit', sans-serif; color: #142b49; }
+header p, small, .inventory-unlisted { color: #64748b; font-size: 12px; }
+header p { margin: 0; }
+.inventory-filters { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+label { display: grid; gap: 8px; color: #142b49; font-size: 12px; }
+input, select { width: 100%; min-width: 0; min-height: 48px; padding: 12px 16px; border: 1px solid #dbe4f0; border-radius: 12px; background: #fff; color: #142b49; font: inherit; }
+.inventory-scroll { overflow-x: auto; }
+table { width: 100%; min-width: 640px; border-collapse: collapse; color: #142b49; font-size: 13px; }
+th { padding: 16px 12px; background: #f5f7fc; text-align: left; text-transform: uppercase; font-size: 10px; font-weight: 500; }
+td { padding: 24px 12px; border-bottom: 1px solid #dbe4f0; }
+.inventory-property { display: flex; gap: 16px; align-items: center; }
+.inventory-property img { width: 72px; height: 72px; border-radius: 8px; object-fit: cover; }
+.inventory-property strong { display: block; font-weight: 500; margin-bottom: 8px; }
+small { display: block; line-height: 1.5; }
+.inventory-price { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.inventory-status { display: inline-block; padding: 8px 12px; border-radius: 24px; background: #e7f6f1; color: #087f63; font-size: 12px; white-space: nowrap; }
+.is-pending { background: #fff4e4; color: #82551c; }
+.is-rejected { background: #fff1f2; color: #be123c; }
+.inventory-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+button { padding: 8px 0; background: transparent; border: 0; color: #0052ff; font: inherit; font-weight: 600; cursor: pointer; transition: transform 180ms cubic-bezier(.16,1,.3,1); }
+button:hover { text-decoration: underline; }
+button:active { transform: scale(.97); }
+.inventory-remove { color: #be123c; }
+:is(button,input,select,.inventory-scroll):focus-visible { outline: 2px solid #0052ff; outline-offset: 4px; }
+.inventory-empty { text-align: center; padding: 32px; }
+@media (max-width: 600px) {
+  .inventory-panel { padding: 16px; }
+  .inventory-filters { grid-template-columns: 1fr; }
+}

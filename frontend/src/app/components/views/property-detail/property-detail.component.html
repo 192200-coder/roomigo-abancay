@@ -1,0 +1,142 @@
+@if (app.selectedRoom(); as room) {
+  <section class="rg-detail">
+    <div class="rg-detail__container">
+      <nav class="rg-detail-breadcrumb" aria-label="Ruta de navegación">
+        <button type="button" (click)="app.switchTab('catalog')"><i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Volver a inmuebles</button>
+        <span aria-hidden="true">/</span>
+        <span>{{ room.title }}</span>
+      </nav>
+
+      <header class="rg-detail-heading">
+        <div>
+          <div class="rg-detail-heading__meta">
+            <span class="rg-detail-status"><i aria-hidden="true"></i> Disponible</span>
+            <span>{{ roomTypeLabel(room.roomType) }}</span>
+          </div>
+          <h1>{{ room.title }}</h1>
+          <p><i class="fa-solid fa-location-dot" aria-hidden="true"></i> {{ room.propertyAddress || 'Ubicación por confirmar' }}, {{ room.propertyCity || 'Abancay' }}</p>
+        </div>
+        @if (room.averageRating && room.totalReviews) {
+          <div class="rg-detail-rating">
+            <i class="fa-solid fa-star" aria-hidden="true"></i>
+            <strong>{{ room.averageRating | number:'1.1-1' }}</strong>
+            <span>{{ room.totalReviews }} {{ room.totalReviews === 1 ? 'opinión' : 'opiniones' }}</span>
+          </div>
+        } @else {
+          <span class="rg-detail-no-rating">Aún sin valoraciones</span>
+        }
+      </header>
+
+      <div class="rg-detail-photo">
+        @if (room.mainImageUrl) {
+          <img [src]="room.mainImageUrl" [alt]="room.title">
+        } @else {
+          <div class="rg-detail-photo__empty">
+            <i class="fa-regular fa-image" aria-hidden="true"></i>
+            <span>El propietario aún no ha agregado una imagen</span>
+          </div>
+        }
+        <span class="rg-detail-photo__caption">Imagen publicada por el propietario</span>
+      </div>
+
+      <div class="rg-detail-columns">
+        <main class="rg-detail-main">
+          <section class="rg-detail-card rg-detail-overview">
+            <div class="rg-detail-overview__title">
+              <span class="rg-detail-icon"><i class="fa-solid fa-house" aria-hidden="true"></i></span>
+              <div>
+                <h2>{{ roomTypeLabel(room.roomType) }} en {{ room.propertyCity || 'Abancay' }}</h2>
+                <p>Hasta {{ room.capacity }} {{ room.capacity === 1 ? 'persona' : 'personas' }}</p>
+              </div>
+            </div>
+            <div class="rg-detail-facts">
+              @if (room.sizeSqm) {
+                <div><i class="fa-solid fa-ruler-combined" aria-hidden="true"></i><span>{{ room.sizeSqm }} m²</span></div>
+              }
+              <div><i class="fa-solid fa-bath" aria-hidden="true"></i><span>{{ room.privateBathroom ? 'Baño privado' : 'Baño compartido' }}</span></div>
+              <div><i class="fa-solid fa-wifi" aria-hidden="true"></i><span>{{ room.offersWifi ? 'Wifi incluido' : 'Sin wifi incluido' }}</span></div>
+              <div><i class="fa-solid fa-paw" aria-hidden="true"></i><span>{{ room.acceptsPets ? 'Acepta mascotas' : 'No acepta mascotas' }}</span></div>
+            </div>
+          </section>
+
+          <section class="rg-detail-card">
+            <p class="rg-detail-kicker">SOBRE ESTE ESPACIO</p>
+            <h2>Un lugar para sentirte en casa</h2>
+            @if (room.description) {
+              <p class="rg-detail-description">{{ room.description }}</p>
+            } @else {
+              <p class="rg-detail-description">El propietario aún no ha agregado una descripción para este inmueble.</p>
+            }
+          </section>
+
+          <section class="rg-detail-card rg-detail-owner">
+            <div class="rg-detail-owner__avatar" aria-hidden="true">
+              <i class="fa-regular fa-user"></i>
+            </div>
+            <div class="rg-detail-owner__copy">
+              <p class="rg-detail-kicker">ANFITRIÓN</p>
+              <h2>{{ room.ownerName || 'Propietario' }}</h2>
+              <p>Publica en RoomiGo</p>
+            </div>
+            @if (room.ownerPhone) {
+              <a class="rg-detail-owner__contact" [href]="'tel:' + room.ownerPhone">
+                <i class="fa-solid fa-phone" aria-hidden="true"></i> Contactar
+              </a>
+            }
+          </section>
+
+          <section class="rg-detail-card rg-detail-reviews">
+            <div class="rg-detail-reviews__heading">
+              <div>
+                <p class="rg-detail-kicker">OPINIONES</p>
+                <h2>Lo que cuentan quienes vivieron aquí</h2>
+              </div>
+              @if (room.totalReviews) { <span>{{ room.totalReviews }} opiniones</span> }
+            </div>
+
+            @if (app.roomReviews().length === 0) {
+              <p class="rg-detail-empty-reviews">Este inmueble todavía no tiene opiniones.</p>
+            } @else {
+              <div class="rg-review-list">
+                @for (review of app.roomReviews(); track review.id) {
+                  <article class="rg-review">
+                    <div class="rg-review__heading">
+                      <strong>{{ review.authorName }}</strong>
+                      <span><i class="fa-solid fa-star" aria-hidden="true"></i> {{ review.rating | number:'1.0-1' }}</span>
+                    </div>
+                    <p>{{ review.comment }}</p>
+                    @if (review.createdAt) { <time>{{ review.createdAt | date:'mediumDate' }}</time> }
+                  </article>
+                }
+              </div>
+            }
+          </section>
+        </main>
+
+        <aside class="rg-detail-booking">
+          <div class="rg-detail-booking__price">
+            <strong>S/ {{ room.pricePerMonth | number:'1.0-0' }}</strong>
+            <span>/ mes</span>
+          </div>
+          <p class="rg-detail-booking__deposit">Depósito: S/ {{ room.depositPrice | number:'1.0-0' }}</p>
+          <button type="button" (click)="app.openBookingModal(room)">Consultar disponibilidad</button>
+          <p class="rg-detail-booking__note"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Tu reserva se confirma desde RoomiGo.</p>
+          <div class="rg-detail-booking__divider"></div>
+          <p class="rg-detail-booking__facts"><i class="fa-solid fa-location-dot" aria-hidden="true"></i>{{ room.propertyCity || 'Abancay' }}, Apurímac</p>
+          @if (room.ownerPhone) {
+            <p class="rg-detail-booking__facts"><i class="fa-solid fa-phone" aria-hidden="true"></i>{{ room.ownerPhone }}</p>
+          }
+        </aside>
+      </div>
+    </div>
+  </section>
+} @else {
+  <section class="rg-detail rg-detail--missing">
+    <div class="rg-detail-missing">
+      <span class="rg-detail-icon"><i class="fa-solid fa-house-circle-exclamation" aria-hidden="true"></i></span>
+      <h1>Este inmueble ya no está disponible</h1>
+      <p>Explora los inmuebles publicados en Abancay.</p>
+      <button type="button" (click)="app.switchTab('catalog')">Volver al catálogo</button>
+    </div>
+  </section>
+}

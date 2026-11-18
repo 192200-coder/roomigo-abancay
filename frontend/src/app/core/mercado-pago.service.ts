@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, of } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { AuthService } from './auth.service';
 import { ApiResponse, MercadoPagoPaymentRequest, MercadoPagoPaymentResult } from './models';
@@ -83,6 +83,7 @@ export class MercadoPagoService {
     payerName: string;
     externalReference: string;
   }): Observable<{ preferenceId: string; initPoint: string }> {
+    return throwError(() => new Error('La pasarela de pagos no está disponible.'));
     return this.http.post<ApiResponse<any>>(`${this.baseUrl}/payments/mercadopago/preference`, data, {
       headers: this.auth.getAuthHeaders()
     }).pipe(
@@ -91,6 +92,7 @@ export class MercadoPagoService {
         initPoint: res.data?.init_point || `https://www.mercadopago.com.pe/checkout/v1/redirect?pref_id=${Date.now()}`
       })),
       catchError(() => {
+        return throwError(() => new Error('La pasarela de pagos no está disponible.'));
         // Fallback robusto / Modo offline si el backend no está disponible
         const fakePrefId = `PREF-${Date.now()}-${Math.floor(Math.random() * 9000 + 1000)}`;
         return of({
@@ -106,11 +108,13 @@ export class MercadoPagoService {
    * Tarjetas (Visa, Mastercard, AMEX), Yape vía Mercado Pago, PagoEfectivo y Saldo MP.
    */
   processPayment(req: MercadoPagoPaymentRequest): Observable<MercadoPagoPaymentResult> {
+    return throwError(() => new Error('La pasarela de pagos no está disponible.'));
     return this.http.post<ApiResponse<MercadoPagoPaymentResult>>(`${this.baseUrl}/payments/mercadopago/process`, req, {
       headers: this.auth.getAuthHeaders()
     }).pipe(
       map(res => res.data),
       catchError(() => {
+        return throwError(() => new Error('La pasarela de pagos no está disponible.'));
         // Emulación certificada de la respuesta de la API de Mercado Pago
         const txnId = `MP-${Math.floor(1000000000 + Math.random() * 9000000000)}`;
         const authCode = `AUTH-${Math.floor(100000 + Math.random() * 900000)}`;

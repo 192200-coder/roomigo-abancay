@@ -1,0 +1,202 @@
+## Table `amenities`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int4` | Primary Identity |
+| `description` | `varchar` |  Nullable |
+| `icon` | `varchar` |  Nullable |
+| `name` | `varchar` |  Unique |
+
+## Table `favorites`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int8` | Primary Identity |
+| `created_at` | `timestamp` |  Nullable |
+| `room_id` | `int8` |  |
+| `user_id` | `int8` |  |
+
+## Table `notifications`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int8` | Primary Identity |
+| `created_at` | `timestamp` |  Nullable |
+| `is_read` | `bool` |  |
+| `message` | `text` |  |
+| `title` | `varchar` |  |
+| `type` | `varchar` |  |
+| `user_id` | `int8` |  |
+
+## Table `payments`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int8` | Primary Identity |
+| `amount` | `numeric` |  |
+| `currency` | `varchar` |  |
+| `paid_at` | `timestamp` |  Nullable |
+| `payment_method` | `varchar` |  |
+| `status` | `varchar` |  |
+| `transaction_code` | `varchar` |  Nullable |
+| `reservation_id` | `int8` |  Unique |
+
+## Table `properties`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int8` | Primary Identity |
+| `address` | `varchar` |  |
+| `city` | `varchar` |  |
+| `country` | `varchar` |  Nullable |
+| `created_at` | `timestamp` |  Nullable |
+| `description` | `text` |  Nullable |
+| `district` | `varchar` |  Nullable |
+| `latitude` | `numeric` |  Nullable |
+| `longitude` | `numeric` |  Nullable |
+| `property_type` | `varchar` |  |
+| `status` | `varchar` |  |
+| `title` | `varchar` |  |
+| `updated_at` | `timestamp` |  Nullable |
+| `owner_id` | `int8` |  |
+
+## Table `reservations`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int8` | Primary Identity |
+| `created_at` | `timestamp` |  Nullable |
+| `end_date` | `date` |  |
+| `notes` | `text` |  Nullable |
+| `start_date` | `date` |  |
+| `status` | `varchar` |  |
+| `total_price` | `numeric` |  |
+| `updated_at` | `timestamp` |  Nullable |
+| `room_id` | `int8` |  |
+| `tenant_id` | `int8` |  |
+
+## Table `reviews`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int8` | Primary Identity |
+| `comment` | `text` |  Nullable |
+| `created_at` | `timestamp` |  Nullable |
+| `rating` | `int4` |  |
+| `status` | `varchar` |  |
+| `reservation_id` | `int8` |  Unique |
+| `room_id` | `int8` |  |
+| `user_id` | `int8` |  |
+
+## Table `roles`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int4` | Primary Identity |
+| `description` | `varchar` |  Nullable |
+| `name` | `varchar` |  Unique |
+
+## Table `room_amenities`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `room_id` | `int8` | Primary |
+| `amenity_id` | `int4` | Primary |
+
+## Table `room_images`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int8` | Primary Identity |
+| `display_order` | `int4` |  |
+| `image_url` | `text` |  |
+| `is_primary` | `bool` |  |
+| `room_id` | `int8` |  |
+
+## Table `rooms`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int8` | Primary Identity |
+| `accepts_pets` | `bool` |  |
+| `average_rating` | `float8` |  Nullable |
+| `capacity` | `int4` |  |
+| `created_at` | `timestamp` |  Nullable |
+| `currency` | `varchar` |  |
+| `deposit_price` | `numeric` |  |
+| `description` | `text` |  Nullable |
+| `floor` | `int4` |  Nullable |
+| `furnished` | `bool` |  |
+| `main_image_url` | `text` |  Nullable |
+| `offers_wifi` | `bool` |  |
+| `payment_method` | `varchar` |  Nullable |
+| `payment_reference` | `varchar` |  Nullable |
+| `price_per_month` | `numeric` |  |
+| `private_bathroom` | `bool` |  |
+| `publication_fee_amount` | `numeric` |  Nullable |
+| `publication_fee_paid` | `bool` |  |
+| `room_type` | `varchar` |  |
+| `size_sqm` | `float8` |  Nullable |
+| `status` | `varchar` |  |
+| `title` | `varchar` |  |
+| `total_reviews` | `int4` |  |
+| `updated_at` | `timestamp` |  Nullable |
+| `property_id` | `int8` |  |
+
+## Table `users`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int8` | Primary Identity |
+| `created_at` | `timestamp` |  Nullable |
+| `email` | `varchar` |  Unique |
+| `first_name` | `varchar` |  |
+| `last_name` | `varchar` |  |
+| `password` | `varchar` |  |
+| `phone` | `varchar` |  Nullable |
+| `profile_image` | `varchar` |  Nullable |
+| `status` | `varchar` |  |
+| `updated_at` | `timestamp` |  Nullable |
+| `role_id` | `int4` |  |
+
+## Table `verification_codes`
+
+### Columns
+
+| Name | Type | Constraints |
+|------|------|-------------|
+| `id` | `int8` | Primary Identity |
+| `code` | `varchar` |  |
+| `created_at` | `timestamp` |  Nullable |
+| `email` | `varchar` |  |
+| `expires_at` | `timestamp` |  |
+| `first_name` | `varchar` |  Nullable |
+| `last_name` | `varchar` |  Nullable |
+| `provider` | `varchar` |  |
+| `role_name` | `varchar` |  Nullable |
+| `used` | `bool` |  |
+

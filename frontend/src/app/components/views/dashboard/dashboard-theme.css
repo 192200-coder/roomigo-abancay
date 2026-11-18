@@ -1,0 +1,54 @@
+:is(app-tenant-dashboard, app-owner-dashboard, app-admin-dashboard) .panel-layout-container {
+  background: #f5f7fc;
+  height: calc(100dvh - 88px);
+}
+:is(app-tenant-dashboard, app-owner-dashboard, app-admin-dashboard) .panel-main-stage {
+  padding: 32px 36px 48px;
+  gap: 24px;
+  background: #f5f7fc;
+}
+:is(app-tenant-dashboard, app-owner-dashboard, app-admin-dashboard) .section-title {
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(24px, 2.6vw, 36px);
+  color: #142b49;
+  font-weight: 700;
+  line-height: 1.2;
+}
+:is(app-tenant-dashboard, app-owner-dashboard, app-admin-dashboard) .rg-dashboard-metrics,
+app-admin-dashboard .admin-metrics-grid { gap: 16px; }
+:is(app-tenant-dashboard, app-owner-dashboard, app-admin-dashboard) .rg-dashboard-metric,
+app-admin-dashboard .admin-metric-card {
+  border-radius: 20px;
+  padding: 24px;
+  border: 1px solid rgba(0, 82, 255, .12);
+  box-shadow: inset 0 1px 0 #fff, 0 2px 4px rgba(13,46,96,.01), 0 8px 24px rgba(13,46,96,.02);
+}
+:is(app-tenant-dashboard, app-owner-dashboard, app-admin-dashboard) .rg-dashboard-metric > strong {
+  font-size: 32px;
+  font-variant-numeric: tabular-nums;
+}
+:is(app-tenant-dashboard, app-owner-dashboard, app-admin-dashboard) .rg-dashboard-metric > small { color: #087f63; }
+app-admin-dashboard .admin-header-banner { padding: 0; border: 0; background: transparent; box-shadow: none; }
+app-admin-dashboard .admin-shield-icon, app-admin-dashboard .admin-header-badge { display: none; }
+app-admin-dashboard .admin-metrics-grid .admin-metric-card { position: relative; display: block; }
+app-admin-dashboard .admin-metric-card .metric-icon { position: absolute; right: 24px; top: 24px; background: transparent; width: 24px; height: 24px; color: #1264e8; }
+app-admin-dashboard .admin-metric-card .metric-title { padding-right: 24px; text-transform: none; color: #64748b; font-size: 12px; font-weight: 500; }
+app-admin-dashboard .admin-metric-card .metric-num { font-size: 32px; color: #142b49; }
+app-admin-dashboard .admin-metric-card .metric-body { gap: 16px; }
+app-admin-dashboard .admin-metric-card .kpi-micro-badge { color: #087f63; background: transparent; }
+app-admin-dashboard .admin-crud-block { border-radius: 20px; }
+app-admin-dashboard .crud-header-icon, app-admin-dashboard .crud-tag-pill { display: none; }
+app-admin-dashboard .crud-title { font-size: 22px; font-weight: 500; }
+app-admin-dashboard .crud-search-box { max-width: none; min-width: 0; background: #fff; padding: 16px; border-radius: 12px; }
+app-admin-dashboard .crud-search-input { min-width: 0; }
+app-admin-dashboard .crud-desc { max-width: 640px; }
+app-admin-dashboard .moderation-heading { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 24px; }
+app-admin-dashboard .moderation-heading h3 { margin: 0 0 8px; color: #142b49; font: 500 22px/1.2 'Outfit', sans-serif; }
+app-admin-dashboard .moderation-heading p { margin: 0; color: #64748b; font-size: 12px; line-height: 1.5; }
+@media (max-width: 860px) {
+  app-admin-dashboard .moderation-heading { align-items: flex-start; flex-direction: column; }
+  :is(app-tenant-dashboard, app-owner-dashboard, app-admin-dashboard) .panel-layout-container { height: auto; min-height: calc(100dvh - 72px); }
+  :is(app-tenant-dashboard, app-owner-dashboard, app-admin-dashboard) .panel-main-stage { padding: 24px 16px 32px; }
+  :is(app-tenant-dashboard, app-owner-dashboard, app-admin-dashboard) .rg-dashboard-metric,
+  app-admin-dashboard .admin-metric-card { padding: 16px; }
+}

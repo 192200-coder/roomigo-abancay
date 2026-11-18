@@ -1,0 +1,186 @@
+@if (app.authMode() === 'register') {
+        <!-- Social Register Shortcut (Solo Google) -->
+        <div class="social-auth-container animate-fade-in">
+          <button type="button" class="btn-social btn-google btn-google-full" (click)="app.loginWithGoogle()"
+            [disabled]="app.authSocialLoading">
+            <svg class="google-icon-svg" viewBox="0 0 24 24" width="20" height="20">
+              <path fill="#4285F4"
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+              <path fill="#34A853"
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+              <path fill="#FBBC05"
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" />
+              <path fill="#EA4335"
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" />
+            </svg>
+            <span>Registrarse con Google</span>
+          </button>
+
+          <div class="social-separator">
+            <span class="social-separator-line"></span>
+            <span class="social-separator-text">o completa tus datos</span>
+            <span class="social-separator-line"></span>
+          </div>
+        </div>
+
+        <form class="auth-register-form" (ngSubmit)="app.submitAuth()">
+          <div class="auth-register-intro">
+            <span class="auth-register-step">01 <span>·</span> Tu perfil</span>
+            <h3>Empieza por lo esencial</h3>
+            <p>Completa tus datos para acceder a tu espacio RoomiGo.</p>
+          </div>
+          <div class="form-row auth-names-grid">
+          <div class="form-group auth-field-group">
+            <label class="form-label" for="register-first-name">
+              <i class="fa-regular fa-user field-icon"></i>
+              <span>Nombre</span>
+            </label>
+            <input type="text" class="form-input auth-modern-input" [(ngModel)]="app.authFirstName"
+              id="register-first-name" name="firstName" required minlength="2" maxlength="50"
+              autocomplete="given-name" placeholder="Tu nombre">
+          </div>
+          <div class="form-group auth-field-group">
+            <label class="form-label" for="register-last-name">
+              <i class="fa-regular fa-user field-icon"></i>
+              <span>Apellido</span>
+            </label>
+            <input type="text" class="form-input auth-modern-input" [(ngModel)]="app.authLastName"
+              id="register-last-name" name="lastName" required minlength="2" maxlength="50"
+              autocomplete="family-name" placeholder="Tu apellido">
+          </div>
+        </div>
+
+        <div class="form-group auth-field-group">
+          <label class="form-label">
+            <i class="fa-solid fa-users-gear field-icon"></i>
+            <span>¿Cómo usarás RoomiGo?</span>
+          </label>
+          <div class="role-selector-cards role-selector-2">
+            <label class="role-card" [class.selected]="app.authRole === 'ROLE_TENANT'">
+              <input type="radio" name="userRole" value="ROLE_TENANT" [(ngModel)]="app.authRole">
+              <div class="role-card-icon-wrap">
+                <i class="fa-solid fa-person-shelter"></i>
+              </div>
+              <span class="role-card-title">Inquilino</span>
+              <small class="role-card-sub">Busco Cuarto</small>
+            </label>
+
+            <label class="role-card" [class.selected]="app.authRole === 'ROLE_OWNER'">
+              <input type="radio" name="userRole" value="ROLE_OWNER" [(ngModel)]="app.authRole">
+              <div class="role-card-icon-wrap">
+                <i class="fa-solid fa-key"></i>
+              </div>
+              <span class="role-card-title">Propietario</span>
+              <small class="role-card-sub">Tengo Cuartos</small>
+            </label>
+
+          </div>
+        </div>
+
+        <div class="form-group auth-field-group">
+          <label class="form-label" for="register-phone">
+            <i class="fa-brands fa-whatsapp field-icon text-emerald"></i>
+            <span>Teléfono móvil (opcional)</span>
+          </label>
+          <input type="tel" class="form-input auth-modern-input" [(ngModel)]="app.authPhone"
+            (ngModelChange)="app.authPhone = app.sanitizeAuthPhone($event)" id="register-phone" name="phone"
+            autocomplete="tel" inputmode="numeric" maxlength="9" pattern="[0-9]{9}" placeholder="987 654 321">
+          <span class="auth-field-hint">9 dígitos · solo números · opcional</span>
+        </div>
+
+        <div class="form-group auth-field-group">
+          <label class="form-label" for="register-email">
+            <i class="fa-regular fa-envelope field-icon"></i>
+            <span>Correo Electrónico</span>
+          </label>
+          <input type="email" class="form-input auth-modern-input" [(ngModel)]="app.authEmail"
+            id="register-email" name="registerEmail" required autocomplete="email" placeholder="correo@ejemplo.com">
+        </div>
+
+        <div class="form-group auth-field-group">
+          <div class="label-with-hint">
+            <label class="form-label" for="register-password">
+              <i class="fa-solid fa-lock field-icon"></i>
+              <span>Contraseña</span>
+            </label>
+            <span class="field-hint">Mínimo 8 caracteres</span>
+          </div>
+          <div class="auth-input-password-wrap">
+            <input [type]="app.showAuthPassword() ? 'text' : 'password'" class="form-input auth-modern-input"
+              id="register-password" [(ngModel)]="app.authPassword" name="registerPassword" required minlength="8"
+              autocomplete="new-password" placeholder="Crea una contraseña segura"
+              [class.password-valid]="app.authPasswordIsValid()">
+            <button type="button" class="auth-eye-btn" (click)="app.showAuthPassword.set(!app.showAuthPassword())"
+              [attr.aria-label]="app.showAuthPassword() ? 'Ocultar contraseña' : 'Ver contraseña'">
+              <i [class]="app.showAuthPassword() ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="auth-password-guide" aria-live="polite">
+          <div class="auth-password-guide__header">
+            <span><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Requisitos de seguridad</span>
+            <strong>{{ app.authPasswordIsValid() ? 'Contraseña segura' : 'Completa los requisitos' }}</strong>
+          </div>
+          <div class="auth-password-rules">
+            <span [class.is-valid]="app.authPasswordHasMinLength()">
+              <i [class]="app.authPasswordHasMinLength() ? 'fa-solid fa-circle-check' : 'fa-regular fa-circle'" aria-hidden="true"></i>
+              8 caracteres mínimo
+            </span>
+            <span [class.is-valid]="app.authPasswordHasUppercase()">
+              <i [class]="app.authPasswordHasUppercase() ? 'fa-solid fa-circle-check' : 'fa-regular fa-circle'" aria-hidden="true"></i>
+              Una letra mayúscula
+            </span>
+            <span [class.is-valid]="app.authPasswordHasNumber()">
+              <i [class]="app.authPasswordHasNumber() ? 'fa-solid fa-circle-check' : 'fa-regular fa-circle'" aria-hidden="true"></i>
+              Un número
+            </span>
+            <span [class.is-valid]="app.authPasswordHasSpecialCharacter()">
+              <i [class]="app.authPasswordHasSpecialCharacter() ? 'fa-solid fa-circle-check' : 'fa-regular fa-circle'" aria-hidden="true"></i>
+              Un símbolo especial
+            </span>
+          </div>
+        </div>
+
+        <div class="form-group auth-field-group">
+          <div class="label-with-hint">
+            <label class="form-label" for="register-confirm-password">
+              <i class="fa-solid fa-shield-halved field-icon text-indigo"></i>
+              <span>Confirmar Contraseña</span>
+            </label>
+            @if (app.authConfirmPassword && app.authPassword !== app.authConfirmPassword) {
+            <span class="field-hint text-rose-500 font-semibold animate-fade-in"><i class="fa-solid fa-circle-xmark"></i> No coinciden</span>
+            } @else if (app.authConfirmPassword && app.authPassword === app.authConfirmPassword) {
+            <span class="field-hint text-emerald-500 font-semibold animate-fade-in"><i class="fa-solid fa-circle-check"></i> Coinciden</span>
+            }
+          </div>
+          <div class="auth-input-password-wrap">
+            <input [type]="app.showAuthConfirmPassword() ? 'text' : 'password'" class="form-input auth-modern-input"
+              id="register-confirm-password" [(ngModel)]="app.authConfirmPassword" name="registerConfirmPassword"
+              required minlength="8" autocomplete="new-password" placeholder="Repite tu contraseña"
+              [class.password-valid]="app.authPasswordsMatch()">
+            <button type="button" class="auth-eye-btn" (click)="app.showAuthConfirmPassword.set(!app.showAuthConfirmPassword())"
+              [attr.aria-label]="app.showAuthConfirmPassword() ? 'Ocultar contraseña' : 'Ver contraseña'">
+              <i [class]="app.showAuthConfirmPassword() ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="auth-submit-wrapper">
+          <button type="submit" class="btn btn-primary btn-block btn-auth-submit" [disabled]="app.authLoading">
+            @if (app.authLoading) {
+            <i class="fa-solid fa-spinner fa-spin"></i> Registrando...
+            } @else {
+            <i class="fa-solid fa-user-plus"></i> Crear mi Cuenta en RoomiGo
+            }
+          </button>
+        </div>
+
+        <p class="auth-terms-note">
+          Al registrarte aceptas los <a href="javascript:void(0)">Términos del Servicio</a> y la <a
+            href="javascript:void(0)">Política de Privacidad</a> de RoomiGo Abancay.
+        </p>
+        </form>
+        }
+
+        

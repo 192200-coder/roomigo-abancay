@@ -1,6 +1,6 @@
 package com.roomix.api.security;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.ObjectMapper;
 import com.roomix.api.dto.common.ErrorDetailDto;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,7 +30,6 @@ public class JwtEntryPoint implements AuthenticationEntryPoint {
         );
 
         ObjectMapper mapper = new ObjectMapper();
-        mapper.findAndRegisterModules();
         mapper.writeValue(response.getOutputStream(), error);
     }
 }

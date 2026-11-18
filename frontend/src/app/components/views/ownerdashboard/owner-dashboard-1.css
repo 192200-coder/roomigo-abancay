@@ -1,0 +1,265 @@
+app-owner-dashboard .sidebar-security-badge p {
+  margin: 0;
+  font-size: 11px;
+  color: #047857;
+  line-height: 1.4;
+}
+app-owner-dashboard .sidebar-spacer {
+  flex-grow: 1;
+}
+app-owner-dashboard .sidebar-logout-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #e11d48;
+  background: #fff1f2;
+  border: 1px solid rgba(225, 29, 72, 0.2);
+  cursor: pointer;
+  transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+app-owner-dashboard .sidebar-logout-btn:hover {
+  background: #ffe4e6;
+  border-color: rgba(225, 29, 72, 0.35);
+  transform: translateY(-1px);
+}
+app-owner-dashboard .sidebar-logout-btn:active {
+  transform: scale(0.97);
+}
+/* ==================== STAGE PRINCIPAL ==================== */
+app-owner-dashboard .panel-main-stage {
+  flex-grow: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  background: #f8fafc;
+  padding: 28px 36px 40px;
+  height: 100%;
+  overflow-y: auto;
+}
+app-owner-dashboard .panel-main-stage::-webkit-scrollbar {
+  width: 6px;
+}
+app-owner-dashboard .panel-main-stage::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 10px;
+}
+/* Header */
+app-owner-dashboard .rg-dashboard-overview__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+app-owner-dashboard .rg-dashboard-eyebrow {
+  margin: 0 0 6px;
+  color: #1264e8;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+app-owner-dashboard .section-title {
+  margin: 0;
+  color: #092c61;
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(22px, 2.5vw, 28px);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
+}
+app-owner-dashboard .section-desc {
+  margin: 6px 0 0;
+  color: #66768d;
+  font-size: 13px;
+  line-height: 1.45;
+}
+app-owner-dashboard .rg-dashboard-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+app-owner-dashboard .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 9px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+app-owner-dashboard .btn:active {
+  transform: scale(0.97);
+}
+app-owner-dashboard .btn-primary {
+  background: #1264e8;
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(18, 100, 232, 0.2);
+}
+app-owner-dashboard .btn-primary:hover {
+  background: #0c57cf;
+  box-shadow: 0 6px 16px rgba(18, 100, 232, 0.28);
+  transform: translateY(-1px);
+}
+app-owner-dashboard .btn-secondary {
+  background: #ffffff;
+  color: #142b49;
+  border-color: #dfe6ef;
+  box-shadow: 0 1px 3px rgba(9, 44, 97, 0.03);
+}
+app-owner-dashboard .btn-secondary:hover {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #092c61;
+}
+app-owner-dashboard .btn-success {
+  background: #10b981;
+  color: #ffffff;
+}
+app-owner-dashboard .btn-success:hover {
+  background: #059669;
+}
+app-owner-dashboard .btn-danger {
+  background: #fff1f2;
+  color: #be123c;
+  border-color: rgba(244, 63, 94, 0.3);
+}
+app-owner-dashboard .btn-danger:hover {
+  background: #ffe4e6;
+}
+app-owner-dashboard .btn-whatsapp {
+  background: #25d366;
+  color: #ffffff;
+}
+app-owner-dashboard .btn-whatsapp:hover {
+  background: #1ebe57;
+}
+/* Notice */
+app-owner-dashboard .rg-dashboard-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #eaf2ff;
+  border: 1px solid rgba(18, 100, 232, 0.15);
+  border-radius: 12px;
+  color: #092c61;
+}
+app-owner-dashboard .rg-dashboard-notice i {
+  color: #1264e8;
+  font-size: 15px;
+  margin-top: 2px;
+}
+app-owner-dashboard .rg-dashboard-notice p {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #142b49;
+}
+/* Métricas */
+app-owner-dashboard .rg-dashboard-metrics {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+app-owner-dashboard .rg-dashboard-metric {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 18px 20px;
+  background: #ffffff;
+  border: 1px solid #dfe6ef;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(9, 44, 97, 0.02), 0 8px 20px rgba(9, 44, 97, 0.03);
+  overflow: hidden;
+}
+app-owner-dashboard .rg-dashboard-metric > span {
+  font-size: 12px;
+  font-weight: 600;
+  color: #66768d;
+}
+app-owner-dashboard .rg-dashboard-metric > strong {
+  font-family: 'Outfit', sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+  color: #092c61;
+  font-feature-settings: 'tnum';
+  line-height: 1.15;
+}
+app-owner-dashboard .rg-dashboard-metric > small {
+  font-size: 11px;
+  color: #66768d;
+}
+app-owner-dashboard .rg-dashboard-metric > i {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  font-size: 16px;
+  color: #1264e8;
+  opacity: 0.85;
+}
+/* ==================== FILTROS Y TABLAS ==================== */
+app-owner-dashboard .panel-filter-pills {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+app-owner-dashboard .panel-filter-pill {
+  padding: 8px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: #ffffff;
+  color: #66768d;
+  border: 1px solid #dfe6ef;
+  cursor: pointer;
+  transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+app-owner-dashboard .panel-filter-pill:hover {
+  background: #f1f6fd;
+  color: #1264e8;
+}
+app-owner-dashboard .panel-filter-pill:active {
+  transform: scale(0.97);
+}
+app-owner-dashboard .panel-filter-pill.active {
+  background: #1264e8;
+  color: #ffffff;
+  border-color: #1264e8;
+  box-shadow: 0 2px 8px rgba(18, 100, 232, 0.25);
+}
+app-owner-dashboard .requests-block {
+  background: #ffffff;
+  border: 1px solid #dfe6ef;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 18px rgba(9, 44, 97, 0.03);
+}
+app-owner-dashboard .block-header h3 {
+  font-family: 'Outfit', sans-serif;
+  font-size: 18px;
+  font-weight: 700;
+  color: #092c61;
+  margin: 0 0 4px 0;
+}
+app-owner-dashboard .block-header .sub-text {
+  font-size: 13px;
+  color: #66768d;
+  margin: 0 0 16px 0;
+}
+app-owner-dashboard .table-responsive {
+  width: 100%;
+  overflow-x: auto;
+}

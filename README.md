@@ -42,6 +42,38 @@ Plataforma web integral para la búsqueda, publicación y gestión de habitacion
 Asegúrate de contar con PostgreSQL corriendo en el puerto `5432` con una base de datos llamada `roomix_db`.
 
 ### 2. Backend (Spring Boot)
+
+El backend usa PostgreSQL local en `127.0.0.1:5432`, base de datos `roomix_db`,
+y el usuario `postgres` por defecto. Configura `SPRING_DATASOURCE_PASSWORD`
+localmente antes de iniciar; si tu usuario o puerto son distintos, configura
+`SPRING_DATASOURCE_USERNAME` o cambia `spring.datasource.url` en
+`api/src/main/resources/application.properties`. No guardes credenciales en el repositorio.
+
+En PowerShell puedes introducir la contraseña de forma oculta y ejecutar el backend
+en la misma sesión:
+
+```powershell
+cd api
+$secret = Read-Host "Contraseña de PostgreSQL" -AsSecureString
+$env:SPRING_DATASOURCE_PASSWORD = [System.Net.NetworkCredential]::new('', $secret).Password
+# Genera una clave local Base64 de 32 bytes; cambiarla invalida sesiones existentes.
+$jwtBytes = New-Object byte[] 32
+$rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
+$rng.GetBytes($jwtBytes)
+$rng.Dispose()
+$env:APP_JWT_SECRET = [Convert]::ToBase64String($jwtBytes)
+.\mvnw.cmd spring-boot:run
+```
+
+Cuando termine el proceso, limpia la variable de esa sesión:
+
+```powershell
+Remove-Item Env:\SPRING_DATASOURCE_PASSWORD
+```
+
+Hibernate conserva la configuración existente `ddl-auto=update`; revisa y respalda
+la base antes de arrancar si no deseas que ajuste el esquema.
+
 ```bash
 cd api
 ./mvnw spring-boot:run
@@ -60,6 +92,6 @@ npm start
 ---
 
 ## 👥 Roles y Credenciales Semilla
-* **Administrador:** `admin@roomix.com` / `admin123`
+* **Administrador:** `roger@gmail.com` / `***REMOVIDO***`
 * **Propietario:** `propietario@roomix.com` / `password123`
 * **Inquilino:** `inquilino@roomix.com` / `password123`

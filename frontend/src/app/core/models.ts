@@ -40,6 +40,7 @@ export interface Property {
   description: string;
   address: string;
   city: string;
+  district?: string;
   country: string;
   latitude?: number;
   longitude?: number;
@@ -61,6 +62,7 @@ export interface Room {
   id: number;
   propertyId: number;
   propertyCity?: string;
+  propertyDistrict?: string;
   propertyAddress?: string;
   title: string;
   description: string;
@@ -118,6 +120,7 @@ export interface AdminStats {
 
 export interface RoomFilter {
   city?: string;
+  district?: string;
   minPrice?: number;
   maxPrice?: number;
   roomType?: RoomType;

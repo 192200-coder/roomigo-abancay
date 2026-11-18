@@ -1,0 +1,61 @@
+<aside class="dashboard-sidebar" [attr.aria-label]="'Panel de ' + labels[role()]">
+  <p class="panel-label">MI PANEL · {{ labels[role()] }}</p>
+  <nav aria-label="Navegación del panel">
+    <button type="button" class="panel-link" (click)="overview()"
+      [class.is-active]="role() === 'tenant' ? app.tenantFilter() === 'ALL' : role() === 'owner' ? app.ownerTab() === 'properties' : app.adminTab() === 'crud'">
+      <i class="fa-solid fa-table-cells-large" aria-hidden="true"></i> Resumen
+    </button>
+    @if (role() === 'tenant') {
+      <button type="button" class="panel-link" (click)="app.tenantFilter.set('ALL')">
+        <i class="fa-solid fa-house" aria-hidden="true"></i> Mi vivienda y reservas
+      </button>
+      <button type="button" class="panel-link" (click)="app.switchTab('favorites')">
+        <i class="fa-regular fa-heart" aria-hidden="true"></i> Favoritos
+      </button>
+      @for (filter of bookingFilters; track filter) {
+        <button type="button" class="panel-link" [class.is-active]="app.tenantFilter() === filter"
+          (click)="app.tenantFilter.set(filter)">
+          <i class="fa-regular fa-calendar-check" aria-hidden="true"></i>
+          {{ filter === 'CONFIRMED' ? 'Confirmadas' : filter === 'PENDING' ? 'En espera' : 'Rechazadas' }}
+          <span class="panel-count">{{ app.getTenantStatusCount(filter) }}</span>
+        </button>
+      }
+    }
+    @if (role() === 'owner') {
+      <button type="button" class="panel-link" (click)="app.ownerTab.set('properties')">
+        <i class="fa-solid fa-house" aria-hidden="true"></i> Mis inmuebles
+      </button>
+      <button type="button" class="panel-link" [class.is-active]="app.ownerTab() === 'requests'" (click)="app.ownerTab.set('requests')">
+        <i class="fa-regular fa-clipboard" aria-hidden="true"></i> Solicitudes
+        <span class="panel-count">{{ app.getOwnerStatusCount('PENDING') }}</span>
+      </button>
+      <button type="button" class="panel-link" [class.is-active]="app.ownerTab() === 'stats'" (click)="app.ownerTab.set('stats')">
+        <i class="fa-solid fa-chart-line" aria-hidden="true"></i> Ingresos
+      </button>
+      <button type="button" class="panel-link" (click)="app.openNewRoomModal()">
+        <i class="fa-regular fa-file-lines" aria-hidden="true"></i> Publicar inmueble
+      </button>
+    }
+    @if (role() === 'admin') {
+      <button type="button" class="panel-link" [class.is-active]="app.adminTab() === 'pending'" (click)="app.adminTab.set('pending')">
+        <i class="fa-solid fa-house" aria-hidden="true"></i> Verificación y moderación
+        <span class="panel-count">{{ app.pendingRooms().length }}</span>
+      </button>
+      <button type="button" class="panel-link" [class.is-active]="app.adminTab() === 'reports'" (click)="app.adminTab.set('reports')">
+        <i class="fa-regular fa-clipboard" aria-hidden="true"></i> Reportes
+      </button>
+      <button type="button" class="panel-link" [class.is-active]="app.adminTab() === 'wallets'" (click)="app.adminTab.set('wallets')">
+        <i class="fa-solid fa-qrcode" aria-hidden="true"></i> Billeteras QR
+      </button>
+    }
+    <button type="button" class="panel-link" (click)="app.onSearchRoomsClick()">
+      <i class="fa-regular fa-compass" aria-hidden="true"></i> Explorar inmuebles
+    </button>
+  </nav>
+  <div class="panel-account">
+    <p>Acceso según el rol asignado a tu cuenta.</p>
+    <button type="button" (click)="app.openEditProfileModal()">Mi perfil</button>
+    <button type="button" (click)="app.openSettingsModal()">Configuraciones</button>
+    <button type="button" (click)="app.logout()">Cerrar sesión</button>
+  </div>
+</aside>

@@ -4,13 +4,14 @@
 <aside class="mobile-drawer-menu animate-slide-left">
   <div class="mobile-drawer-header">
     <div class="mobile-drawer-brand">
-      <img src="logo.png" alt="Logo" class="mobile-logo-img">
-      <div>
-        <span class="mobile-brand-title">ROOMIX ABANCAY</span>
-        <small class="mobile-brand-sub">Portal Oficial de Alquiler</small>
-      </div>
+      <span class="mobile-logo-mark" aria-hidden="true">
+        <img src="roomigo-mark.svg" alt="" class="mobile-logo-img">
+      </span>
+      <span class="mobile-brand-title">
+        <span>Roomi</span><span class="mobile-brand-accent">Go</span><span class="mobile-brand-period">.</span>
+      </span>
     </div>
-    <button class="mobile-drawer-close" (click)="app.closeMobileMenu()" aria-label="Cerrar Menú">
+    <button type="button" class="mobile-drawer-close" (click)="app.closeMobileMenu()" aria-label="Cerrar Menú">
       <i class="fa-solid fa-xmark"></i>
     </button>
   </div>
@@ -47,7 +48,7 @@
   <div class="mobile-drawer-auth-box">
     <p class="mobile-auth-intro">Accede para reservar habitaciones o gestionar tus cuartos en Abancay.</p>
     <div class="mobile-auth-btn-row">
-      <button class="btn btn-secondary btn-sm btn-block" (click)="app.openAuth('login'); app.closeMobileMenu()">
+      <button class="btn btn-secondary btn-sm btn-block" (click)="app.openSignInPage(); app.closeMobileMenu()">
         <i class="fa-regular fa-user"></i> Iniciar Sesión
       </button>
       <button class="btn btn-primary btn-sm btn-block" (click)="app.openAuth('register'); app.closeMobileMenu()">
@@ -60,14 +61,37 @@
   <div class="mobile-drawer-section">
     <span class="mobile-section-label">Navegación & Paneles</span>
     <div class="mobile-nav-links">
-      <button class="mobile-nav-link" [class.active]="app.activeTab() === 'explore'" (click)="app.switchTab('explore')">
+      <button class="mobile-nav-link" [class.active]="app.activeTab() === 'explore'" (click)="app.switchTab('explore'); app.closeMobileMenu()">
         <i class="fa-solid fa-compass text-primary"></i>
-        <span>Explorar Cuartos</span>
+        <span>Inicio</span>
       </button>
+      <button class="mobile-nav-link" type="button" (click)="app.onSearchRoomsClick(); app.closeMobileMenu()">
+        <i class="fa-solid fa-magnifying-glass text-primary"></i>
+        <span>Buscar inmuebles</span>
+      </button>
+      <button class="mobile-nav-link" type="button" (click)="app.scrollToSection('zonas-section')">
+        <i class="fa-solid fa-map-location-dot text-primary"></i>
+        <span>Zonas de Abancay</span>
+      </button>
+      <button class="mobile-nav-link" type="button" (click)="app.scrollToSection('faq-section')">
+        <i class="fa-solid fa-circle-question text-primary"></i>
+        <span>Ayuda</span>
+      </button>
+
+      @if (app.auth.isLoggedIn()) {
+      <button class="mobile-nav-link" [class.active]="app.activeTab() === 'favorites'"
+        type="button" (click)="app.switchTab('favorites'); app.closeMobileMenu()">
+        <i class="fa-solid fa-bookmark text-primary" aria-hidden="true"></i>
+        <span>Mis Favoritos</span>
+        @if (app.favorites.count() > 0) {
+          <span class="mobile-badge-count">{{ app.favorites.count() }}</span>
+        }
+      </button>
+      }
 
       @if (app.auth.isTenant()) {
       <button class="mobile-nav-link" [class.active]="app.activeTab() === 'my-bookings'"
-        (click)="app.switchTab('my-bookings')">
+        (click)="app.switchTab('my-bookings'); app.closeMobileMenu()">
         <i class="fa-solid fa-calendar-check text-cyan"></i>
         <span>Mis Reservas</span>
         @if (app.tenantBookings().length > 0) {
@@ -78,7 +102,7 @@
 
       @if (app.auth.isOwner()) {
       <button class="mobile-nav-link" [class.active]="app.activeTab() === 'owner-panel'"
-        (click)="app.switchTab('owner-panel')">
+        (click)="app.switchTab('owner-panel'); app.closeMobileMenu()">
         <i class="fa-solid fa-chart-line text-primary"></i>
         <span>Panel Propietario</span>
         @if (app.ownerBookings().length > 0) {
@@ -101,7 +125,7 @@
 
       @if (app.auth.isAdmin()) {
       <button class="mobile-nav-link" [class.active]="app.activeTab() === 'admin-panel'"
-        (click)="app.switchTab('admin-panel')">
+        (click)="app.switchTab('admin-panel'); app.closeMobileMenu()">
         <i class="fa-solid fa-shield-halved text-rose"></i>
         <span>Modo Administrador</span>
         @if (app.pendingRooms().length > 0) {
@@ -137,7 +161,7 @@
 
   @if (app.auth.isLoggedIn()) {
   <div class="mobile-drawer-footer">
-    <button class="btn btn-danger-soft btn-block" (click)="app.logout()">
+    <button class="btn btn-danger-soft btn-block" (click)="app.logout(); app.closeMobileMenu()">
       <i class="fa-solid fa-arrow-right-from-bracket"></i> Cerrar Sesión
     </button>
   </div>

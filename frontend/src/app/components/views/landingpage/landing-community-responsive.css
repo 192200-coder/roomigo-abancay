@@ -1,0 +1,68 @@
+@media (max-width: 1100px) {
+  .rg-owner-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 32px;
+  }
+
+  .rg-faq-layout {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: 32px;
+  }
+}
+
+@media (max-width: 760px) {
+  .rg-step-card {
+    min-height: 0;
+    padding: 28px;
+    gap: 18px;
+  }
+
+  .rg-steps-grid {
+    gap: 24px;
+  }
+
+  .rg-story-card {
+    min-height: 238px;
+    padding: 22px;
+  }
+
+  .rg-owner-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+
+  .rg-owner-image {
+    height: clamp(240px, 69.23vw, 270px);
+    border-radius: 20px;
+  }
+
+  .rg-owner-section {
+    padding: 44px 0;
+  }
+
+  .rg-faq-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 26px;
+  }
+
+  .rg-faq-intro {
+    gap: 12px;
+  }
+
+  .rg-final-cta-inner {
+    min-height: 0;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 28px;
+    padding-top: 48px;
+    padding-bottom: 48px;
+  }
+
+  .rg-final-cta h2 {
+    font-size: 32px;
+  }
+
+  .rg-button--warm {
+    width: 100%;
+  }
+}

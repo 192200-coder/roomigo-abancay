@@ -1,6 +1,7 @@
 package com.roomix.api.exception;
 
 import com.roomix.api.dto.common.ErrorDetailDto;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -14,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
@@ -84,10 +86,22 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(error, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(org.springframework.web.HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorDetailDto> handleMethodNotSupported(org.springframework.web.HttpRequestMethodNotSupportedException ex) {
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED)
+                .body(ErrorDetailDto.of("Método no permitido", List.of("El método solicitado no está disponible para este recurso.")));
+    }
+
+    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+    public ResponseEntity<ErrorDetailDto> handleMissingResource(org.springframework.web.servlet.resource.NoResourceFoundException ex) {
+        return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                .body(ErrorDetailDto.of("Recurso no encontrado", List.of("El recurso solicitado no existe.")));
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorDetailDto> handleGlobalException(Exception ex) {
-        String msg = ex.getLocalizedMessage() != null ? ex.getLocalizedMessage() : "Ocurrió un error inesperado en el servidor.";
-        ErrorDetailDto error = ErrorDetailDto.of("Error interno del servidor", List.of(msg));
+        log.error("Error inesperado procesando la solicitud", ex);
+        ErrorDetailDto error = ErrorDetailDto.of("Error interno del servidor", List.of("Ocurrió un error inesperado en el servidor."));
         return new ResponseEntity<>(error, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

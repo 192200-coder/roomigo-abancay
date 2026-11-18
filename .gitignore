@@ -17,6 +17,7 @@ tmp/
 **/tmp/
 out-tsc/
 **/out-tsc/
+scratch/dashboard-chrome/
 
 # IDEs and Editors
 .idea/
@@ -46,3 +47,10 @@ yarn-error.log*
 .DS_Store
 Thumbs.db
 desktop.ini
+
+# Repositorio local de Maven / wrapper (cache regenerable)
+.m2/
+**/.m2/
+
+# Material archivado local (capturas y pruebas visuales antiguas)
+_archivo/

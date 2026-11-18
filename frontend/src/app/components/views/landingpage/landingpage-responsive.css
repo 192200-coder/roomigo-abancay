@@ -1,0 +1,264 @@
+@media (max-width: 1100px) {
+  .rg-hero-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.9fr);
+    gap: 32px;
+  }
+
+  .rg-hero-image {
+    height: 340px;
+  }
+
+  .rg-search-panel {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .rg-search-button {
+    min-height: 50px;
+  }
+
+  .rg-map-layout {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    column-gap: 32px;
+  }
+
+  .rg-owner-layout {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 32px;
+  }
+
+  .rg-faq-layout {
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+    gap: 32px;
+  }
+}
+
+@media (max-width: 760px) {
+  .rg-hero-shell {
+    padding-top: 32px;
+    padding-bottom: 32px;
+  }
+
+  .rg-hero-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+
+  .rg-hero-copy {
+    gap: 22px;
+  }
+
+  .rg-hero-benefits {
+    row-gap: 12px;
+  }
+
+  .rg-hero h1 {
+    font-size: clamp(40px, 11vw, 52px);
+  }
+
+  .rg-hero-description {
+    max-width: 530px;
+    font-size: 14px;
+  }
+
+  .rg-hero-image {
+    height: clamp(230px, 66.67vw, 260px);
+    border-radius: 20px;
+  }
+
+  .rg-search-panel {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    margin-top: 32px;
+    padding: 24px;
+    border-radius: 16px;
+  }
+
+  .rg-search-button {
+    width: 100%;
+  }
+
+  .rg-quick-search {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 32px;
+  }
+
+  .rg-trust-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+    padding-top: 28px;
+    padding-bottom: 28px;
+  }
+
+  .rg-trust-item {
+    min-height: 42px;
+  }
+
+  .rg-section {
+    padding: 46px 0;
+  }
+
+  .rg-neighborhood-section,
+  .rg-steps-section {
+    padding: 40px 0;
+  }
+
+  .rg-section-heading {
+    margin-bottom: 22px;
+  }
+
+  .rg-section-heading h2,
+  .rg-map-copy h2,
+  .rg-owner-copy h2,
+  .rg-faq-intro h2 {
+    font-size: 28px;
+  }
+
+  .rg-section-heading--split {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .rg-empty-state {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    padding: 18px;
+  }
+
+  .rg-empty-state > div {
+    min-width: calc(100% - 48px);
+  }
+
+  .rg-empty-state .rg-button {
+    width: 100%;
+  }
+
+  .rg-room-grid,
+  .rg-neighborhood-grid,
+  .rg-steps-grid,
+  .rg-stories-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .rg-room-image {
+    height: 220px;
+  }
+
+  .rg-neighborhood-image {
+    height: 180px;
+  }
+
+  .rg-room-details {
+    min-height: 0;
+  }
+
+  .rg-neighborhood-content {
+    gap: 8px;
+    padding: 24px;
+  }
+
+  .rg-map-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 22px;
+  }
+
+  .rg-map-copy {
+    gap: 13px;
+  }
+
+  .rg-map-canvas {
+    min-height: 340px;
+  }
+
+  .rg-map-park--one {
+    width: 50px;
+  }
+
+  .rg-step-card {
+    min-height: 0;
+    padding: 28px;
+    gap: 18px;
+  }
+
+  .rg-steps-grid {
+    gap: 24px;
+  }
+
+  .rg-story-card {
+    min-height: 238px;
+    padding: 22px;
+  }
+
+  .rg-owner-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 28px;
+  }
+
+  .rg-owner-image {
+    height: clamp(240px, 69.23vw, 270px);
+    border-radius: 20px;
+  }
+
+  .rg-owner-section {
+    padding: 44px 0;
+  }
+
+  .rg-faq-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 26px;
+  }
+
+  .rg-faq-intro {
+    gap: 12px;
+  }
+
+  .rg-final-cta-inner {
+    min-height: 0;
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 28px;
+    padding-top: 48px;
+    padding-bottom: 48px;
+  }
+
+  .rg-final-cta h2 {
+    font-size: 32px;
+  }
+
+  .rg-button--warm {
+    width: 100%;
+  }
+}
+
+@media (max-width: 390px) {
+  .rg-map-tag {
+    font-size: 9px;
+  }
+}
+
+@media (max-width: 900px) {
+  .rg-section[id] {
+    scroll-margin-top: 88px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .roomigo-landing *,
+  .roomigo-landing *::before,
+  .roomigo-landing *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+@media (max-width: 760px) {
+  .rg-map-canvas,
+  .rg-map-canvas iframe {
+    min-height: 340px;
+  }
+}

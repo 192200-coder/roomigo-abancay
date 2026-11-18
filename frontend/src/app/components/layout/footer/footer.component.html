@@ -1,134 +1,31 @@
-<!-- ==================== FOOTER CORPORATIVO Y ORDENADO (ROOMIGO ABANCAY) ==================== -->
-<footer class="app-footer-modern" id="contacto-footer">
-
-  <!-- CONTENIDO PRINCIPAL DEL FOOTER (GRID ALINEADO) -->
-  <div class="footer-container">
-    <div class="footer-grid">
-
-      <!-- Columna 1: Marca, Identidad y Contacto -->
-      <div class="footer-col footer-col-brand">
-        <div class="footer-logo-row">
-          <span class="footer-brand-title">RoomiGo</span>
-          <span class="footer-brand-badge"><i class="fa-solid fa-location-dot"></i> Abancay</span>
-        </div>
-        <p class="brand-desc">
-          Plataforma oficial para encontrar cuartos, minidepartamentos y alojamientos verificados en la Provincia de Abancay, Apurímac.
-        </p>
-
-        <div class="footer-contact-list">
-          <div class="contact-item">
-            <i class="fa-solid fa-location-dot contact-icon"></i>
-            <span>Plaza de Armas / Av. Arenas, Abancay</span>
-          </div>
-          <div class="contact-item">
-            <i class="fa-solid fa-envelope contact-icon"></i>
-            <span>contacto&#64;roomigo.pe</span>
-          </div>
-          <div class="contact-item">
-            <i class="fa-brands fa-whatsapp contact-icon text-emerald"></i>
-            <span>+51 983 456 789 (Atención 24/7)</span>
-          </div>
-        </div>
-
-        <div class="footer-social-wrapper">
-          <span class="footer-social-title">Síguenos en redes:</span>
-          <div class="footer-socials">
-            <a href="javascript:void(0)" class="social-btn" aria-label="Facebook" title="Facebook"><i class="fa-brands fa-facebook-f"></i></a>
-            <a href="javascript:void(0)" class="social-btn" aria-label="Instagram" title="Instagram"><i class="fa-brands fa-instagram"></i></a>
-            <a href="javascript:void(0)" class="social-btn" aria-label="WhatsApp" title="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
-            <a href="javascript:void(0)" class="social-btn" aria-label="TikTok" title="TikTok"><i class="fa-brands fa-tiktok"></i></a>
-          </div>
-        </div>
+<footer class="rg-footer" id="contacto-footer">
+  <div class="rg-footer-inner">
+    <div class="rg-footer-grid">
+      <div class="rg-footer-brand">
+        <button class="rg-footer-logo" type="button" (click)="app.switchTab('explore')" aria-label="RoomiGo, inicio">
+          <span><img src="/figma/landing/house-footer.svg" alt=""></span>
+          <strong>Roomi<span>Go.</span></strong>
+        </button>
+        <p>Tu próximo hogar, más cerca. Conectamos personas y espacios en Abancay, Apurímac.</p>
+        <strong class="rg-footer-tagline">Hecho para vivir Abancay.</strong>
       </div>
 
-      <!-- Columna 2: Zonas de Interés -->
-      <div class="footer-col footer-col-links">
-        <h4 class="footer-heading">Zonas de Interés</h4>
-        <ul class="footer-nav-list">
-          <li><a href="javascript:void(0)" (click)="app.scrollToSection('cuartos-section')"><i class="fa-solid fa-angle-right"></i> Frente a UNAMBA (Tamburco)</a></li>
-          <li><a href="javascript:void(0)" (click)="app.scrollToSection('cuartos-section')"><i class="fa-solid fa-angle-right"></i> Alrededores UTEA</a></li>
-          <li><a href="javascript:void(0)" (click)="app.scrollToSection('cuartos-section')"><i class="fa-solid fa-angle-right"></i> Centro Histórico / Plaza de Armas</a></li>
-          <li><a href="javascript:void(0)" (click)="app.scrollToSection('cuartos-section')"><i class="fa-solid fa-angle-right"></i> Américas & Fonavi</a></li>
-          <li><a href="javascript:void(0)" (click)="app.scrollToSection('cuartos-section')"><i class="fa-solid fa-angle-right"></i> Patibamba & Condebamba</a></li>
-          <li><a href="javascript:void(0)" (click)="app.scrollToSection('mapa-section')"><i class="fa-solid fa-map-location-dot"></i> Ver Mapa de Distritos</a></li>
-        </ul>
+      <div class="rg-footer-column">
+        <h2>Explora RoomiGo</h2>
+        <button type="button" (click)="app.onSearchRoomsClick()">Buscar inmuebles</button>
+        <button type="button" (click)="app.onPublishPropertyClick()">Publicar inmueble</button>
+        <button type="button" (click)="app.scrollToSection('faq-section')">Cómo funciona</button>
+        <button type="button" (click)="app.scrollToSection('faq-section')">Centro de ayuda</button>
       </div>
 
-      <!-- Columna 3: Navegación y Portales -->
-      <div class="footer-col footer-col-links">
-        <h4 class="footer-heading">Navegación</h4>
-        <ul class="footer-nav-list">
-          <li><a href="javascript:void(0)" (click)="app.switchTab('explore')"><i class="fa-solid fa-angle-right"></i> Catálogo de Cuartos</a></li>
-          <li><a href="javascript:void(0)" (click)="app.openAuth('login')"><i class="fa-solid fa-angle-right"></i> Iniciar Sesión con Google</a></li>
-          <li><a href="javascript:void(0)" (click)="app.openAuth('register')"><i class="fa-solid fa-angle-right"></i> Registrarse como Inquilino</a></li>
-          <li><a href="javascript:void(0)" (click)="app.openAuth('register')"><i class="fa-solid fa-angle-right"></i> Publicar Cuarto (Propietarios)</a></li>
-          <li><a href="javascript:void(0)" (click)="app.switchTab('admin-panel')"><i class="fa-solid fa-angle-right"></i> Panel de Moderación Admin</a></li>
-          <li><a href="javascript:void(0)" (click)="app.scrollToSection('mapa-section')"><i class="fa-solid fa-angle-right"></i> Ubicación y Coordenadas</a></li>
-        </ul>
-      </div>
-
-      <!-- Columna 4: Medios de Pago y Garantía Oficial -->
-      <div class="footer-col footer-col-payments">
-        <h4 class="footer-heading">Pasarela & Pagos</h4>
-        <p class="footer-payment-intro">Transacciones 100% protegidas mediante la API oficial de Mercado Pago:</p>
-        
-        <div class="footer-payment-badges-grid">
-          <div class="payment-badge-chip chip-mp">
-            <i class="fa-solid fa-handshake-angle"></i>
-            <span><strong>mercado</strong> pago</span>
-          </div>
-          <div class="payment-badge-chip chip-yape">
-            <i class="fa-solid fa-qrcode"></i>
-            <span>Yape Oficial</span>
-          </div>
-          <div class="payment-badge-chip chip-card">
-            <i class="fa-regular fa-credit-card"></i>
-            <span>Visa / Mastercard</span>
-          </div>
-          <div class="payment-badge-chip chip-plin">
-            <i class="fa-solid fa-mobile-screen-button"></i>
-            <span>Plin Digital</span>
-          </div>
-        </div>
-
-        <div class="footer-security-box">
-          <i class="fa-solid fa-lock text-cyan"></i>
-          <div>
-            <strong class="security-title">Seguridad Cifrada SSL</strong>
-            <small class="security-sub">Tus datos bancarios nunca se almacenan en servidores locales.</small>
-          </div>
-        </div>
-
-        <div class="footer-team-signature">
-          <span class="team-label">Equipo de Desarrollo:</span>
-          <div class="team-tags">
-            <span class="team-tag">Roger (Lead)</span>
-            <span class="team-tag">Carlos (Front)</span>
-            <span class="team-tag">Ana (UI)</span>
-            <span class="team-tag">Luis (Back)</span>
-          </div>
-        </div>
-      </div>
-
-    </div>
-
-    <!-- LÍNEA DIVISORIA SUTIL -->
-    <div class="footer-divider"></div>
-
-    <!-- BARRA INFERIOR (COPYRIGHT Y LEGAL ALINEADO) -->
-    <div class="footer-bottom">
-      <div class="footer-copy">
-        <p>© 2026 <strong>RoomiGo Abancay</strong> • Todos los derechos reservados. Desarrollado para la Región Apurímac.</p>
-      </div>
-      <div class="footer-legal">
-        <a href="javascript:void(0)">Términos de Servicio</a>
-        <span class="legal-separator">•</span>
-        <a href="javascript:void(0)">Políticas de Privacidad</a>
-        <span class="legal-separator">•</span>
-        <a href="javascript:void(0)">Garantía de Alquiler</a>
-        <span class="legal-separator">•</span>
-        <a href="javascript:void(0)">Libro de Reclamaciones</a>
+      <div class="rg-footer-column rg-footer-contact">
+        <h2>Estamos en Abancay</h2>
+        <a href="mailto:hola@roomigo.pe">hola&#64;roomigo.pe</a>
+        <span>Lunes a viernes · 9:00–18:00</span>
+        <span>Abancay, Apurímac, Perú</span>
       </div>
     </div>
+    <div class="rg-footer-divider"></div>
+    <p class="rg-footer-legal">© 2026 RoomiGo. Fotos de referencia. Confirma los detalles y condiciones con el propietario.</p>
   </div>
 </footer>

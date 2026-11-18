@@ -1,0 +1,25 @@
+@media (max-width: 860px) {
+  app-admin-dashboard .panel-layout-container {
+    flex-direction: column;
+    height: auto;
+    min-height: calc(100vh - 61px);
+    overflow-y: visible;
+  }
+  app-admin-dashboard .dashboard-vertical-sidebar {
+    width: 100%;
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid #dfe6ef;
+    padding: 16px;
+  }
+  app-admin-dashboard .sidebar-buttons-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 6px;
+  }
+  app-admin-dashboard .panel-main-stage {
+    padding: 20px 16px 36px;
+    height: auto;
+    overflow: visible;
+  }
+}

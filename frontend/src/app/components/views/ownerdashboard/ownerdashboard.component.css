@@ -1,0 +1,266 @@
+/* ==========================================================================
+   ROOMIX ABANCAY - OWNER DASHBOARD (PANEL DE PROPIETARIO)
+   Estilo de alta fidelidad adaptado a la web RoomiGo
+   ========================================================================== */
+app-owner-dashboard {
+  display: block;
+  width: 100%;
+}
+app-owner-dashboard .panel-layout-container {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0;
+  height: calc(100vh - 68px);
+  background: #f8fafc;
+  overflow: hidden;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+}
+/* ==================== MENÚ VERTICAL LATERAL (SIDEBAR) ==================== */
+app-owner-dashboard .dashboard-vertical-sidebar {
+  width: 270px;
+  background: #ffffff;
+  border-right: 1px solid #dfe6ef;
+  box-shadow: 2px 0 10px rgba(9, 44, 97, 0.02);
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: relative;
+  height: 100%;
+  flex-shrink: 0;
+  color: #142b49;
+  overflow-y: auto;
+  z-index: 5;
+}
+app-owner-dashboard .dashboard-vertical-sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+app-owner-dashboard .dashboard-vertical-sidebar::-webkit-scrollbar-thumb {
+  background: #dfe6ef;
+  border-radius: 999px;
+}
+/* Header del usuario */
+app-owner-dashboard .sidebar-user-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid #dfe6ef;
+}
+app-owner-dashboard .sidebar-avatar-wrapper {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  cursor: pointer;
+  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+app-owner-dashboard .sidebar-avatar-wrapper:hover {
+  transform: scale(1.05);
+}
+app-owner-dashboard .sidebar-avatar-wrapper:active {
+  transform: scale(0.96);
+}
+app-owner-dashboard .sidebar-avatar-img {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  border: 2px solid #eaf2ff;
+  box-shadow: 0 2px 8px rgba(18, 100, 232, 0.12);
+}
+app-owner-dashboard .sidebar-avatar-badge {
+  position: absolute;
+  bottom: -1px;
+  right: -1px;
+  width: 17px;
+  height: 17px;
+  border-radius: 50%;
+  background: #1264e8;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  border: 1.5px solid #ffffff;
+  box-shadow: 0 1px 4px rgba(18, 100, 232, 0.25);
+}
+app-owner-dashboard .sidebar-user-meta {
+  flex: 1;
+  min-width: 0;
+}
+app-owner-dashboard .sidebar-user-name {
+  font-family: 'Outfit', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  color: #092c61;
+  margin: 0 0 2px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.25;
+}
+app-owner-dashboard .sidebar-user-email {
+  font-size: 11px;
+  color: #66768d;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 165px;
+}
+/* Grupo de botones */
+app-owner-dashboard .sidebar-buttons-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+app-owner-dashboard .sidebar-nav-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 13px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #435d7c;
+  background: transparent;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: all 180ms cubic-bezier(0.16, 1, 0.3, 1);
+  text-align: left;
+}
+app-owner-dashboard .sidebar-nav-btn .btn-icon-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+app-owner-dashboard .sidebar-nav-btn .btn-icon-label i {
+  font-size: 14px;
+  color: #66768d;
+  width: 18px;
+  text-align: center;
+  transition: color 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+app-owner-dashboard .sidebar-arrow-icon {
+  font-size: 10px;
+  color: #a0aec0;
+  transition: transform 180ms cubic-bezier(0.16, 1, 0.3, 1), color 180ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+app-owner-dashboard .sidebar-nav-btn:hover {
+  background: #f1f6fd;
+  color: #1264e8;
+  border-color: rgba(18, 100, 232, 0.08);
+  transform: translateX(2px);
+}
+app-owner-dashboard .sidebar-nav-btn:hover .btn-icon-label i,
+app-owner-dashboard .sidebar-nav-btn:hover .sidebar-arrow-icon {
+  color: #1264e8;
+}
+app-owner-dashboard .sidebar-nav-btn:active {
+  transform: scale(0.97);
+}
+app-owner-dashboard .sidebar-nav-btn.active {
+  background: #eaf2ff;
+  color: #1264e8;
+  border-color: rgba(18, 100, 232, 0.18);
+  border-left: 3px solid #1264e8;
+  font-weight: 700;
+  box-shadow: 0 2px 6px rgba(18, 100, 232, 0.06);
+}
+app-owner-dashboard .sidebar-nav-btn.active .btn-icon-label i {
+  color: #1264e8;
+}
+app-owner-dashboard .sidebar-btn-badge {
+  font-family: 'Outfit', sans-serif;
+  font-feature-settings: 'tnum';
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #eaf2ff;
+  color: #1264e8;
+  border: 1px solid rgba(18, 100, 232, 0.18);
+  min-width: 20px;
+  text-align: center;
+}
+app-owner-dashboard .sidebar-nav-btn.active .sidebar-btn-badge {
+  background: #1264e8;
+  color: #ffffff;
+  border-color: #1264e8;
+}
+app-owner-dashboard .sidebar-pill-badge {
+  font-family: 'Outfit', sans-serif;
+  font-feature-settings: 'tnum';
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #eaf2ff;
+  color: #1264e8;
+  border: 1px solid rgba(18, 100, 232, 0.18);
+}
+/* Tarjeta informativa resumen */
+app-owner-dashboard .sidebar-info-card {
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #dfe6ef;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+app-owner-dashboard .sidebar-group-title {
+  color: #092c61;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+app-owner-dashboard .sidebar-stats-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+app-owner-dashboard .sidebar-stat-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #66768d;
+}
+app-owner-dashboard .sidebar-stat-item strong,
+app-owner-dashboard .sidebar-stat-item .stat-val {
+  font-family: 'Outfit', sans-serif;
+  font-feature-settings: 'tnum';
+  font-weight: 700;
+  color: #092c61;
+}
+/* Soporte propietarios */
+app-owner-dashboard .sidebar-security-badge {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  background: #f0fdf4;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+app-owner-dashboard .sidebar-security-badge i {
+  color: #10b981;
+  font-size: 16px;
+  margin-top: 2px;
+}
+app-owner-dashboard .sidebar-security-badge h5 {
+  margin: 0 0 2px 0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #065f46;
+}

@@ -1,0 +1,33 @@
+@if (booking; as current) {
+  @if (app.tenantFilter() === 'ALL') {
+    <div class="home-overview">
+      <section class="home-card" aria-labelledby="home-title">
+        <h3 id="home-title">Mi vivienda</h3>
+        <div class="home-property">
+          <img [src]="current.room.mainImageUrl || '/figma/landing/hero-room.png'" [alt]="current.room.title">
+          <div>
+            <span class="home-status">Reserva confirmada</span>
+            <h4>{{ current.room.title }}</h4>
+            <p>RG-{{ current.room.id }} · {{ current.room.propertyAddress || 'Abancay' }}</p>
+            <strong>S/ {{ current.room.pricePerMonth | number:'1.0-2' }} al mes</strong>
+            <p>Propietario: {{ current.room.ownerName || 'Ver ficha de la vivienda' }}</p>
+          </div>
+        </div>
+        <button type="button" (click)="app.contactOwnerWhatsApp(current.room.ownerPhone, current.room.title)">
+          <i class="fa-regular fa-comment" aria-hidden="true"></i> Contactar al propietario
+        </button>
+      </section>
+      <section class="home-card" aria-labelledby="stay-title">
+        <h3 id="stay-title">Tu reserva</h3>
+        <p>Reserva #{{ current.id }}</p>
+        <span class="home-status">Confirmada</span>
+        <dl>
+          <div><dt>Inicio</dt><dd>{{ current.startDate | date:'dd/MM/yyyy' }}</dd></div>
+          <div><dt>Fin</dt><dd>{{ current.endDate | date:'dd/MM/yyyy' }}</dd></div>
+          <div><dt>Monto total</dt><dd>S/ {{ current.totalPrice | number:'1.0-2' }}</dd></div>
+        </dl>
+        <button type="button" (click)="app.openRoomDetails(current.room)">Ver vivienda</button>
+      </section>
+    </div>
+  }
+}

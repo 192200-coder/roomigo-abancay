@@ -1,0 +1,55 @@
+﻿@if (app.ownerTab() === 'properties') {
+  <section class="inventory-panel" aria-labelledby="inventory-title">
+    <header>
+      <h3 id="inventory-title">Mis inmuebles</h3>
+      <p>{{ app.myProperties().length }} inmuebles · {{ rooms.length }} habitaciones registradas</p>
+    </header>
+    <div class="inventory-filters">
+      <label>Buscar en mis inmuebles
+        <input type="search" [(ngModel)]="query" placeholder="Título, zona o código">
+      </label>
+      <label>Estado
+        <select [(ngModel)]="status">
+          <option value="ALL">Todos los estados</option>
+          <option value="AVAILABLE">Disponible</option>
+          <option value="PENDING_APPROVAL">En revisión</option>
+          <option value="RENTED">Ocupado</option>
+          <option value="REJECTED">Rechazado</option>
+        </select>
+      </label>
+    </div>
+    <div class="inventory-scroll" tabindex="0" aria-label="Lista de inmuebles">
+      <table>
+        <thead><tr><th>Inmueble</th><th>Renta / mes</th><th>Estado</th><th>Gestión</th></tr></thead>
+        <tbody>
+          @for (room of filteredRooms; track room.id) {
+            <tr>
+              <td><div class="inventory-property">
+                <img [src]="room.mainImageUrl || '/figma/landing/hero-room.png'" [alt]="room.title" loading="lazy">
+                <div><strong>{{ room.title }}</strong><small>RG-{{ room.id }} · {{ room.propertyAddress || 'Abancay' }}</small></div>
+              </div></td>
+              <td class="inventory-price">S/ {{ room.pricePerMonth | number:'1.0-2' }}</td>
+              <td><span class="inventory-status" [class.is-pending]="room.status === 'PENDING_APPROVAL'"
+                [class.is-rejected]="room.status === 'REJECTED'">{{ statusLabel(room.status) }}</span></td>
+              <td><div class="inventory-actions">
+                <button type="button" (click)="app.openOwnerEditRoomModal(room)">Editar</button>
+                <button type="button" (click)="app.openRoomDetails(room)">Ver ficha</button>
+                <button type="button" class="inventory-remove" (click)="app.openOwnerDeleteRoomModal(room)">Quitar</button>
+              </div></td>
+            </tr>
+          } @empty {
+            <tr><td colspan="4" class="inventory-empty">
+              <p>{{ rooms.length ? 'No hay inmuebles con estos filtros.' : 'Publica tu primera habitación para comenzar.' }}</p>
+              @if (!rooms.length) { <button type="button" (click)="app.openNewRoomModal()">Publicar inmueble</button> }
+            </td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    @for (property of app.myProperties(); track property.id) {
+      @if (!app.getRoomsForProperty(property.id).length) {
+        <p class="inventory-unlisted">{{ property.title }} · {{ property.address }} · Sin habitaciones publicadas</p>
+      }
+    }
+  </section>
+}

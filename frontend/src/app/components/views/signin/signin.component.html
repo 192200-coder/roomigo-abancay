@@ -1,0 +1,108 @@
+<section class="rg-signin">
+  <div class="rg-signin__layout">
+    <aside class="rg-signin-welcome">
+      <span class="rg-signin-welcome__badge">TU ESPACIO EN ROOMIGO</span>
+      <h1>Un hogar para tus próximos planes.</h1>
+      <p>Vuelve a tus favoritos, conversa y organiza tus alquileres desde un panel hecho para tu cuenta.</p>
+      <img class="rg-signin-welcome__image" src="/figma/auth/login-room.jpeg" alt="Sala acogedora en una vivienda de Abancay">
+      <p class="rg-signin-welcome__note">
+        <img src="/figma/auth/shield-check.svg" alt="">
+        El rol de tu cuenta define tu panel. No eliges permisos al iniciar sesión.
+      </p>
+    </aside>
+
+    <form class="rg-signin-card" (ngSubmit)="app.submitAuth()">
+      <div class="rg-signin-card__heading">
+        <p class="rg-eyebrow">ACCESO A ROOMIGO</p>
+        <h2>Qué bueno verte de nuevo.</h2>
+        <p>Inicia sesión con el correo de tu cuenta RoomiGo.</p>
+      </div>
+
+      @if (app.authError) {
+        <div class="rg-signin-alert" role="alert">
+          <i class="fa-solid fa-circle-exclamation" aria-hidden="true"></i>
+          <span>{{ app.authError }}</span>
+        </div>
+      }
+
+      @if (app.authSuccessMessage) {
+        <div class="rg-signin-success" role="status">
+          <i class="fa-solid fa-circle-check" aria-hidden="true"></i>
+          <span>{{ app.authSuccessMessage }}</span>
+        </div>
+      }
+
+      <label class="rg-signin-field" for="rg-signin-email">
+        <span>Correo electrónico</span>
+        <span class="rg-signin-field__input">
+          <img src="/figma/auth/mail.svg" alt="">
+          <input id="rg-signin-email" name="email" type="email" [(ngModel)]="app.authEmail"
+            autocomplete="email" placeholder="tu@correo.com" required>
+        </span>
+      </label>
+
+      <label class="rg-signin-field" for="rg-signin-password">
+        <span>Contraseña</span>
+        <span class="rg-signin-field__input">
+          <img src="/figma/auth/lock-keyhole.svg" alt="">
+          <input id="rg-signin-password" name="password" [type]="app.showAuthPassword() ? 'text' : 'password'"
+            [(ngModel)]="app.authPassword" autocomplete="current-password" placeholder="Tu contraseña" required>
+          <button type="button" class="rg-signin-eye" (click)="app.showAuthPassword.set(!app.showAuthPassword())"
+            [attr.aria-label]="app.showAuthPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'">
+            <i [class]="app.showAuthPassword() ? 'fa-solid fa-eye-slash' : 'fa-solid fa-eye'" aria-hidden="true"></i>
+          </button>
+        </span>
+      </label>
+
+      <div class="rg-signin-preferences">
+        <label><input type="checkbox" name="remember" [(ngModel)]="app.authRememberMe"><span>Recordar mi cuenta</span></label>
+        <button type="button" (click)="app.openAuth('login'); app.openForgotPassword()">Olvidé mi contraseña</button>
+      </div>
+
+      <button class="rg-signin-submit" type="submit" [disabled]="app.authLoading">
+        @if (app.authLoading) {
+          <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Iniciando sesión...
+        } @else {
+          Iniciar sesión <img src="/figma/auth/arrow-right.svg" alt="">
+        }
+      </button>
+
+      <div class="rg-signin-permissions">
+        <strong>Acceso según el rol registrado</strong>
+        <p>Tu cuenta te dirige al panel de inquilino, propietario o administración correspondiente.</p>
+      </div>
+
+      <p class="rg-signin-register">
+        ¿Aún no tienes cuenta?
+        <button type="button" (click)="app.openAuth('register')">Crear una cuenta</button>
+      </p>
+    </form>
+  </div>
+
+  <section class="rg-signin-flow" aria-labelledby="rg-signin-flow-title">
+    <p class="rg-eyebrow">ACCESO POR CUENTA</p>
+    <h2 id="rg-signin-flow-title">Una cuenta. El panel que te corresponde.</h2>
+    <div class="rg-signin-flow__steps">
+      <article><span>1</span><p>Ingresa tus credenciales</p></article>
+      <article><span>2</span><p>Se consulta el rol de tu cuenta</p></article>
+      <article><span>3</span><p>Se muestra tu panel</p></article>
+    </div>
+    <div class="rg-signin-roles">
+      <article>
+        <img src="/figma/auth/house.svg" alt="">
+        <h3>Panel de inquilino</h3>
+        <p>Reservas, solicitudes y gestión de tu estancia.</p>
+      </article>
+      <article>
+        <img src="/figma/auth/key-round.svg" alt="">
+        <h3>Panel de propietario</h3>
+        <p>Publicaciones, solicitudes e ingresos de tus inmuebles.</p>
+      </article>
+      <article>
+        <img src="/figma/auth/shield-check-role.svg" alt="">
+        <h3>Panel de administrador</h3>
+        <p>Gestión de publicaciones, usuarios y reportes.</p>
+      </article>
+    </div>
+  </section>
+</section>

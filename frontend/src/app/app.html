@@ -21,6 +21,22 @@
       <app-landing-page></app-landing-page>
     }
 
+    @if (activeTab() === 'catalog') {
+      <app-room-catalog></app-room-catalog>
+    }
+
+    @if (activeTab() === 'favorites') {
+      <app-favorites></app-favorites>
+    }
+
+    @if (activeTab() === 'room-detail') {
+      <app-property-detail></app-property-detail>
+    }
+
+    @if (activeTab() === 'sign-in') {
+      <app-signin></app-signin>
+    }
+
     @if (activeTab() === 'my-bookings') {
       <app-tenant-dashboard></app-tenant-dashboard>
     }

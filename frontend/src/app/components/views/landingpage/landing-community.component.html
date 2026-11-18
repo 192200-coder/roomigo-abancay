@@ -1,0 +1,120 @@
+<section class="rg-section rg-steps-section">
+    <div class="rg-shell">
+      <div class="rg-section-heading">
+        <p class="rg-eyebrow">MÁS FÁCIL, MÁS CERCANO</p>
+        <h2>Del primer vistazo a tu nuevo hogar.</h2>
+        <p>Tómate el tiempo de elegir bien. RoomiGo te ayuda a ordenar el camino.</p>
+      </div>
+      <div class="rg-steps-grid">
+        <article class="rg-step-card">
+          <div><strong>01</strong><img src="/figma/landing/search-outline.svg" alt=""></div>
+          <h3>Encuentra tu espacio</h3>
+          <p>Filtra por zona, presupuesto y tipo de inmueble. Guarda tus favoritos.</p>
+        </article>
+        <article class="rg-step-card">
+          <div><strong>02</strong><img src="/figma/landing/messages-outline.svg" alt=""></div>
+          <h3>Conversa y visita</h3>
+          <p>Consulta las condiciones y coordina una visita con el propietario.</p>
+        </article>
+        <article class="rg-step-card">
+          <div><strong>03</strong><img src="/figma/landing/file-check.svg" alt=""></div>
+          <h3>Acuerda con tranquilidad</h3>
+          <p>Revisa el contrato y los servicios incluidos antes de dar el siguiente paso.</p>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="rg-section rg-owner-section">
+    <div class="rg-shell rg-owner-layout">
+      <img class="rg-owner-image" src="/images/landing/owner-home.jpg" alt="Interior luminoso de una vivienda" loading="lazy">
+      <div class="rg-owner-copy">
+        <span class="rg-owner-label">PARA PROPIETARIOS</span>
+        <h2>Tu inmueble merece encontrar a su persona.</h2>
+        <p>Presenta tu espacio con buenas fotos y condiciones claras. Organiza tus inmuebles, solicitudes y conversaciones en un solo panel.</p>
+        <button class="rg-button rg-button--primary" type="button" (click)="app.onPublishPropertyClick()">
+          <img src="/figma/landing/plus.svg" alt="">
+          Quiero publicar mi inmueble
+        </button>
+        <small>El panel se habilita según el rol asignado a tu cuenta.</small>
+      </div>
+    </div>
+  </section>
+
+  <section class="rg-section rg-stories-section">
+    <div class="rg-shell">
+      <div class="rg-section-heading">
+        <p class="rg-eyebrow">PERSONAS QUE HACEN CIUDAD</p>
+        <h2>Más que alquilar, encontrar tu lugar.</h2>
+        <p>Historias ilustrativas de nuestra comunidad local.</p>
+      </div>
+      <div class="rg-stories-grid">
+        <article class="rg-story-card">
+          <p>“Quería vivir cerca de mis clases. Tener la zona, el precio y los servicios claros hizo más fácil comparar.”</p>
+          <div><span class="rg-story-avatar">DL</span><span><strong>Daniela L.</strong><small>Inquilina · Abancay centro</small></span></div>
+        </article>
+        <article class="rg-story-card">
+          <p>“Puedo mostrar el departamento y ordenar las consultas sin perder de vista cada conversación.”</p>
+          <div><span class="rg-story-avatar">RQ</span><span><strong>Rosa Quispe</strong><small>Propietaria · Patibamba</small></span></div>
+        </article>
+        <article class="rg-story-card">
+          <p>“Encontrar referencias de la UNAMBA me ayudó a pensar en mi rutina, no solo en una habitación.”</p>
+          <div><span class="rg-story-avatar">MC</span><span><strong>Miguel C.</strong><small>Inquilino · Tamburco</small></span></div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="rg-section rg-faq-section" id="faq-section">
+    <div class="rg-shell rg-faq-layout">
+      <div class="rg-faq-intro">
+        <p class="rg-eyebrow">CON LA INFORMACIÓN CLARA</p>
+        <h2>¿Tienes preguntas? Estamos cerca.</h2>
+        <p>Lo esencial antes de buscar o publicar un inmueble.</p>
+        <button class="rg-button rg-button--outline" type="button" (click)="app.scrollToSection('contacto-footer')">Ir al centro de ayuda</button>
+      </div>
+      <div class="rg-faq-list">
+        <details class="rg-faq-item" open>
+          <summary>
+            ¿Cómo contacto al propietario?
+            <span><img class="rg-faq-plus" src="/figma/landing/plus-outline.svg" alt=""><img class="rg-faq-minus" src="/figma/landing/minus.svg" alt=""></span>
+          </summary>
+          <p>Abre el detalle del inmueble y envía una consulta desde tu cuenta. Coordina la visita y confirma las condiciones directamente.</p>
+        </details>
+        <details class="rg-faq-item" open>
+          <summary>
+            ¿RoomiGo cobra el alquiler?
+            <span><img class="rg-faq-plus" src="/figma/landing/plus-outline.svg" alt=""><img class="rg-faq-minus" src="/figma/landing/minus.svg" alt=""></span>
+          </summary>
+          <p>Consulta las condiciones y medios de pago con el propietario. Confirma el monto y los datos antes de transferir.</p>
+        </details>
+        <details class="rg-faq-item">
+          <summary>
+            ¿Qué debo revisar antes de alquilar?
+            <span><img class="rg-faq-plus" src="/figma/landing/plus-outline.svg" alt=""><img class="rg-faq-minus" src="/figma/landing/minus.svg" alt=""></span>
+          </summary>
+          <p>Consulta la ubicación, los servicios incluidos, la garantía y el contrato. Si puedes, coordina una visita antes de tomar una decisión.</p>
+        </details>
+        <details class="rg-faq-item">
+          <summary>
+            ¿Cómo publico mi inmueble?
+            <span><img class="rg-faq-plus" src="/figma/landing/plus-outline.svg" alt=""><img class="rg-faq-minus" src="/figma/landing/minus.svg" alt=""></span>
+          </summary>
+          <p>Crea una cuenta con el rol de propietario y luego podrás organizar tus inmuebles y solicitudes desde tu panel.</p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <section class="rg-final-cta">
+    <div class="rg-shell rg-final-cta-inner">
+      <div>
+        <h2>Tu próxima historia empieza en Abancay.</h2>
+        <p>Un cuarto, un departamento, un lugar para ti.</p>
+      </div>
+      <button class="rg-button rg-button--warm" type="button" (click)="app.onSearchRoomsClick()">
+        Encontrar mi hogar
+        <img src="/figma/landing/arrow-right.svg" alt="">
+      </button>
+    </div>
+  </section>
