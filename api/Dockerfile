@@ -30,5 +30,5 @@ COPY --from=builder /build/target/*.jar app.jar
 ENV PORT=8081
 EXPOSE 8081 10000
 
-# Flags de JVM optimizados para contenedores y compatibilidad IPv4 con Supabase Pooler
-ENTRYPOINT ["sh", "-c", "java -Djava.net.preferIPv4Stack=true -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -jar app.jar"]
+# Flags de JVM: zona horaria de Perú (fechas de notificaciones/pagos), contenedores e IPv4 para Supabase Pooler
+ENTRYPOINT ["sh", "-c", "java -Duser.timezone=America/Lima -Djava.net.preferIPv4Stack=true -XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -jar app.jar"]

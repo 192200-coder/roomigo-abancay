@@ -15,7 +15,9 @@ import com.roomix.api.repository.ReservationRepository;
 import com.roomix.api.repository.ReviewRepository;
 import com.roomix.api.repository.RoomRepository;
 import com.roomix.api.service.ReviewService;
+import com.roomix.api.event.DomainEvents;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,6 +32,7 @@ public class ReviewServiceImpl implements ReviewService {
     private final ReservationRepository reservationRepository;
     private final RoomRepository roomRepository;
     private final ReviewMapper reviewMapper;
+    private final ApplicationEventPublisher events;
 
     @Override
     @Transactional
@@ -67,6 +70,7 @@ public class ReviewServiceImpl implements ReviewService {
         room.setTotalReviews((room.getTotalReviews() != null ? room.getTotalReviews() : 0) + 1);
         roomRepository.save(room);
 
+        events.publishEvent(new DomainEvents.ReviewCreated(savedReview.getId()));
         return reviewMapper.toDto(savedReview);
     }
 

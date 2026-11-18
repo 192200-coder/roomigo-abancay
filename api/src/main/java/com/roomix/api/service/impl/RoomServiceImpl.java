@@ -16,7 +16,9 @@ import com.roomix.api.repository.PropertyRepository;
 import com.roomix.api.repository.RoomRepository;
 import com.roomix.api.repository.specification.RoomSpecification;
 import com.roomix.api.service.RoomService;
+import com.roomix.api.event.DomainEvents;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -41,6 +43,7 @@ public class RoomServiceImpl implements RoomService {
     private final ReservationRepository reservationRepository;
     private final ReviewRepository reviewRepository;
     private final RoomMapper roomMapper;
+    private final ApplicationEventPublisher events;
 
     @Override
     @Transactional
@@ -136,7 +139,9 @@ public class RoomServiceImpl implements RoomService {
         Room room = roomRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Habitación no encontrada"));
         room.setStatus(RoomStatus.AVAILABLE);
-        return roomMapper.toDto(roomRepository.save(room));
+        Room saved = roomRepository.save(room);
+        events.publishEvent(new DomainEvents.RoomModerated(saved.getId(), true, null));
+        return roomMapper.toDto(saved);
     }
 
     @Override
@@ -145,7 +150,9 @@ public class RoomServiceImpl implements RoomService {
         Room room = roomRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Habitación no encontrada"));
         room.setStatus(RoomStatus.REJECTED);
-        return roomMapper.toDto(roomRepository.save(room));
+        Room saved = roomRepository.save(room);
+        events.publishEvent(new DomainEvents.RoomModerated(saved.getId(), false, reason));
+        return roomMapper.toDto(saved);
     }
 
     @Override

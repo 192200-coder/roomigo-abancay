@@ -252,3 +252,18 @@ export interface PaymentStatusResult {
 }
 
 
+
+export type NotificationType =
+  | 'BOOKING_REQUEST' | 'BOOKING_APPROVED' | 'BOOKING_REJECTED' | 'BOOKING_CANCELLED'
+  | 'PAYMENT_CONFIRMED' | 'PAYMENT_RECEIVED' | 'PUBLICATION_PAID'
+  | 'ROOM_APPROVED' | 'ROOM_REJECTED' | 'REVIEW_RECEIVED';
+
+/** Aviso para el usuario autenticado (reservas, pagos, publicaciones). */
+export interface AppNotification {
+  id: number;
+  type: NotificationType;
+  title: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
+}

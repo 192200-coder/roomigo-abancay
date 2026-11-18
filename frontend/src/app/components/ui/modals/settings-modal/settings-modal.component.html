@@ -57,10 +57,13 @@
           <span class="settings-option-label">Notificaciones</span>
         </div>
         <div class="settings-option-action-wrap">
-          <div class="settings-select-display">
-            <span class="settings-select-val">Permitidas</span>
-            <i class="fa-solid fa-chevron-down settings-select-chevron"></i>
-          </div>
+          <!-- Antes era un texto fijo ("Permitidas") sin función; ahora abre el panel real -->
+          <button type="button" class="settings-select-display" (click)="openNotifications($event)">
+            <span class="settings-select-val">
+              {{ notifications.unreadCount() ? notifications.unreadCount() + ' sin leer' : 'Ver avisos' }}
+            </span>
+            <i class="fa-regular fa-bell settings-select-chevron" aria-hidden="true"></i>
+          </button>
         </div>
       </div>
 

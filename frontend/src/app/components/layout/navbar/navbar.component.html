@@ -71,6 +71,10 @@
       }
     </div>
 
+    @if (app.auth.isLoggedIn()) {
+      <app-notification-bell class="rg-nav-bell"></app-notification-bell>
+    }
+
     <button
       class="mobile-hamburger-btn"
       [class.is-active]="app.mobileMenuOpen()"

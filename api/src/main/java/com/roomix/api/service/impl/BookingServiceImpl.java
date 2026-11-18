@@ -16,7 +16,9 @@ import com.roomix.api.repository.ReservationRepository;
 import com.roomix.api.repository.RoomRepository;
 import com.roomix.api.repository.UserRepository;
 import com.roomix.api.service.BookingService;
+import com.roomix.api.event.DomainEvents;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,6 +35,7 @@ public class BookingServiceImpl implements BookingService {
     private final RoomRepository roomRepository;
     private final UserRepository userRepository;
     private final BookingMapper bookingMapper;
+    private final ApplicationEventPublisher events;
 
     @Override
     @Transactional
@@ -75,7 +78,9 @@ public class BookingServiceImpl implements BookingService {
                 .build();
 
         // La habitación permanece disponible en el Landing Page hasta que el propietario acepte y confirme la reserva
-        return bookingMapper.toDto(reservationRepository.save(reservation));
+        Reservation saved = reservationRepository.save(reservation);
+        events.publishEvent(new DomainEvents.BookingRequested(saved.getId()));
+        return bookingMapper.toDto(saved);
     }
 
     @Override
@@ -145,6 +150,8 @@ public class BookingServiceImpl implements BookingService {
             roomRepository.save(room);
         }
 
-        return bookingMapper.toDto(reservationRepository.save(reservation));
+        Reservation updated = reservationRepository.save(reservation);
+        events.publishEvent(new DomainEvents.BookingStatusChanged(updated.getId(), status));
+        return bookingMapper.toDto(updated);
     }
 }

@@ -76,3 +76,14 @@
     display: inline-flex;
   }
 }
+
+/* Campana de notificaciones: junto a las acciones en escritorio y pegada al menú en móvil */
+.rg-nav-bell {
+  flex-shrink: 0;
+}
+
+@media (max-width: 900px) {
+  .rg-nav-bell {
+    margin-left: auto;
+  }
+}
