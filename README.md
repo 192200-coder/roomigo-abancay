@@ -2,6 +2,13 @@
 
 Plataforma web integral para la búsqueda, publicación y gestión de habitaciones y alojamientos en la ciudad de **Abancay, Apurímac - Perú**.
 
+**Funcionalidades principales:** catálogo con filtros · reserva por número de meses · aprobación por el
+propietario · pago del primer mes + depósito con **Mercado Pago** · moderación de publicaciones por el
+administrador · **notificaciones** en tiempo casi real · reseñas.
+
+📚 Documentación técnica completa en [`docs/`](docs/README.md): arquitectura, modelo de datos, API (41 endpoints),
+flujos de negocio y pruebas.
+
 ---
 
 ## 🚀 Tecnologías

@@ -1,0 +1,158 @@
+[
+  {
+    "file": "01-inicio.png",
+    "role": "Visitante",
+    "title": "Página de inicio",
+    "description": "Portada con buscador por zona, tipo de inmueble y presupuesto."
+  },
+  {
+    "file": "02-inicio-zonas.png",
+    "role": "Visitante",
+    "title": "Zonas de Abancay",
+    "description": "Sección de barrios: Centro, Patibamba y Tamburco."
+  },
+  {
+    "file": "03-catalogo.png",
+    "role": "Visitante",
+    "title": "Catálogo de inmuebles",
+    "description": "Listado con filtros de zona, tipo, precio y servicios."
+  },
+  {
+    "file": "04-detalle-cuarto.png",
+    "role": "Visitante",
+    "title": "Detalle de un cuarto",
+    "description": "Fotos, precio, depósito, servicios y ubicación del cuarto."
+  },
+  {
+    "file": "05-iniciar-sesion.png",
+    "role": "Visitante",
+    "title": "Inicio de sesión",
+    "description": "Acceso con correo y contraseña o con Google."
+  },
+  {
+    "file": "06-registro.png",
+    "role": "Visitante",
+    "title": "Registro",
+    "description": "Creación de cuenta como inquilino o propietario."
+  },
+  {
+    "file": "07-inicio-movil.png",
+    "role": "Visitante",
+    "title": "Inicio en móvil",
+    "description": "La interfaz se adapta a pantallas de 390 px."
+  },
+  {
+    "file": "10-reserva-por-meses.png",
+    "role": "Inquilino",
+    "title": "Solicitud de reserva por meses",
+    "description": "Fecha de inicio + duración (1 a 12 meses), total del contrato y pago inicial."
+  },
+  {
+    "file": "11-panel-inquilino.png",
+    "role": "Inquilino",
+    "title": "Panel del inquilino",
+    "description": "Resumen de solicitudes, reservas confirmadas y montos."
+  },
+  {
+    "file": "12-reserva-aprobada-pagar.png",
+    "role": "Inquilino",
+    "title": "Reserva aprobada lista para pagar",
+    "description": "Botón \"Pagar\" con Mercado Pago (primer mes + depósito)."
+  },
+  {
+    "file": "13-reserva-pagada.png",
+    "role": "Inquilino",
+    "title": "Reserva pagada",
+    "description": "Insignia \"Pago inicial acreditado\" tras el pago."
+  },
+  {
+    "file": "14-notificaciones-inquilino.png",
+    "role": "Inquilino",
+    "title": "Notificaciones del inquilino",
+    "description": "Aviso de aprobación y de pago acreditado."
+  },
+  {
+    "file": "15-comprobante-pago.png",
+    "role": "Inquilino",
+    "title": "Comprobante de pago",
+    "description": "Resultado confirmado por Mercado Pago con número de operación."
+  },
+  {
+    "file": "16-calificar.png",
+    "role": "Inquilino",
+    "title": "Calificar el inmueble",
+    "description": "Reseña con estrellas y comentario."
+  },
+  {
+    "file": "17-panel-inquilino-movil.png",
+    "role": "Inquilino",
+    "title": "Panel del inquilino en móvil",
+    "description": "Vista adaptada a celular."
+  },
+  {
+    "file": "20-panel-propietario.png",
+    "role": "Propietario",
+    "title": "Panel del propietario",
+    "description": "Métricas de publicaciones, solicitudes e ingresos."
+  },
+  {
+    "file": "21-mis-inmuebles.png",
+    "role": "Propietario",
+    "title": "Mis inmuebles",
+    "description": "Inventario con estado, tarifa de publicación y acciones."
+  },
+  {
+    "file": "22-solicitudes.png",
+    "role": "Propietario",
+    "title": "Solicitudes de alquiler",
+    "description": "Aprobar, rechazar o contactar al inquilino por WhatsApp."
+  },
+  {
+    "file": "23-publicar-inmueble.png",
+    "role": "Propietario",
+    "title": "Publicar inmueble",
+    "description": "Formulario de nueva publicación con fotos y características."
+  },
+  {
+    "file": "24-notificaciones-propietario.png",
+    "role": "Propietario",
+    "title": "Notificaciones del propietario",
+    "description": "Solicitudes nuevas, pagos recibidos, reseñas y moderación."
+  },
+  {
+    "file": "25-ingresos.png",
+    "role": "Propietario",
+    "title": "Ingresos",
+    "description": "Resumen de reservas aceptadas e ingresos."
+  },
+  {
+    "file": "30-admin-publicaciones.png",
+    "role": "Administrador",
+    "title": "Gestión de publicaciones",
+    "description": "Listado completo con estado, tarifa y acciones CRUD."
+  },
+  {
+    "file": "31-admin-pendientes.png",
+    "role": "Administrador",
+    "title": "Publicaciones por aprobar",
+    "description": "Moderación: aprobar o rechazar con motivo."
+  },
+  {
+    "file": "32-admin-reportes.png",
+    "role": "Administrador",
+    "title": "Reportes",
+    "description": "Indicadores generales de la plataforma."
+  },
+  {
+    "file": "33-admin-editar.png",
+    "role": "Administrador",
+    "title": "Editar publicación",
+    "description": "Edición de cualquier anuncio por el administrador."
+  },
+  {
+    "file": "40-swagger-api.png",
+    "role": "Técnico",
+    "title": "Documentación de la API (Swagger)",
+    "description": "Endpoints REST documentados con OpenAPI."
+  }
+]

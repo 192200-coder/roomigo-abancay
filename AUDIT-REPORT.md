@@ -1,3 +1,30 @@
+# Estado de los hallazgos (actualizado al 18 de noviembre de 2026)
+
+La auditoría original (más abajo) se conserva como registro histórico. Esta tabla indica qué se resolvió en las
+fases 1–4 y qué sigue pendiente.
+
+| Hallazgo | Estado | Cómo se resolvió / qué falta |
+|---|---|---|
+| Pagos simulados marcados como aprobados (crítico 2) | ✅ Resuelto | Integración real con Mercado Pago Checkout Pro; el estado sale siempre de la API de Mercado Pago (`PaymentReconciler`). Se eliminó la simulación y los formularios de tarjeta del frontend. |
+| Webhook sin autenticación criptográfica (crítico 3) | ✅ Resuelto | Firma `x-signature` HMAC-SHA256, consulta del pago al proveedor, validación de monto/moneda e idempotencia con bloqueo pesimista. |
+| Esquema gestionado por Hibernate (`ddl-auto`) | ✅ Resuelto | Flyway V1–V4; Hibernate solo valida. |
+| Pruebas no reproducibles / fallando | ✅ Resuelto | 29 pruebas en verde con H2 y Mercado Pago simulado. |
+| Swagger devolvía 500 (springdoc 2.x con Boot 4) | ✅ Resuelto | springdoc 3.0.3. |
+| `GET /rooms/my-rooms` inexistente (aviso repetido "No se pudieron cargar tus habitaciones") | ✅ Resuelto | Endpoint implementado con prueba de regresión. |
+| Notificaciones sin implementar | ✅ Resuelto | Eventos de dominio, API `/notifications` y campana con sondeo silencioso. |
+| Tarifa de publicación inconsistente (S/ 3 en la interfaz, S/ 15 en el backend) | ✅ Resuelto | Valor único en el frontend; la recaudación solo suma tarifas pagadas. |
+| Mensajes de validación con tildes corruptas ("telÃ©fono") | ✅ Resuelto | Codificación corregida en `RegisterRequestDto`. |
+| RLS ejecutado contra H2 con advertencias | 🟡 Mitigado | Desactivado por defecto (`APP_SUPABASE_RLS_ENABLED=false`); conviene moverlo a una migración propia de Supabase. |
+| Recuperación de contraseña en `localStorage` (crítico 1) | ⏳ Pendiente | Fase 6: endpoint de recuperación en el backend con código temporal de un solo uso. |
+| CSP permisiva (crítico 4) | ⏳ Pendiente | Fase 6: quitar `unsafe-inline` y declarar dominios concretos. |
+| CORS con comodines y credenciales (crítico 5) | ⏳ Pendiente | Fase 6: lista explícita por entorno. |
+| JWT en `localStorage`, `X-Forwarded-For` sin proxy de confianza, `open-in-view` activo | ⏳ Pendiente | Mejoras de endurecimiento posteriores. |
+| `mock-data.ts` y *fallbacks* que ocultan errores | ⏳ Pendiente | Sigue importado por `RoomixApiService`. |
+| `app.ts` como componente monolítico | ⏳ Pendiente | Se redujo de 2.947 a 2.627 líneas al quitar código muerto; falta dividirlo por funcionalidad. |
+| Vulnerabilidades de `npm audit` | ⏳ Pendiente | Requieren evaluar la actualización mayor de Angular CLI. |
+
+---
+
 # Resumen General
 
 Auditoría estática, de configuración, dependencias, pruebas y ejecución realizada sobre el repositorio Roomix Abancay.
