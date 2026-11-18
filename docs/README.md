@@ -9,6 +9,7 @@
 | [Pruebas](pruebas.md) | Pruebas automatizadas, validaciones en navegador e integración con Mercado Pago |
 | [Instalación](../README.md) | Cómo levantar el proyecto en local |
 | [Auditoría](../AUDIT-REPORT.md) | Hallazgos de seguridad y calidad, con su estado actual |
+| [Documento final (Word / PDF)](entregables/) | Documentación técnica + anexos: manual de usuario, informe del proyecto e instalación |
 
 Material para el informe y el manual de usuario: [`informe/`](informe/) (capturas por rol y diagramas).
 
