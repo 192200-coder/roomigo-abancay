@@ -6,7 +6,7 @@
 -- 3. Mantiene acceso total para el Backend Spring Boot (rol postgres / superuser)
 -- ==============================================================================
 
--- 1. Habilitar RLS en las 13 tablas del sistema
+-- 1. Habilitar RLS en las tablas del sistema (incluye el historial de Flyway)
 ALTER TABLE IF EXISTS public.users ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.roles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.verification_codes ENABLE ROW LEVEL SECURITY;
@@ -20,6 +20,7 @@ ALTER TABLE IF EXISTS public.payments ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.reviews ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.favorites ENABLE ROW LEVEL SECURITY;
 ALTER TABLE IF EXISTS public.notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS public.flyway_schema_history ENABLE ROW LEVEL SECURITY;
 
 -- 2. Revocar privilegios directos de PostgREST a roles anónimos y autenticados
 -- Toda la lógica de negocio y seguridad es gestionada por el Backend Spring Boot (JWT + BCrypt)
@@ -46,7 +47,7 @@ DECLARE
     tables text[] := ARRAY[
         'users', 'roles', 'verification_codes', 'properties', 'rooms', 
         'room_images', 'amenities', 'room_amenities', 'reservations', 
-        'payments', 'reviews', 'favorites', 'notifications'
+        'payments', 'reviews', 'favorites', 'notifications', 'flyway_schema_history'
     ];
 BEGIN
     FOREACH tbl IN ARRAY tables

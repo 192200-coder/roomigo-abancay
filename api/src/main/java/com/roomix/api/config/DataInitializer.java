@@ -120,7 +120,7 @@ public class DataInitializer implements CommandLineRunner {
         java.util.List<String> tables = java.util.List.of(
                 "users", "roles", "verification_codes", "properties", "rooms",
                 "room_images", "amenities", "room_amenities", "reservations",
-                "payments", "reviews", "favorites", "notifications"
+                "payments", "reviews", "favorites", "notifications", "flyway_schema_history"
         );
 
         if (supabaseRlsEnabled) {

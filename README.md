@@ -7,9 +7,10 @@ Plataforma web integral para la búsqueda, publicación y gestión de habitacion
 ## 🚀 Tecnologías
 
 ### Backend (API REST)
-* **Framework:** Java 17 + Spring Boot 3.3.4
-* **Seguridad:** Spring Security 6 + JSON Web Tokens (JWT)
+* **Framework:** Java 25 + Spring Boot 4.0.6
+* **Seguridad:** Spring Security 7 + JSON Web Tokens (JWT)
 * **Persistencia:** Spring Data JPA + Hibernate + PostgreSQL
+* **Migraciones:** Flyway (`api/src/main/resources/db/migration`)
 * **Documentación:** OpenAPI 3 / Swagger UI (`/swagger-ui.html`)
 * **Validación:** Jakarta Bean Validation
 
@@ -23,65 +24,58 @@ Plataforma web integral para la búsqueda, publicación y gestión de habitacion
 ## 📁 Estructura del Proyecto
 
 ```text
-├── api/                  # Backend Spring Boot (REST API en puerto 8081)
-│   ├── src/main/java/    # Código fuente: controllers, services, entities, security, etc.
-│   ├── src/main/resources/# application.properties, base de datos
-│   └── pom.xml           # Configuración Maven
-├── frontend/             # Frontend Angular (Dev Server en puerto 4200)
-│   ├── src/app/          # Componentes, vistas y servicios Angular
-│   ├── package.json      # Dependencias Node.js
-│   └── angular.json      # Configuración Angular CLI
-└── .gitignore            # Exclusión de dependencias (node_modules, target, etc.)
+├── api/                       # Backend Spring Boot (REST API en puerto 8081)
+│   ├── src/main/java/         # Controllers, services, entities, security, etc.
+│   ├── src/main/resources/    # application.properties y migraciones Flyway
+│   ├── docker-compose.yml     # PostgreSQL local para desarrollo
+│   ├── .env.example           # Plantilla de variables locales (copiar a .env)
+│   └── pom.xml                # Configuración Maven
+├── frontend/                  # Frontend Angular (Dev Server en puerto 4200)
+│   ├── src/app/               # Componentes, vistas y servicios Angular
+│   ├── package.json           # Dependencias Node.js
+│   └── angular.json           # Configuración Angular CLI
+└── .gitignore
 ```
 
 ---
 
 ## 🛠️ Cómo Ejecutar el Proyecto
 
-### 1. Base de Datos (PostgreSQL)
-Asegúrate de contar con PostgreSQL corriendo en el puerto `5432` con una base de datos llamada `roomix_db`.
+### Requisitos
+* **JDK 25** (por ejemplo `winget install EclipseAdoptium.Temurin.25.JDK`). No hace falta instalar Maven: se usa el wrapper `mvnw`.
+* **Node.js 24+** y npm.
+* **Docker Desktop** (para la base de datos local).
 
-### 2. Backend (Spring Boot)
-
-El backend usa PostgreSQL local en `127.0.0.1:5432`, base de datos `roomix_db`,
-y el usuario `postgres` por defecto. Configura `SPRING_DATASOURCE_PASSWORD`
-localmente antes de iniciar; si tu usuario o puerto son distintos, configura
-`SPRING_DATASOURCE_USERNAME` o cambia `spring.datasource.url` en
-`api/src/main/resources/application.properties`. No guardes credenciales en el repositorio.
-
-En PowerShell puedes introducir la contraseña de forma oculta y ejecutar el backend
-en la misma sesión:
-
+### 1. Variables locales
 ```powershell
 cd api
-$secret = Read-Host "Contraseña de PostgreSQL" -AsSecureString
-$env:SPRING_DATASOURCE_PASSWORD = [System.Net.NetworkCredential]::new('', $secret).Password
-# Genera una clave local Base64 de 32 bytes; cambiarla invalida sesiones existentes.
-$jwtBytes = New-Object byte[] 32
-$rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
-$rng.GetBytes($jwtBytes)
-$rng.Dispose()
-$env:APP_JWT_SECRET = [Convert]::ToBase64String($jwtBytes)
+Copy-Item .env.example .env
+```
+Completa `api/.env`. Como mínimo: `SPRING_DATASOURCE_PASSWORD`, `APP_JWT_SECRET` y
+`APP_ADMIN_INITIAL_PASSWORD` (sin esta última el backend no arranca la primera vez).
+Spring Boot y docker compose leen ese archivo automáticamente. **Nunca lo subas a git** (ya está ignorado).
+
+### 2. Base de datos (PostgreSQL en Docker)
+```powershell
+cd api
+docker compose up -d
+```
+Levanta PostgreSQL 17 en `127.0.0.1:5432` con la base `roomix_db`. Al arrancar el backend,
+**Flyway crea el esquema** automáticamente; Hibernate solo lo valida (`ddl-auto=validate`).
+
+Para usar Supabase en lugar de la base local, define `SPRING_DATASOURCE_URL`,
+`SPRING_DATASOURCE_USERNAME` y `SPRING_DATASOURCE_PASSWORD` en `api/.env`.
+
+### 3. Backend (Spring Boot)
+```powershell
+cd api
 .\mvnw.cmd spring-boot:run
-```
-
-Cuando termine el proceso, limpia la variable de esa sesión:
-
-```powershell
-Remove-Item Env:\SPRING_DATASOURCE_PASSWORD
-```
-
-Hibernate conserva la configuración existente `ddl-auto=update`; revisa y respalda
-la base antes de arrancar si no deseas que ajuste el esquema.
-
-```bash
-cd api
-./mvnw spring-boot:run
 ```
 * API disponible en: `http://localhost:8081/api/v1`
 * Documentación Swagger: `http://localhost:8081/swagger-ui.html`
+* Tests: `.\mvnw.cmd test` (usan H2 en memoria; no requieren PostgreSQL)
 
-### 3. Frontend (Angular)
+### 4. Frontend (Angular)
 ```bash
 cd frontend
 npm install
@@ -91,7 +85,17 @@ npm start
 
 ---
 
-## 👥 Roles y Credenciales Semilla
-* **Administrador:** `roger@gmail.com` / `***REMOVIDO***`
-* **Propietario:** `propietario@roomix.com` / `password123`
-* **Inquilino:** `inquilino@roomix.com` / `password123`
+## 🗄️ Cambios en el esquema de base de datos
+
+Todo cambio de tablas o columnas se hace con una **nueva migración** en
+`api/src/main/resources/db/migration`, siguiendo el formato `V<n>__descripcion.sql`
+(por ejemplo `V2__reserva_por_meses.sql`). Nunca edites una migración ya aplicada.
+
+`V1__esquema_inicial.sql` es la línea base: en una base vacía se ejecuta completa; en una
+base existente sin historial (Supabase) Flyway la registra como *baseline* sin ejecutarla.
+
+---
+
+## 👥 Roles y Credenciales
+* **Administrador:** se crea al primer arranque con `APP_ADMIN_INITIAL_EMAIL` (por defecto `roger@gmail.com`) y `APP_ADMIN_INITIAL_PASSWORD`, definidos en `api/.env`.
+* **Propietario / Inquilino:** se registran desde la aplicación. Los usuarios de prueba antiguos (`propietario@roomix.com`, `inquilino@roomix.com`) se eliminan al arrancar.

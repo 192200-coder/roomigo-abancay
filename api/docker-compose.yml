@@ -1,0 +1,24 @@
+# PostgreSQL local para desarrollo. Uso (desde la carpeta api/):
+#   docker compose up -d
+# Lee las credenciales desde api/.env (ver .env.example).
+services:
+  db:
+    image: postgres:17
+    container_name: roomix-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: roomix_db
+      POSTGRES_USER: ${SPRING_DATASOURCE_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:?Define SPRING_DATASOURCE_PASSWORD en api/.env}
+    ports:
+      - "5432:5432"
+    volumes:
+      - roomix-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d roomix_db"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  roomix-db-data:
