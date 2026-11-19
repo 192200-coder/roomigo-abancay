@@ -53,6 +53,14 @@ flujos de negocio y pruebas.
 * **Node.js 24+** y npm.
 * **Docker Desktop** (para la base de datos local).
 
+### 0. Obtener el código
+```bash
+git clone https://github.com/192200-coder/roomigo-abancay.git
+cd roomigo-abancay
+```
+El repositorio contiene backend (`api/`) y frontend (`frontend/`). En Render se configura
+*Root Directory* = `api` y en Vercel *Root Directory* = `frontend`.
+
 ### 1. Variables locales
 ```powershell
 cd api
