@@ -1,5 +1,6 @@
 package com.roomix.api.mapper;
 
+import com.roomix.api.dto.common.RoomPhotoDto;
 import com.roomix.api.dto.response.RoomResponseDto;
 import com.roomix.api.entity.Room;
 import org.springframework.stereotype.Component;
@@ -17,13 +18,18 @@ public class RoomMapper {
                 .propertyAddress(room.getProperty() != null ? room.getProperty().getAddress() : null)
                 .title(room.getTitle())
                 .description(room.getDescription())
+                .operation(room.getOperation())
                 .pricePerMonth(room.getPricePerMonth())
                 .depositPrice(room.getDepositPrice())
+                .salePrice(room.getSalePrice())
                 .roomType(room.getRoomType())
                 .status(room.getStatus())
                 .privateBathroom(room.isPrivateBathroom())
                 .capacity(room.getCapacity())
                 .sizeSqm(room.getSizeSqm())
+                .landAreaSqm(room.getLandAreaSqm())
+                .bedrooms(room.getBedrooms())
+                .bathrooms(room.getBathrooms())
                 .offersWifi(room.isOffersWifi())
                 .acceptsPets(room.isAcceptsPets())
                 .mainImageUrl(room.getMainImageUrl())
@@ -38,5 +44,16 @@ public class RoomMapper {
                 .ownerPhone(room.getProperty() != null && room.getProperty().getOwner() != null ? room.getProperty().getOwner().getPhone() : null)
                 .createdAt(room.getCreatedAt())
                 .build();
+    }
+
+    /** Como {@link #toDto} pero con la galería completa (para la ficha de detalle). */
+    public RoomResponseDto toDetailDto(Room room) {
+        RoomResponseDto dto = toDto(room);
+        if (dto != null) {
+            dto.setPhotos(room.getImages().stream()
+                    .map(image -> new RoomPhotoDto(image.getImageUrl(), image.getCategory()))
+                    .toList());
+        }
+        return dto;
     }
 }

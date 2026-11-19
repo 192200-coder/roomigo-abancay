@@ -6,5 +6,7 @@ public enum RoomStatus {
     RENTED,
     OCCUPIED,
     MAINTENANCE,
-    REJECTED
+    REJECTED,
+    /** Publicación en venta que ya se vendió. */
+    SOLD
 }

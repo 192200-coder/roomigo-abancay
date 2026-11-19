@@ -110,15 +110,16 @@ public class AdminController {
     @Operation(summary = "Actualizar anuncio de habitación (Administrador)")
     public ResponseEntity<ApiResponseDto<RoomResponseDto>> updateRoom(
             @PathVariable Long id,
-            @RequestBody RoomRequestDto request) {
-        RoomResponseDto response = roomService.updateRoom(id, request);
+            @RequestBody RoomRequestDto request,
+            Authentication authentication) {
+        RoomResponseDto response = roomService.updateRoom(id, request, authentication.getName());
         return ResponseEntity.ok(ApiResponseDto.success("Anuncio de habitación actualizado con éxito", response));
     }
 
     @DeleteMapping("/rooms/{id}")
     @Operation(summary = "Eliminar anuncio de habitación permanentemente (Administrador)")
-    public ResponseEntity<ApiResponseDto<Void>> deleteRoom(@PathVariable Long id) {
-        roomService.deleteRoom(id);
+    public ResponseEntity<ApiResponseDto<Void>> deleteRoom(@PathVariable Long id, Authentication authentication) {
+        roomService.deleteRoom(id, authentication.getName());
         return ResponseEntity.ok(ApiResponseDto.success("Anuncio eliminado exitosamente de la plataforma", null));
     }
 }

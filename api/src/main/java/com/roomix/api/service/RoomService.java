@@ -10,6 +10,7 @@ import java.util.List;
 
 public interface RoomService {
     RoomResponseDto createRoom(RoomRequestDto request, String ownerEmail);
+    /** Detalle con la galería completa de fotos. */
     RoomResponseDto getRoomById(Long id);
     /** Todas las habitaciones de las propiedades del propietario, en cualquier estado. */
     List<RoomResponseDto> getRoomsByOwner(String ownerEmail);
@@ -20,7 +21,9 @@ public interface RoomService {
     RoomResponseDto approveRoom(Long id, String adminEmail);
     RoomResponseDto rejectRoom(Long id, String adminEmail, String reason);
     RoomResponseDto updateRoomLocation(Long id, java.util.Map<String, String> locationData);
-    RoomResponseDto updateRoom(Long id, RoomRequestDto request);
-    void deleteRoom(Long id);
+    /** Solo el propietario de la publicación o un administrador. */
+    RoomResponseDto updateRoom(Long id, RoomRequestDto request, String userEmail);
+    /** Solo el propietario de la publicación o un administrador. */
+    void deleteRoom(Long id, String userEmail);
 }
 

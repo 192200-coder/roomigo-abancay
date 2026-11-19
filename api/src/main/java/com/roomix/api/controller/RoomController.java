@@ -94,16 +94,17 @@ public class RoomController {
     @Operation(summary = "Actualizar habitación", description = "Permite al propietario o administrador editar los datos de su habitación.")
     public ResponseEntity<ApiResponseDto<RoomResponseDto>> updateRoom(
             @PathVariable Long id,
-            @RequestBody RoomRequestDto request) {
-        RoomResponseDto response = roomService.updateRoom(id, request);
+            @RequestBody RoomRequestDto request,
+            Authentication authentication) {
+        RoomResponseDto response = roomService.updateRoom(id, request, authentication.getName());
         return ResponseEntity.ok(ApiResponseDto.success("Habitación actualizada exitosamente", response));
     }
 
     @DeleteMapping("/{id}")
     @PreAuthorize("hasAnyRole('OWNER', 'ADMIN')")
     @Operation(summary = "Eliminar habitación", description = "Permite al propietario o administrador quitar una publicación de habitación.")
-    public ResponseEntity<ApiResponseDto<Void>> deleteRoom(@PathVariable Long id) {
-        roomService.deleteRoom(id);
+    public ResponseEntity<ApiResponseDto<Void>> deleteRoom(@PathVariable Long id, Authentication authentication) {
+        roomService.deleteRoom(id, authentication.getName());
         return ResponseEntity.ok(ApiResponseDto.success("Habitación eliminada exitosamente", null));
     }
 }

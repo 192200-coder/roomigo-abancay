@@ -8,6 +8,7 @@ import com.roomix.api.repository.PaymentRepository;
 import com.roomix.api.repository.ReservationRepository;
 import com.roomix.api.repository.ReviewRepository;
 import com.roomix.api.repository.RoomRepository;
+import com.roomix.api.repository.VisitRequestRepository;
 import com.roomix.api.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,12 +37,14 @@ public class NotificationEventListener {
 
     private static final Locale ES_PE = Locale.forLanguageTag("es-PE");
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", ES_PE);
+    private static final DateTimeFormatter TIME = DateTimeFormatter.ofPattern("HH:mm", ES_PE);
 
     private final NotificationService notifications;
     private final ReservationRepository reservationRepository;
     private final RoomRepository roomRepository;
     private final PaymentRepository paymentRepository;
     private final ReviewRepository reviewRepository;
+    private final VisitRequestRepository visitRequestRepository;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
@@ -105,13 +108,13 @@ public class NotificationEventListener {
         safely("RoomModerated", () -> roomRepository.findById(event.roomId()).ifPresent(room -> {
             if (event.approved()) {
                 notifications.notify(owner(room), NotificationType.ROOM_APPROVED,
-                        "Tu cuarto ya está publicado",
+                        "Tu publicación ya está visible",
                         room.getTitle() + " fue aprobado y ya aparece en las búsquedas de RoomiGo.");
             } else {
                 String reason = event.reason() != null && !event.reason().isBlank() ? " Motivo: " + event.reason().trim() : "";
                 notifications.notify(owner(room), NotificationType.ROOM_REJECTED,
-                        "Tu cuarto no fue aprobado",
-                        room.getTitle() + " no fue aprobado por el administrador." + reason + " Puedes editarlo y volver a enviarlo.");
+                        "Tu publicación no fue aprobada",
+                        room.getTitle() + " no fue aprobada por el administrador." + reason + " Puedes editarlo y volver a enviarlo.");
             }
         }));
     }
@@ -125,6 +128,45 @@ public class NotificationEventListener {
                     "Nueva reseña: " + "★".repeat(Math.max(1, Math.min(5, review.getRating()))),
                     review.getUser().getFirstName() + " calificó " + room.getTitle() + " con " + review.getRating() + " de 5.");
         }));
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void onVisitRequested(DomainEvents.VisitRequested event) {
+        safely("VisitRequested", () -> visitRequestRepository.findById(event.visitRequestId()).ifPresent(v -> {
+            User requester = v.getRequester();
+            notifications.notify(owner(v.getRoom()), NotificationType.VISIT_REQUESTED,
+                    "Quieren visitar " + v.getRoom().getTitle(),
+                    requester.getFirstName() + " " + requester.getLastName() + " propone visitarla el "
+                            + DATE.format(v.getPreferredDate()) + visitTime(v) + ". Respóndele en Visitas.");
+        }));
+    }
+
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void onVisitStatusChanged(DomainEvents.VisitStatusChanged event) {
+        safely("VisitStatusChanged", () -> visitRequestRepository.findById(event.visitRequestId()).ifPresent(v -> {
+            String room = v.getRoom().getTitle();
+            String note = v.getOwnerNote() != null ? " Nota del propietario: " + v.getOwnerNote() : "";
+            switch (event.status()) {
+                case CONFIRMED -> notifications.notify(v.getRequester(), NotificationType.VISIT_CONFIRMED,
+                        "Visita confirmada",
+                        "El propietario te espera el " + DATE.format(v.getPreferredDate()) + visitTime(v) + " para ver "
+                                + room + ". Ya puedes ver su teléfono en Mis visitas." + note);
+                case DECLINED -> notifications.notify(v.getRequester(), NotificationType.VISIT_DECLINED,
+                        "Visita no disponible",
+                        "El propietario no puede recibirte en esa fecha para ver " + room + ". Puedes proponer otra." + note);
+                case CANCELLED -> notifications.notify(event.byRequester() ? owner(v.getRoom()) : v.getRequester(),
+                        NotificationType.VISIT_CANCELLED,
+                        "Visita cancelada",
+                        "Se canceló la visita del " + DATE.format(v.getPreferredDate()) + " a " + room + ".");
+                default -> { /* sin aviso */ }
+            }
+        }));
+    }
+
+    private static String visitTime(VisitRequest v) {
+        return v.getPreferredTime() != null ? " a las " + TIME.format(v.getPreferredTime()) : "";
     }
 
     private static User owner(Room room) {

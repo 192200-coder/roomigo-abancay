@@ -1,5 +1,6 @@
 package com.roomix.api.entity;
 
+import com.roomix.api.entity.enums.PhotoCategory;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -30,4 +31,9 @@ public class RoomImage {
     @Column(name = "display_order", nullable = false)
     @Builder.Default
     private Integer displayOrder = 0;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "category", nullable = false, length = 20)
+    @Builder.Default
+    private PhotoCategory category = PhotoCategory.OTHER;
 }

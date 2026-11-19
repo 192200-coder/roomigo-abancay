@@ -3,6 +3,7 @@ package com.roomix.api.repository.specification;
 import com.roomix.api.dto.request.RoomFilterDto;
 import com.roomix.api.entity.Property;
 import com.roomix.api.entity.Room;
+import com.roomix.api.entity.enums.ListingOperation;
 import com.roomix.api.entity.enums.RoomStatus;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.Predicate;
@@ -18,7 +19,7 @@ public class RoomSpecification {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
-            // Únicamente habitaciones disponibles por defecto
+            // Únicamente publicaciones disponibles (en alquiler o en venta)
             predicates.add(criteriaBuilder.equal(root.get("status"), RoomStatus.AVAILABLE));
 
             if (filter != null) {
@@ -30,16 +31,23 @@ public class RoomSpecification {
                     ));
                 }
 
+                if (filter.getOperation() != null) {
+                    predicates.add(criteriaBuilder.equal(root.get("operation"), filter.getOperation()));
+                }
+
+                // El rango de precio se compara con el precio de venta cuando se buscan ventas;
+                // en cualquier otro caso, con la renta mensual.
+                String priceField = filter.getOperation() == ListingOperation.SALE ? "salePrice" : "pricePerMonth";
                 if (filter.getMinPrice() != null) {
-                    predicates.add(criteriaBuilder.greaterThanOrEqualTo(
-                            root.get("pricePerMonth"), filter.getMinPrice()
-                    ));
+                    predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get(priceField), filter.getMinPrice()));
                 }
 
                 if (filter.getMaxPrice() != null) {
-                    predicates.add(criteriaBuilder.lessThanOrEqualTo(
-                            root.get("pricePerMonth"), filter.getMaxPrice()
-                    ));
+                    predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get(priceField), filter.getMaxPrice()));
+                }
+
+                if (filter.getMinBedrooms() != null) {
+                    predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("bedrooms"), filter.getMinBedrooms()));
                 }
 
                 if (filter.getRoomType() != null) {

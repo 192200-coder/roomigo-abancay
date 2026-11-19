@@ -2,6 +2,8 @@ package com.roomix.api;
 
 import tools.jackson.databind.ObjectMapper;
 import com.roomix.api.dto.request.*;
+import com.roomix.api.dto.common.RoomPhotoDto;
+import com.roomix.api.entity.enums.PhotoCategory;
 import com.roomix.api.entity.enums.RoomType;
 import com.roomix.api.entity.enums.UserRole;
 import org.junit.jupiter.api.MethodOrderer;
@@ -201,7 +203,7 @@ class RoomixIntegrationTest {
                 .description("Habitación amplia con escritorio, cama doble y clóset empotrado")
                 .pricePerMonth(BigDecimal.valueOf(850.00))
                 .depositPrice(BigDecimal.valueOf(850.00))
-                .roomType(RoomType.SINGLE)
+                .roomType(RoomType.ROOM)
                 .privateBathroom(true)
                 .capacity(1)
                 .sizeSqm(18.5)
@@ -209,6 +211,10 @@ class RoomixIntegrationTest {
                 .acceptsPets(false)
                 .paymentMethod("MERCADO_PAGO")
                 .paymentReference("referencia-no-verificada")
+                .photos(java.util.List.of(
+                        new RoomPhotoDto("https://fotos.test/fachada.jpg", PhotoCategory.FACADE),
+                        new RoomPhotoDto("https://fotos.test/cuarto.jpg", PhotoCategory.ROOM),
+                        new RoomPhotoDto("https://fotos.test/bano.jpg", PhotoCategory.BATHROOM)))
                 .build();
 
         MvcResult result = mockMvc.perform(post("/api/v1/rooms")

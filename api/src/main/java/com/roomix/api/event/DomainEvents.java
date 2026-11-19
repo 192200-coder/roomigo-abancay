@@ -1,6 +1,7 @@
 package com.roomix.api.event;
 
 import com.roomix.api.entity.enums.ReservationStatus;
+import com.roomix.api.entity.enums.VisitRequestStatus;
 
 /**
  * Eventos de dominio publicados por los servicios. Llevan solo ids: quien los consume
@@ -21,6 +22,17 @@ public final class DomainEvents {
 
     /** El administrador aprobó o rechazó la publicación de un cuarto. */
     public record RoomModerated(Long roomId, boolean approved, String reason) {
+    }
+
+    /** Un interesado pidió visitar una publicación en venta. */
+    public record VisitRequested(Long visitRequestId) {
+    }
+
+    /**
+     * Un pedido de visita fue confirmado, declinado o cancelado.
+     * {@code byRequester} indica que lo canceló el propio interesado (se avisa al propietario).
+     */
+    public record VisitStatusChanged(Long visitRequestId, VisitRequestStatus status, boolean byRequester) {
     }
 
     /** Un inquilino publicó una reseña. */

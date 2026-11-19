@@ -1,6 +1,11 @@
 package com.roomix.api.service.impl;
 
 import com.roomix.api.dto.common.PageResponseDto;
+import com.roomix.api.dto.common.RoomPhotoDto;
+import com.roomix.api.entity.enums.ListingOperation;
+import com.roomix.api.entity.enums.PhotoCategory;
+import com.roomix.api.entity.enums.RoomType;
+import com.roomix.api.repository.VisitRequestRepository;
 import com.roomix.api.dto.request.RoomFilterDto;
 import com.roomix.api.dto.request.RoomRequestDto;
 import com.roomix.api.dto.response.RoomResponseDto;
@@ -30,7 +35,9 @@ import com.roomix.api.entity.Review;
 import com.roomix.api.repository.UserRepository;
 import com.roomix.api.repository.ReservationRepository;
 import com.roomix.api.repository.ReviewRepository;
+import java.util.EnumSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -42,8 +49,14 @@ public class RoomServiceImpl implements RoomService {
     private final UserRepository userRepository;
     private final ReservationRepository reservationRepository;
     private final ReviewRepository reviewRepository;
+    private final VisitRequestRepository visitRequestRepository;
     private final RoomMapper roomMapper;
     private final ApplicationEventPublisher events;
+
+    /** Máximo de fotos por publicación (3 obligatorias + hasta 5 adicionales). */
+    static final int MAX_PHOTOS = 8;
+    /** Tope por foto en base64 (~2,2 MB de imagen). El frontend las comprime antes de enviarlas. */
+    static final int MAX_PHOTO_CHARS = 3_000_000;
 
     @Override
     @Transactional
@@ -55,12 +68,17 @@ public class RoomServiceImpl implements RoomService {
             throw new UnauthorizedException("No posee permisos para agregar habitaciones a esta propiedad");
         }
 
+        ListingOperation operation = request.getOperation() != null ? request.getOperation() : ListingOperation.RENT;
+        validatePhotos(request.getPhotos());
+
         Room room = Room.builder()
                 .property(property)
                 .title(request.getTitle())
                 .description(request.getDescription())
+                .operation(operation)
                 .pricePerMonth(request.getPricePerMonth())
                 .depositPrice(request.getDepositPrice())
+                .salePrice(request.getSalePrice())
                 .roomType(request.getRoomType())
                 .status(RoomStatus.PENDING_APPROVAL)
                 .publicationFeePaid(false)
@@ -69,27 +87,122 @@ public class RoomServiceImpl implements RoomService {
                 .privateBathroom(request.isPrivateBathroom())
                 .capacity(request.getCapacity())
                 .sizeSqm(request.getSizeSqm())
+                .landAreaSqm(request.getLandAreaSqm())
+                .bedrooms(request.getBedrooms())
+                .bathrooms(request.getBathrooms())
                 .offersWifi(request.isOffersWifi())
                 .acceptsPets(request.isAcceptsPets())
-                .mainImageUrl(request.getMainImageUrl())
                 .build();
 
-        if (request.getImageUrls() != null && !request.getImageUrls().isEmpty()) {
-            for (int i = 0; i < request.getImageUrls().size(); i++) {
-                String imgUrl = request.getImageUrls().get(i);
-                if (imgUrl != null && !imgUrl.trim().isEmpty()) {
-                    RoomImage roomImg = RoomImage.builder()
-                            .room(room)
-                            .imageUrl(imgUrl)
-                            .isPrimary(i == 0)
-                            .displayOrder(i)
-                            .build();
-                    room.getImages().add(roomImg);
-                }
-            }
-        }
+        normalizeAndValidateListing(room);
+        replacePhotos(room, request.getPhotos());
+        room.setMainImageUrl(hasText(request.getMainImageUrl())
+                ? request.getMainImageUrl().trim()
+                : request.getPhotos().get(0).getUrl().trim());
 
         return roomMapper.toDto(roomRepository.save(room));
+    }
+
+    /**
+     * Reglas que dependen de la operación. Se aplican sobre la entidad (no sobre la petición)
+     * para que también valgan al editar solo algunos campos.
+     */
+    private static void normalizeAndValidateListing(Room room) {
+        if (room.getRoomType() == null) {
+            throw new BadRequestException("El tipo de inmueble es obligatorio");
+        }
+        if (room.isForSale()) {
+            if (room.getRoomType() == RoomType.ROOM) {
+                throw new BadRequestException("Un cuarto solo puede publicarse en alquiler. Para vender, elige minidepartamento, departamento o casa entera.");
+            }
+            if (room.getSalePrice() == null || room.getSalePrice().signum() <= 0) {
+                throw new BadRequestException("Indica el precio de venta");
+            }
+            // En venta no hay renta ni depósito: se limpian para que no se muestren ni se cobren.
+            room.setPricePerMonth(null);
+            room.setDepositPrice(null);
+        } else {
+            if (room.getPricePerMonth() == null || room.getPricePerMonth().signum() <= 0) {
+                throw new BadRequestException("Indica la renta mensual");
+            }
+            if (room.getDepositPrice() == null || room.getDepositPrice().signum() < 0) {
+                throw new BadRequestException("Indica el depósito de garantía (puede ser 0)");
+            }
+            room.setSalePrice(null);
+        }
+    }
+
+    /** Toda publicación debe mostrar fachada, habitación y baño, con un máximo de {@value #MAX_PHOTOS} fotos. */
+    static void validatePhotos(List<RoomPhotoDto> photos) {
+        if (photos == null || photos.isEmpty()) {
+            throw new BadRequestException("Agrega al menos 3 fotos: la fachada, la habitación y el baño");
+        }
+        if (photos.size() > MAX_PHOTOS) {
+            throw new BadRequestException("Puedes subir como máximo " + MAX_PHOTOS + " fotos");
+        }
+        Set<PhotoCategory> present = EnumSet.noneOf(PhotoCategory.class);
+        for (RoomPhotoDto photo : photos) {
+            if (photo == null || !hasText(photo.getUrl()) || photo.getCategory() == null) {
+                throw new BadRequestException("Cada foto necesita una imagen y una categoría");
+            }
+            String url = photo.getUrl().trim();
+            boolean validFormat = url.startsWith("data:image/") || url.startsWith("https://") || url.startsWith("http://");
+            if (!validFormat) {
+                throw new BadRequestException("Formato de foto no válido");
+            }
+            if (url.length() > MAX_PHOTO_CHARS) {
+                throw new BadRequestException("Una de las fotos es demasiado pesada (máximo ~2 MB)");
+            }
+            present.add(photo.getCategory());
+        }
+        Set<PhotoCategory> missing = EnumSet.copyOf(PhotoCategory.REQUIRED);
+        missing.removeAll(present);
+        if (!missing.isEmpty()) {
+            throw new BadRequestException("Faltan fotos obligatorias: " + missing.stream()
+                    .map(RoomServiceImpl::photoLabel)
+                    .collect(Collectors.joining(", ")));
+        }
+    }
+
+    private static String photoLabel(PhotoCategory category) {
+        return switch (category) {
+            case FACADE -> "fachada";
+            case ROOM -> "habitación";
+            case BATHROOM -> "baño";
+            case LIVING_KITCHEN -> "sala o cocina";
+            case OTHER -> "otra";
+        };
+    }
+
+    private static void replacePhotos(Room room, List<RoomPhotoDto> photos) {
+        room.getImages().clear();
+        for (int i = 0; i < photos.size(); i++) {
+            RoomPhotoDto photo = photos.get(i);
+            room.getImages().add(RoomImage.builder()
+                    .room(room)
+                    .imageUrl(photo.getUrl().trim())
+                    .category(photo.getCategory())
+                    .isPrimary(i == 0)
+                    .displayOrder(i)
+                    .build());
+        }
+    }
+
+    /** El propietario de la publicación o un administrador. */
+    private void assertCanManage(Room room, String userEmail) {
+        if (room.getProperty().getOwner().getEmail().equals(userEmail)) {
+            return;
+        }
+        User user = userRepository.findByEmail(userEmail)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+        boolean isAdmin = user.getRole() != null && "ROLE_ADMIN".equals(user.getRole().getName());
+        if (!isAdmin) {
+            throw new UnauthorizedException("No posee permisos sobre esta publicación");
+        }
+    }
+
+    private static boolean hasText(String value) {
+        return value != null && !value.isBlank();
     }
 
     @Override
@@ -97,7 +210,7 @@ public class RoomServiceImpl implements RoomService {
     public RoomResponseDto getRoomById(Long id) {
         Room room = roomRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Habitación no encontrada con ID: " + id));
-        return roomMapper.toDto(room);
+        return roomMapper.toDetailDto(room);
     }
 
     @Override
@@ -207,23 +320,39 @@ public class RoomServiceImpl implements RoomService {
 
     @Override
     @Transactional
-    public RoomResponseDto updateRoom(Long id, RoomRequestDto request) {
+    public RoomResponseDto updateRoom(Long id, RoomRequestDto request, String userEmail) {
         Room room = roomRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Habitación no encontrada con ID: " + id));
+        assertCanManage(room, userEmail);
         if (request.getTitle() != null && !request.getTitle().isBlank()) room.setTitle(request.getTitle().trim());
         if (request.getDescription() != null) room.setDescription(request.getDescription().trim());
+        if (request.getOperation() != null) room.setOperation(request.getOperation());
         if (request.getPricePerMonth() != null) room.setPricePerMonth(request.getPricePerMonth());
         if (request.getDepositPrice() != null) room.setDepositPrice(request.getDepositPrice());
+        if (request.getSalePrice() != null) room.setSalePrice(request.getSalePrice());
         if (request.getRoomType() != null) room.setRoomType(request.getRoomType());
         room.setPrivateBathroom(request.isPrivateBathroom());
         room.setOffersWifi(request.isOffersWifi());
         room.setAcceptsPets(request.isAcceptsPets());
         if (request.getCapacity() != null) room.setCapacity(request.getCapacity());
         if (request.getSizeSqm() != null) room.setSizeSqm(request.getSizeSqm());
-        if (request.getMainImageUrl() != null && !request.getMainImageUrl().isBlank()) room.setMainImageUrl(request.getMainImageUrl().trim());
+        if (request.getLandAreaSqm() != null) room.setLandAreaSqm(request.getLandAreaSqm());
+        if (request.getBedrooms() != null) room.setBedrooms(request.getBedrooms());
+        if (request.getBathrooms() != null) room.setBathrooms(request.getBathrooms());
+        normalizeAndValidateListing(room);
+
+        // Fotos: null conserva las actuales (las publicaciones antiguas no se bloquean);
+        // una lista las reemplaza y debe cumplir las mismas reglas que al publicar.
+        if (request.getPhotos() != null) {
+            validatePhotos(request.getPhotos());
+            replacePhotos(room, request.getPhotos());
+            room.setMainImageUrl(request.getPhotos().get(0).getUrl().trim());
+        } else if (hasText(request.getMainImageUrl())) {
+            room.setMainImageUrl(request.getMainImageUrl().trim());
+        }
         if (request.getStatus() != null && !request.getStatus().isBlank()) {
             try {
-                room.setStatus(com.roomix.api.entity.enums.RoomStatus.valueOf(request.getStatus().trim()));
+                room.setStatus(RoomStatus.valueOf(request.getStatus().trim()));
             } catch (Exception ignored) {}
         }
         return roomMapper.toDto(roomRepository.save(room));
@@ -231,9 +360,12 @@ public class RoomServiceImpl implements RoomService {
 
     @Override
     @Transactional
-    public void deleteRoom(Long id) {
+    public void deleteRoom(Long id, String userEmail) {
         Room room = roomRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Habitación no encontrada con ID: " + id));
+        assertCanManage(room, userEmail);
+
+        visitRequestRepository.deleteByRoomId(id);
 
         List<Review> reviews = reviewRepository.findByRoomId(id);
         if (reviews != null && !reviews.isEmpty()) {

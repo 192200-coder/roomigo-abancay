@@ -21,5 +21,13 @@ public enum NotificationType {
     /** Propietario: el administrador rechazó su cuarto. */
     ROOM_REJECTED,
     /** Propietario: un inquilino calificó su cuarto. */
-    REVIEW_RECEIVED
+    REVIEW_RECEIVED,
+    /** Propietario: alguien pidió visitar una publicación en venta. */
+    VISIT_REQUESTED,
+    /** Interesado: el propietario confirmó la visita. */
+    VISIT_CONFIRMED,
+    /** Interesado: el propietario no puede recibir la visita en esa fecha. */
+    VISIT_DECLINED,
+    /** Propietario o interesado: el otro canceló la visita. */
+    VISIT_CANCELLED
 }

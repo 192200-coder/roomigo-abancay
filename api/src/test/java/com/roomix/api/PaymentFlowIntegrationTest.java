@@ -74,7 +74,7 @@ class PaymentFlowIntegrationTest {
         room = roomRepository.save(Room.builder()
                 .property(property).title("Cuarto " + suffix)
                 .pricePerMonth(new BigDecimal("450.00")).depositPrice(new BigDecimal("300.00"))
-                .roomType(RoomType.SINGLE).status(RoomStatus.AVAILABLE).build());
+                .roomType(RoomType.ROOM).status(RoomStatus.AVAILABLE).build());
         when(mercadoPago.createPreference(any(), anyString()))
                 .thenReturn(new PreferenceResponse("pref-" + suffix, "https://mp.test/checkout/" + suffix, null));
     }

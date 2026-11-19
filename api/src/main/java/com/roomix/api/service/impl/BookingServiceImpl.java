@@ -47,6 +47,10 @@ public class BookingServiceImpl implements BookingService {
         Room room = roomRepository.findById(request.getRoomId())
                 .orElseThrow(() -> new ResourceNotFoundException("Habitación no encontrada"));
 
+        if (room.isForSale()) {
+            throw new BadRequestException("Esta publicación está en venta: no se reserva. Agenda una visita con el propietario.");
+        }
+
         if (room.getStatus() != RoomStatus.AVAILABLE) {
             throw new BadRequestException("La habitación no se encuentra disponible para reserva");
         }

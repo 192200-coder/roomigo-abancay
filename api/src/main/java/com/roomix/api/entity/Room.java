@@ -1,5 +1,6 @@
 package com.roomix.api.entity;
 
+import com.roomix.api.entity.enums.ListingOperation;
 import com.roomix.api.entity.enums.RoomStatus;
 import com.roomix.api.entity.enums.RoomType;
 import jakarta.persistence.*;
@@ -41,11 +42,31 @@ public class Room {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "price_per_month", nullable = false, precision = 10, scale = 2)
+    /** Alquiler o venta. Define qué precios aplican y si se puede reservar. */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "operation", nullable = false, length = 10)
+    @Builder.Default
+    private ListingOperation operation = ListingOperation.RENT;
+
+    /** Renta mensual (solo alquiler). */
+    @Column(name = "price_per_month", precision = 10, scale = 2)
     private BigDecimal pricePerMonth;
 
-    @Column(name = "deposit_price", nullable = false, precision = 10, scale = 2)
+    /** Depósito de garantía (solo alquiler). */
+    @Column(name = "deposit_price", precision = 10, scale = 2)
     private BigDecimal depositPrice;
+
+    /** Precio de venta (solo venta). */
+    @Column(name = "sale_price", precision = 12, scale = 2)
+    private BigDecimal salePrice;
+
+    private Integer bedrooms;
+
+    private Integer bathrooms;
+
+    /** Área del terreno en m² (venta de casas). El área construida es {@link #sizeSqm}. */
+    @Column(name = "land_area_sqm")
+    private Double landAreaSqm;
 
     @Column(length = 3, nullable = false)
     @Builder.Default
@@ -132,11 +153,7 @@ public class Room {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    public BigDecimal getPrice() {
-        return pricePerMonth;
-    }
-
-    public void setPrice(BigDecimal price) {
-        this.pricePerMonth = price;
+    public boolean isForSale() {
+        return operation == ListingOperation.SALE;
     }
 }
