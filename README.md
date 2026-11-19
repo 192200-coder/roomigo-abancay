@@ -48,6 +48,20 @@ flujos de negocio y pruebas.
 
 ## 🛠️ Cómo Ejecutar el Proyecto
 
+### ⚡ Inicio rápido (Windows)
+Con los requisitos instalados y `api/.env` creado (paso 1), un solo comando levanta todo:
+
+```powershell
+.\iniciar.ps1            # base de datos + backend + frontend → http://localhost:4200
+.\iniciar.ps1 -Tunel     # además abre ngrok para compartir la app por internet
+node scripts/datos-demo.mjs   # (opcional) carga ~30 publicaciones demo de Abancay
+.\detener.ps1            # apaga todo (los datos de la base se conservan)
+```
+Si PowerShell bloquea los scripts: `powershell -ExecutionPolicy Bypass -File .\iniciar.ps1`.
+Las cuentas demo usan correos `@roomix.test` y la contraseña `Demo12345!`.
+
+Los pasos manuales equivalentes están a continuación.
+
 ### Requisitos
 * **JDK 25** (por ejemplo `winget install EclipseAdoptium.Temurin.25.JDK`). No hace falta instalar Maven: se usa el wrapper `mvnw`.
 * **Node.js 24+** y npm.

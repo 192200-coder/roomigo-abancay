@@ -7,6 +7,7 @@
 | [API REST](api.md) | Los 41 endpoints con método, ruta, rol requerido y descripción |
 | [Flujos de negocio](flujos.md) | Reserva por meses, pago con Mercado Pago, moderación y notificaciones |
 | [Pruebas](pruebas.md) | Pruebas automatizadas, validaciones en navegador e integración con Mercado Pago |
+| [Hoja de ruta](hoja-de-ruta.md) | Qué está hecho y qué sigue: Fase 5 (casas y venta), fotos obligatorias, seguridad y despliegue |
 | [Instalación](../README.md) | Cómo levantar el proyecto en local |
 | [Auditoría](../AUDIT-REPORT.md) | Hallazgos de seguridad y calidad, con su estado actual |
 | [Entregables (Word / PDF)](entregables/) | **Informe de documentación técnica** (con anexos: informe del proyecto e instalación) y **Manual de usuario** |
