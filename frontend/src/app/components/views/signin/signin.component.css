@@ -41,6 +41,7 @@
 .rg-signin-welcome h1 {
   max-width: 520px;
   margin: 0;
+  color: #fff;
   font-family: "Outfit", sans-serif;
   font-size: clamp(32px, 4vw, 46px);
   font-weight: 700;
