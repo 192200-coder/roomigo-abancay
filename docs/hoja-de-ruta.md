@@ -15,6 +15,21 @@ Estado al 20 de noviembre de 2026. Qué está hecho, qué sigue y en qué orden.
 | 5. Casas, venta y segmentación | Tipos por público (Cuarto · Minidepartamento · Departamento · Casa entera), alquiler o venta, pedidos de visita en lugar de reserva, filtros e insignias (V5–V7) |
 | Fotos obligatorias | Fachada + habitación + baño validadas en backend y frontend (máx. 8, comprimidas en el navegador), galería en la ficha |
 
+## 📝 Observaciones de la revisión del 20 de noviembre (pendientes de planificar)
+
+Anotadas por el equipo al probar la Fase 5 con `kevin.tito@roomix.test`. Junto a cada una, la causa probable
+encontrada en el código (sin corregir todavía).
+
+| # | Observación | Causa probable |
+|---|---|---|
+| 1 | La edición del perfil se siente demasiado expuesta. | El modal «Mi perfil» cambia nombre, apellido y teléfono sin pedir confirmación, y solo los guarda en el navegador (`AuthService.updateUserData` → `localStorage`): no existe un endpoint en el backend. Hay que crear `PUT /users/me` y una pantalla de cuenta propia, y pedir la contraseña para cambios sensibles. |
+| 2 | Los botones Atrás / Adelante del navegador no funcionan: no retrocede, y al avanzar la página no cambia. | La app no usa el router de Angular (`app.routes.ts` está vacío): las vistas cambian con señales (`activeTab`) sin actualizar el historial ni la URL. Se soluciona con rutas reales (`/buscar`, `/inmueble/:id`, `/panel/...`), lo que además permite compartir enlaces de una publicación. |
+| 3 | En el panel de inquilino, «Mi vivienda y reservas» no lleva a ningún lado. | Ese botón hace lo mismo que «Resumen» (`tenantFilter = 'ALL'`) y no tiene estado activo: no existe una vista propia de reservas. |
+| 4 | Dudas con el botón «Mis reservas» de la barra superior. | Lleva al panel completo del inquilino (`activeTab = 'my-bookings'`), no a sus reservas. Hay que alinear el nombre con el destino o, mejor, resolverlo junto con el punto 2 (rutas por sección). |
+
+Sugerencia de orden: 2 (rutas) primero, porque los puntos 3 y 4 dependen de tener secciones con su propia
+dirección; después 1 (perfil en el backend), que encaja con la Fase 6.
+
 ## ⏭️ Siguiente: Fase 6 — Seguridad
 
 1. Recuperación de contraseña en el backend (hoy guarda datos en `localStorage`).
