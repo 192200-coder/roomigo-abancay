@@ -5,7 +5,7 @@
 Ejecutar: `cd api && .\mvnw.cmd test`. Usan **H2 en memoria** (modo PostgreSQL) y no necesitan base de datos ni
 credenciales; el cliente de Mercado Pago se reemplaza por un mock.
 
-Resultado actual: **29 pruebas aprobadas, 0 fallidas** (2 omitidas: requieren PostgreSQL local y se activan con
+Resultado actual: **38 pruebas aprobadas, 0 fallidas** (2 omitidas: requieren PostgreSQL local y se activan con
 `ROOMIX_TEST_LOCAL_POSTGRES=true`).
 
 | Clase | Pruebas | Qué cubre |
@@ -13,6 +13,7 @@ Resultado actual: **29 pruebas aprobadas, 0 fallidas** (2 omitidas: requieren Po
 | `ApiApplicationTests` | 1 | El contexto de Spring arranca con toda la configuración |
 | `RoomixIntegrationTest` | 13 | Registro y login por rol, rechazo de registro como admin, propiedades, cuartos, búsqueda pública, reserva por meses (total exacto, fecha de fin, rechazo de 0 y 13 meses), aprobación y reseñas |
 | `PaymentFlowIntegrationTest` | 12 | Permisos de pago, monto = primer mes + depósito, conciliación idempotente, intento rechazado tardío, monto distinto, acceso de terceros, firma del webhook (válida e inválida), temas ignorados, tarifa de publicación, `/rooms/my-rooms` |
+| `ListingSaleAndPhotosIntegrationTest` | 9 | Fotos obligatorias (faltantes, máximo 8, formato, rutas locales sin `..`), galería solo en el detalle, edición sin fotos en publicaciones antiguas, venta (precio, cuarto no vendible, sin reserva), filtros por operación, flujo de visitas con avisos y teléfono revelado al confirmar, permisos para editar y borrar publicaciones ajenas |
 | `NotificationFlowIntegrationTest` | 3 | Flujo completo solicitud → aprobación → pago → reseña con los avisos correctos, rechazo y moderación, aislamiento de notificaciones por usuario |
 | `LocalPostgresRegistrationTest` | 2 (omitidas) | Registro contra PostgreSQL real con rollback |
 
@@ -25,6 +26,12 @@ Con Edge en modo headless (protocolo DevTools) sobre `http://localhost:4200`, en
 - **Pagos:** botón *Pagar* en reservas aprobadas, *Pagar publicación* en Mis inmuebles, comprobante en estados
   acreditado/pendiente/rechazado y vuelta cancelada de Mercado Pago.
 - **Notificaciones:** contador, panel, navegación a la sección, marcar todas como leídas, Escape y vista móvil.
+- **Fase 5 (venta, segmentación y fotos)** — Playwright con Edge, 1366 px y 375 px, contra la base local migrada
+  a V7: título del login en blanco; catálogo filtrado por *Venta* (solo tarjetas «En venta»); ficha con galería
+  categorizada y «Agendar visita»; pedido de visita del inquilino → confirmación con nota por la propietaria
+  (WhatsApp y teléfono visibles); formulario de publicar en alquiler y en venta; carga real de 4 fotos
+  (comprimidas a 80–320 KB) con `POST /rooms` 201 y galería guardada con sus categorías. Sin errores de consola
+  ni desbordes horizontales.
 
 ## Integración real con Mercado Pago (sandbox)
 

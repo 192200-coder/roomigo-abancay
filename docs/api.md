@@ -20,18 +20,44 @@ Total: **41 endpoints**.
 | `POST` | `/api/v1/auth/social/send-code` | Público | Enviar código de verificación para Google/Facebook |
 | `POST` | `/api/v1/auth/social/verify` | Público | Verificar código e iniciar sesión con Google/Facebook |
 
-## Habitaciones
+## Habitaciones (publicaciones)
+
+Una publicación es un cuarto, minidepartamento, departamento o casa entera (`roomType`: `ROOM`, `MINI_APARTMENT`,
+`APARTMENT`, `HOUSE`) en alquiler o en venta (`operation`: `RENT`, `SALE`).
 
 | Método | Ruta | Acceso | Descripción |
 |---|---|---|---|
-| `GET` | `/api/v1/rooms` | Público | Listar habitaciones disponibles con filtros y paginación |
-| `POST` | `/api/v1/rooms` | OWNER / ADMIN | Crear habitación |
-| `DELETE` | `/api/v1/rooms/{id}` | OWNER / ADMIN | Eliminar habitación |
-| `GET` | `/api/v1/rooms/{id}` | Público | Detalle de habitación por ID |
-| `PUT` | `/api/v1/rooms/{id}` | OWNER / ADMIN | Actualizar habitación |
+| `GET` | `/api/v1/rooms` | Público | Listar publicaciones disponibles con filtros y paginación |
+| `POST` | `/api/v1/rooms` | OWNER / ADMIN | Crear publicación (exige fotos de fachada, habitación y baño) |
+| `DELETE` | `/api/v1/rooms/{id}` | Dueño de la publicación / ADMIN | Eliminar publicación |
+| `GET` | `/api/v1/rooms/{id}` | Público | Detalle, con la galería de fotos y sus categorías |
+| `PUT` | `/api/v1/rooms/{id}` | Dueño de la publicación / ADMIN | Actualizar publicación (sin `photos` conserva las actuales) |
 | `PATCH` | `/api/v1/rooms/{id}/status` | OWNER / ADMIN | Cambiar estado de la habitación |
 | `GET` | `/api/v1/rooms/my-rooms` | OWNER / ADMIN | Habitaciones del propietario autenticado |
-| `GET` | `/api/v1/rooms/search` | Público | Búsqueda filtrada y paginada de habitaciones disponibles |
+| `GET` | `/api/v1/rooms/search` | Público | Búsqueda filtrada y paginada de publicaciones disponibles |
+
+**Filtros de búsqueda:** `city`, `operation`, `roomType`, `minBedrooms`, `minPrice`, `maxPrice` (renta mensual;
+con `operation=SALE` se comparan con el precio de venta), `privateBathroom`, `offersWifi`, `acceptsPets`, `minRating`.
+
+**Reglas al publicar:**
+
+- Alquiler: `pricePerMonth` > 0 y `depositPrice` ≥ 0. Venta: `salePrice` > 0 (la renta y el depósito se descartan).
+- Un `ROOM` (cuarto) solo se publica en alquiler.
+- `photos`: de 3 a 8 fotos `{ url, category }` con al menos `FACADE`, `ROOM` y `BATHROOM`. `url` debe ser
+  `data:image/…`, `http(s)://…` o una imagen del propio sitio (`/images/…`); máximo ~2 MB por foto.
+- Las publicaciones en venta no se reservan: `POST /bookings` devuelve 400 y se usa `/visit-requests`.
+
+## Visitas (publicaciones en venta)
+
+| Método | Ruta | Acceso | Descripción |
+|---|---|---|---|
+| `POST` | `/api/v1/visit-requests` | Autenticado | Pedir una visita (`roomId`, `preferredDate`, `preferredTime?`, `contactPhone?`, `message?`) |
+| `GET` | `/api/v1/visit-requests/mine` | Autenticado | Mis pedidos de visita (el teléfono del propietario solo aparece si la visita está confirmada) |
+| `GET` | `/api/v1/visit-requests/owner` | OWNER / ADMIN | Pedidos recibidos en mis publicaciones |
+| `PATCH` | `/api/v1/visit-requests/{id}/status` | Propietario o interesado | `{ status, note? }`: el propietario confirma (`CONFIRMED`) o declina (`DECLINED`); cualquiera de los dos cancela (`CANCELLED`) |
+
+Un interesado solo puede tener un pedido abierto por publicación (409 si repite) y no puede pedir visita a su
+propia publicación.
 
 ## Propiedades
 

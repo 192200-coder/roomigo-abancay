@@ -21,6 +21,9 @@
 | V2 | Reserva por meses | `reservations.months` (1–12). |
 | V3 | Pagos Mercado Pago | `payments` genérica (`purpose`, `room_id`, `external_reference`, `preference_id`, `provider_payment_id`…) y `reservations.initial_payment`. |
 | V4 | Índices de notificaciones | Índices para el contador de no leídas y la lista por fecha. |
+| V5 | Publicaciones en venta y segmentación | `rooms.operation` (RENT/SALE), `sale_price`, `bedrooms`, `bathrooms`, `land_area_sqm`; renta y depósito opcionales (CHECK por operación); tipos `ROOM`/`MINI_APARTMENT`/`APARTMENT`/`HOUSE` (SINGLE y SHARED → ROOM, DOUBLE → MINI_APARTMENT, SUITE → APARTMENT); estado `SOLD`. |
+| V6 | Categorías de fotos | `room_images.category` (FACADE, ROOM, BATHROOM, LIVING_KITCHEN, OTHER); las fotos existentes quedan como OTHER. |
+| V7 | Pedidos de visita | Tabla `visit_requests`. |
 
 ## Tablas
 
@@ -176,10 +179,12 @@ Fotos de cada publicación, con orden y foto principal.
 | `id` | bigint | no | PK |
 | `room_id` | bigint | no | FK → `rooms.id` |
 | `image_url` | text | no |  |
+| `category` | varchar(20) | no |  |
 
 ### `rooms`
 
-Unidad publicada y alquilable (cuarto, minidepartamento o departamento) con precio mensual, depósito y estado de moderación.
+Publicación (cuarto, minidepartamento, departamento o casa entera) en alquiler o en venta, con sus precios y su
+estado de moderación. En alquiler tiene `price_per_month` y `deposit_price`; en venta, `sale_price`.
 
 | Columna | Tipo | Nulo | Clave |
 |---|---|---|---|
@@ -187,11 +192,16 @@ Unidad publicada y alquilable (cuarto, minidepartamento o departamento) con prec
 | `average_rating` | float8 | sí |  |
 | `capacity` | integer | no |  |
 | `currency` | varchar(3) | no |  |
-| `deposit_price` | numeric | no |  |
+| `deposit_price` | numeric | sí |  |
 | `floor` | integer | sí |  |
 | `furnished` | boolean | no |  |
 | `offers_wifi` | boolean | no |  |
-| `price_per_month` | numeric | no |  |
+| `price_per_month` | numeric | sí |  |
+| `operation` | varchar(10) | no |  |
+| `sale_price` | numeric(12,2) | sí |  |
+| `bedrooms` | integer | sí |  |
+| `bathrooms` | integer | sí |  |
+| `land_area_sqm` | float8 | sí |  |
 | `private_bathroom` | boolean | no |  |
 | `publication_fee_amount` | numeric | sí |  |
 | `publication_fee_paid` | boolean | no |  |
@@ -209,7 +219,28 @@ Unidad publicada y alquilable (cuarto, minidepartamento o departamento) con prec
 | `description` | text | sí |  |
 | `main_image_url` | text | sí |  |
 
-Restricciones: `rooms_status_check`, `rooms_room_type_check`.
+Restricciones: `rooms_status_check`, `rooms_room_type_check`, `rooms_operation_check`,
+`rooms_operation_prices_check` (precios según la operación), `rooms_counts_check`.
+
+### `visit_requests`
+
+Pedido de visita a una publicación en venta (reemplaza a la reserva en ventas).
+
+| Columna | Tipo | Nulo | Clave |
+|---|---|---|---|
+| `id` | bigint | no | PK |
+| `room_id` | bigint | no | FK → `rooms.id` (ON DELETE CASCADE) |
+| `requester_id` | bigint | no | FK → `users.id` (ON DELETE CASCADE) |
+| `preferred_date` | date | no |  |
+| `preferred_time` | time | sí |  |
+| `contact_phone` | varchar(20) | sí |  |
+| `message` | text | sí |  |
+| `status` | varchar(20) | no |  |
+| `owner_note` | varchar(300) | sí |  |
+| `created_at` | timestamp | sí |  |
+| `updated_at` | timestamp | sí |  |
+
+Restricciones: `visit_requests_status_check`.
 
 ### `users`
 
@@ -252,10 +283,13 @@ Códigos temporales para registro/acceso con Google o Facebook.
 
 | Enum | Valores |
 |---|---|
-| Estado del cuarto (`rooms.status`) | PENDING_APPROVAL, AVAILABLE, RENTED, OCCUPIED, MAINTENANCE, REJECTED |
-| Tipo de cuarto (`rooms.room_type`) | SINGLE, DOUBLE, SUITE, SHARED |
+| Estado de la publicación (`rooms.status`) | PENDING_APPROVAL, AVAILABLE, RENTED, OCCUPIED, MAINTENANCE, REJECTED, SOLD |
+| Tipo de inmueble (`rooms.room_type`) | ROOM (cuarto · estudiantes), MINI_APARTMENT (parejas), APARTMENT (familias), HOUSE (casa entera) |
+| Operación (`rooms.operation`) | RENT, SALE |
+| Categoría de foto (`room_images.category`) | FACADE, ROOM, BATHROOM, LIVING_KITCHEN, OTHER |
+| Estado del pedido de visita | PENDING, CONFIRMED, DECLINED, CANCELLED |
 | Estado de la reserva | PENDING, CONFIRMED, REJECTED, CANCELLED, COMPLETED |
 | Estado del pago | PENDING, COMPLETED, FAILED, REFUNDED |
 | Concepto del pago (`payments.purpose`) | BOOKING, ROOM_PUBLICATION |
-| Tipo de notificación | BOOKING_REQUEST, BOOKING_APPROVED, BOOKING_REJECTED, BOOKING_CANCELLED, PAYMENT_CONFIRMED, PAYMENT_RECEIVED, PUBLICATION_PAID, ROOM_APPROVED, ROOM_REJECTED, REVIEW_RECEIVED |
+| Tipo de notificación | BOOKING_REQUEST, BOOKING_APPROVED, BOOKING_REJECTED, BOOKING_CANCELLED, PAYMENT_CONFIRMED, PAYMENT_RECEIVED, PUBLICATION_PAID, ROOM_APPROVED, ROOM_REJECTED, REVIEW_RECEIVED, VISIT_REQUESTED, VISIT_CONFIRMED, VISIT_DECLINED, VISIT_CANCELLED |
 | Rol | ROLE_ADMIN, ROLE_OWNER, ROLE_TENANT |
