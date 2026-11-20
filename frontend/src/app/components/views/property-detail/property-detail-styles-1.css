@@ -349,8 +349,15 @@
   background: #e08a00;
 }
 button.rg-detail-owner__contact {
-  font: inherit;
+  font-family: inherit;
   cursor: pointer;
+  transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+button.rg-detail-owner__contact:active {
+  transform: scale(0.97);
+}
+.rg-detail-booking > button {
+  gap: 8px;
 }
 @media (max-width: 700px) {
   .rg-detail-thumb {

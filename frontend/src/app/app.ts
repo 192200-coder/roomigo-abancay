@@ -1173,12 +1173,14 @@ export class App implements OnInit {
   /** Alquiler o venta. Un cuarto solo se alquila: al pasar a venta se sugiere una casa. */
   setNewRoomOperation(operation: ListingOperation): void {
     this.newRoomOperation = operation;
-    if (operation === 'SALE' && this.newRoomType === 'ROOM') this.newRoomType = 'HOUSE';
+    if (operation === 'SALE' && this.newRoomType === 'ROOM') this.setNewRoomType('HOUSE');
   }
 
   setNewRoomType(type: RoomType): void {
     if (this.newRoomOperation === 'SALE' && !roomTypeOption(type).allowsSale) return;
     this.newRoomType = type;
+    // 18 m² es el valor por defecto de un cuarto: en otros tipos se deja vacío para que lo escriban.
+    if (type !== 'ROOM' && this.newRoomSize === 18) this.newRoomSize = null;
     if (type === 'ROOM') {
       this.newRoomBedrooms = null;
       this.newRoomLandArea = null;

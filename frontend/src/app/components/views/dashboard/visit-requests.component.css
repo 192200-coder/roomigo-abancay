@@ -221,6 +221,10 @@
   color: #526782;
 }
 
+.vr-card__note i {
+  margin-right: 4px;
+}
+
 .vr-card__actions {
   display: flex;
   flex-wrap: wrap;
