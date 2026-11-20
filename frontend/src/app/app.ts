@@ -23,6 +23,7 @@ import { MpReceiptModalComponent } from './components/ui/modals/mp-receipt-modal
 import { EditProfileModalComponent } from './components/ui/modals/edit-profile-modal/edit-profile-modal.component';
 import { SettingsModalComponent } from './components/ui/modals/settings-modal/settings-modal.component';
 import { FavoritesComponent } from './components/views/favorites/favorites.component';
+import { VisitModalComponent } from './components/ui/modals/visit-modal/visit-modal.component';
 import { Component, OnInit, signal, computed, ChangeDetectorRef, NgZone } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -34,9 +35,30 @@ import { MercadoPagoService } from './core/mercado-pago.service';
 import { FavoritesService } from './core/favorites.service';
 import { MapSectionComponent } from './components/ui/map-section/map-section.component';
 import {
+  MAX_PHOTOS,
+  PHOTO_CATEGORY_OPTIONS,
+  REQUIRED_PHOTO_CATEGORIES,
+  ROOM_TYPE_OPTIONS,
+  audienceLabel,
+  compressImage,
+  formatPen,
+  isForSale,
+  mainPrice,
+  normalizeRoomType,
+  operationLabel,
+  photoCategoryLabel,
+  roomTypeLabel,
+  roomTypeOption
+} from './core/listings';
+import {
   Room,
   RoomFilter,
   RoomType,
+  ListingOperation,
+  PhotoCategory,
+  RoomPhoto,
+  VisitRequest,
+  VisitRequestStatus,
   Property,
   Booking,
   Review,
@@ -64,6 +86,7 @@ import { ViewEncapsulation } from '@angular/core';
     AdminDashboardComponent,
     RoomDetailModalComponent,
     BookingModalComponent,
+    VisitModalComponent,
     PublishRoomModalComponent,
     ReviewModalComponent,
     EditLocationModalComponent,
@@ -96,7 +119,14 @@ export class App implements OnInit {
   selectedCity = '';
   selectedDistrict = '';
   selectedRoomType: RoomType | '' = '';
+  /** Alquiler, venta o ambas (''). */
+  selectedOperation: ListingOperation | '' = '';
+  /** Máximo mensual (solo alquiler). */
   maxPrice: number = 1200;
+  /** Precio máximo de venta (null = sin límite). */
+  maxSalePrice: number | null = null;
+  /** Mínimo de dormitorios (0 = cualquiera). */
+  minBedrooms = 0;
   filterBathroom = false;
   filterWifi = false;
   filterPets = false;
@@ -198,15 +228,28 @@ export class App implements OnInit {
   readonly ownerRooms = signal<Room[]>([]);
   readonly ownerBookings = signal<Booking[]>([]);
   readonly tenantBookings = signal<Booking[]>([]);
+  /** Pedidos de visita recibidos (propietario) y enviados (inquilino). */
+  readonly ownerVisits = signal<VisitRequest[]>([]);
+  readonly tenantVisits = signal<VisitRequest[]>([]);
+  private updatingVisitId: number | null = null;
+
+  // Visit Modal State (publicaciones en venta)
+  readonly showVisitModal = signal<boolean>(false);
+  visitRoom: Room | null = null;
+  visitDate = '';
+  visitTime = '';
+  visitPhone = '';
+  visitMessage = '';
+  visitSubmitting = false;
 
   // Mobile Hamburger Menu State
   readonly mobileMenuOpen = signal<boolean>(false);
 
   // Tenant Panel Filter
-  readonly tenantFilter = signal<'ALL' | 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'EXPLORE'>('ALL');
+  readonly tenantFilter = signal<'ALL' | 'PENDING' | 'CONFIRMED' | 'REJECTED' | 'EXPLORE' | 'VISITS'>('ALL');
 
   // Owner Panel Functional Tabs & Filters
-  readonly ownerTab = signal<'requests' | 'properties' | 'stats' | 'explore'>('properties');
+  readonly ownerTab = signal<'requests' | 'properties' | 'stats' | 'explore' | 'visits'>('properties');
   readonly ownerBookingFilter = signal<'ALL' | 'PENDING' | 'CONFIRMED' | 'REJECTED'>('ALL');
 
   get filteredTenantBookings(): Booking[] {
@@ -336,21 +379,28 @@ export class App implements OnInit {
   manualPropertyAddress = '';
   manualPropertyDistrict = 'Tamburco';
 
-  // Fotos de la Habitación (Hasta 5 fotos)
-  newRoomImages: string[] = [];
-  newRoomImageUrlInput = '';
+  // Fotos de la publicación: 3 obligatorias (fachada, habitación, baño) + adicionales.
+  newRoomRequiredPhotos: Record<'FACADE' | 'ROOM' | 'BATHROOM', string | null> = { FACADE: null, ROOM: null, BATHROOM: null };
+  newRoomExtraPhotos: RoomPhoto[] = [];
+  /** Fotos que se están comprimiendo: bloquea el envío hasta que terminen. */
+  newRoomPhotosProcessing = 0;
+  readonly requiredPhotoCategories = REQUIRED_PHOTO_CATEGORIES as ('FACADE' | 'ROOM' | 'BATHROOM')[];
 
+  newRoomOperation: ListingOperation = 'RENT';
   newRoomTitle = '';
   newRoomDescription = '';
   newRoomPrice = 320;
   newRoomDeposit = 150;
-  newRoomType: RoomType = 'SINGLE';
+  newRoomSalePrice: number | null = null;
+  newRoomBedrooms: number | null = null;
+  newRoomBathrooms: number | null = null;
+  newRoomLandArea: number | null = null;
+  newRoomType: RoomType = 'ROOM';
   newRoomBathroom = true;
   newRoomCapacity = 1;
-  newRoomSize = 18;
+  newRoomSize: number | null = 18;
   newRoomWifi = true;
   newRoomPets = false;
-  newRoomImageUrl = 'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80';
   /** Tarifa de publicación por defecto; el backend la cobra por Mercado Pago (Room.publicationFeeAmount). */
   readonly publicationFee: number = 15.00;
   newRoomSubmitting = false;
@@ -372,7 +422,8 @@ export class App implements OnInit {
   adminEditTitle = '';
   adminEditPrice = 0;
   adminEditDeposit = 0;
-  adminEditType: RoomType = 'SINGLE';
+  adminEditType: RoomType = 'ROOM';
+  adminEditSalePrice: number | null = null;
   adminEditStatus = 'AVAILABLE';
   adminEditBathroom = false;
   adminEditWifi = false;
@@ -391,7 +442,8 @@ export class App implements OnInit {
   ownerEditDescription = '';
   ownerEditPrice = 0;
   ownerEditDeposit = 0;
-  ownerEditType: RoomType = 'SINGLE';
+  ownerEditType: RoomType = 'ROOM';
+  ownerEditSalePrice: number | null = null;
   ownerEditBathroom = false;
   ownerEditWifi = false;
   ownerEditPets = false;
@@ -460,7 +512,12 @@ export class App implements OnInit {
 
     const filter: RoomFilter = { city: this.selectedCity.trim() || 'Abancay' };
     if (this.selectedRoomType) filter.roomType = this.selectedRoomType as RoomType;
-    if (this.maxPrice < 1500) filter.maxPrice = this.maxPrice;
+    if (this.selectedOperation) filter.operation = this.selectedOperation;
+    // El precio máximo depende de la operación: mensual en alquiler, de venta en venta.
+    // Con «Todo» no se filtra por precio (mezclaría rentas con precios de venta).
+    if (this.selectedOperation === 'RENT' && this.maxPrice < 1500) filter.maxPrice = this.maxPrice;
+    if (this.selectedOperation === 'SALE' && this.maxSalePrice) filter.maxPrice = this.maxSalePrice;
+    if (this.minBedrooms > 0) filter.minBedrooms = this.minBedrooms;
     if (this.filterBathroom) filter.privateBathroom = true;
     if (this.filterWifi) filter.offersWifi = true;
     if (this.filterPets) filter.acceptsPets = true;
@@ -520,6 +577,9 @@ export class App implements OnInit {
     this.filterWifi = false;
     this.filterPets = false;
     this.maxPrice = 1200;
+    this.selectedOperation = '';
+    this.maxSalePrice = null;
+    this.minBedrooms = 0;
 
     if (chip === 'unamba') {
       this.searchKeyword = 'UNAMBA';
@@ -542,7 +602,10 @@ export class App implements OnInit {
     } else if (chip === 'wifi') {
       this.filterWifi = true;
     } else if (chip === 'cheap') {
+      this.selectedOperation = 'RENT';
       this.maxPrice = 300;
+    } else if (chip === 'sale') {
+      this.selectedOperation = 'SALE';
     } else if (chip === 'all') {
       this.searchKeyword = '';
       this.selectedDistrict = '';
@@ -556,7 +619,10 @@ export class App implements OnInit {
     this.selectedCity = '';
     this.selectedDistrict = '';
     this.selectedRoomType = '';
+    this.selectedOperation = '';
     this.maxPrice = 1200;
+    this.maxSalePrice = null;
+    this.minBedrooms = 0;
     this.filterBathroom = false;
     this.filterWifi = false;
     this.filterPets = false;
@@ -564,14 +630,47 @@ export class App implements OnInit {
     this.loadRooms();
   }
 
+  // Etiquetas y precios de publicaciones (core/listings.ts) expuestos a las plantillas.
+  readonly roomTypeOptions = ROOM_TYPE_OPTIONS;
+  readonly photoCategoryOptions = PHOTO_CATEGORY_OPTIONS;
+  readonly maxPhotos = MAX_PHOTOS;
+
   getRoomTypeName(type?: string): string {
-    switch (type) {
-      case 'SINGLE': return 'Individual';
-      case 'DOUBLE': return 'Doble (Minidepa)';
-      case 'SUITE': return 'Suite con Baño';
-      case 'SHARED': return 'Compartida';
-      default: return type || 'Habitación';
-    }
+    return roomTypeLabel(type);
+  }
+
+  roomTypeIcon(type?: string): string {
+    return roomTypeOption(type).icon;
+  }
+
+  audienceLabel(type?: string): string {
+    return audienceLabel(type);
+  }
+
+  operationLabel(operation?: ListingOperation | null): string {
+    return operationLabel(operation);
+  }
+
+  isForSale(room?: Room | null): boolean {
+    return isForSale(room);
+  }
+
+  photoCategoryLabel(category?: PhotoCategory | null): string {
+    return photoCategoryLabel(category);
+  }
+
+  /** Precio principal formateado: renta mensual o precio de venta. */
+  priceText(room: Room): string {
+    return formatPen(mainPrice(room));
+  }
+
+  /** «/ mes» en alquiler; vacío en venta. */
+  priceSuffix(room: Room): string {
+    return isForSale(room) ? '' : ' / mes';
+  }
+
+  formatPen(amount?: number | null): string {
+    return formatPen(amount);
   }
 
   isFavorite(roomId: number): boolean {
@@ -595,6 +694,7 @@ export class App implements OnInit {
       case 'PENDING_APPROVAL': return 'Pendiente de Aprobación';
       case 'MAINTENANCE': return 'En Mantenimiento';
       case 'REJECTED': return 'Rechazado';
+      case 'SOLD': return 'Vendido';
       default: return status || 'Disponible';
     }
   }
@@ -607,6 +707,7 @@ export class App implements OnInit {
       case 'PENDING_APPROVAL': return 'hero-badge-pending';
       case 'MAINTENANCE': return 'hero-badge-maintenance';
       case 'REJECTED': return 'hero-badge-rejected';
+      case 'SOLD': return 'hero-badge-rented';
       default: return 'hero-badge-available';
     }
   }
@@ -618,6 +719,7 @@ export class App implements OnInit {
     this.selectedRoom.set(room);
     this.showDetailModal.set(true);
     this.loadRoomReviews(room);
+    this.loadRoomGallery(room);
   }
 
   openRoomPage(room: Room): void {
@@ -626,6 +728,24 @@ export class App implements OnInit {
     this.activeTab.set('room-detail');
     window.scrollTo({ top: 0, behavior: 'smooth' });
     this.loadRoomReviews(room);
+    this.loadRoomGallery(room);
+  }
+
+  /**
+   * Los listados no traen las fotos (pesan demasiado); el detalle sí. Se muestra la
+   * publicación de inmediato y se completa con la galería cuando llega.
+   */
+  private loadRoomGallery(room: Room): void {
+    if (room.photos?.length) return;
+    this.api.getRoomById(room.id).subscribe({
+      next: res => {
+        const current = this.selectedRoom();
+        // getRoomById tiene datos simulados de respaldo: solo se acepta la misma publicación.
+        if (res.success && res.data?.id === room.id && current?.id === room.id) {
+          this.selectedRoom.set({ ...current, ...res.data });
+        }
+      }
+    });
   }
 
   private loadRoomReviews(room: Room): void {
@@ -646,6 +766,10 @@ export class App implements OnInit {
   // BOOKING MODAL & ACTIONS CON BILLETERA DIGITAL (YAPE / PLIN)
   // ==========================================
   openBookingModal(room: Room): void {
+    if (isForSale(room)) {
+      this.openVisitModal(room);
+      return;
+    }
     if (!this.auth.isLoggedIn()) {
       this.showToast('Inicia sesión para reservar esta habitación en Abancay', 'info');
       this.authMode.set('login');
@@ -758,6 +882,134 @@ export class App implements OnInit {
         }
       }
     });
+    this.loadVisits();
+  }
+
+  // ==========================================
+  // VISITAS A PUBLICACIONES EN VENTA
+  // ==========================================
+  /** Carga los pedidos de visita según el rol: recibidos (propietario) o enviados (inquilino). */
+  loadVisits(): void {
+    if (!this.auth.isLoggedIn()) return;
+    if (this.auth.isOwner()) {
+      this.api.getOwnerVisitRequests().subscribe({
+        next: res => { if (res.success) this.ownerVisits.set(res.data || []); },
+        error: () => this.showToast('No se pudieron cargar los pedidos de visita.', 'error')
+      });
+    } else if (!this.auth.isAdmin()) {
+      this.api.getMyVisitRequests().subscribe({
+        next: res => { if (res.success) this.tenantVisits.set(res.data || []); },
+        error: () => this.showToast('No se pudieron cargar tus visitas.', 'error')
+      });
+    }
+  }
+
+  pendingVisitCount(): number {
+    return this.ownerVisits().filter(v => v.status === 'PENDING').length;
+  }
+
+  openVisitModal(room: Room): void {
+    if (!this.auth.isLoggedIn()) {
+      this.showToast('Inicia sesión para agendar una visita', 'info');
+      this.authMode.set('login');
+      this.showAuthModal.set(true);
+      return;
+    }
+    if (this.auth.isAdmin()) {
+      this.showToast('Los administradores no agendan visitas', 'info');
+      return;
+    }
+    if (this.auth.isOwner()) {
+      this.showToast('Las visitas se agendan desde una cuenta de inquilino', 'info');
+      return;
+    }
+    this.visitRoom = room;
+    this.visitDate = tomorrowIsoDate();
+    this.visitTime = '';
+    this.visitPhone = this.auth.currentUser()?.phone || '';
+    this.visitMessage = '';
+    this.showDetailModal.set(false);
+    this.showVisitModal.set(true);
+  }
+
+  closeVisitModal(): void {
+    this.showVisitModal.set(false);
+    this.visitRoom = null;
+  }
+
+  /** Hoy en formato yyyy-MM-dd (hora local): la visita puede ser desde hoy. */
+  get visitMinDate(): string {
+    const now = new Date();
+    return new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  }
+
+  submitVisitRequest(): void {
+    const room = this.visitRoom;
+    if (!room || this.visitSubmitting) return;
+    if (!this.visitDate || this.visitDate < this.visitMinDate) {
+      this.showToast('Elige una fecha desde hoy en adelante.', 'error');
+      return;
+    }
+    const phone = this.visitPhone.trim();
+    if (phone && !/^\+?[0-9 ]{6,20}$/.test(phone)) {
+      this.showToast('El teléfono solo puede tener números y espacios.', 'error');
+      return;
+    }
+    this.visitSubmitting = true;
+    this.api.createVisitRequest({
+      roomId: room.id,
+      preferredDate: this.visitDate,
+      preferredTime: this.visitTime || null,
+      contactPhone: phone,
+      message: this.visitMessage.trim()
+    }).subscribe({
+      next: res => {
+        this.visitSubmitting = false;
+        if (!res.success) {
+          this.showToast(res.message || 'No se pudo enviar el pedido.', 'error');
+          return;
+        }
+        this.closeVisitModal();
+        this.showToast('Pedido enviado. El propietario confirmará la visita.', 'success');
+        this.activeTab.set('my-bookings');
+        this.tenantFilter.set('VISITS');
+        this.loadVisits();
+      },
+      error: err => {
+        this.visitSubmitting = false;
+        this.showToast(err.error?.message || 'No se pudo enviar el pedido de visita.', 'error');
+      }
+    });
+  }
+
+  isUpdatingVisit(id: number): boolean {
+    return this.updatingVisitId === id;
+  }
+
+  updateVisitStatus(visit: VisitRequest, status: VisitRequestStatus, note?: string): void {
+    if (this.updatingVisitId) return;
+    this.updatingVisitId = visit.id;
+    this.api.updateVisitRequestStatus(visit.id, status, note).subscribe({
+      next: res => {
+        this.updatingVisitId = null;
+        if (res.success) {
+          const text = { CONFIRMED: 'Visita confirmada. Avisamos a la persona interesada.',
+            DECLINED: 'Avisamos que no puedes en esa fecha.', CANCELLED: 'Visita cancelada.', PENDING: '' }[status];
+          this.showToast(text, 'success');
+          this.loadVisits();
+        }
+      },
+      error: err => {
+        this.updatingVisitId = null;
+        this.showToast(err.error?.message || 'No se pudo actualizar la visita.', 'error');
+      }
+    });
+  }
+
+  /** Lleva al catálogo filtrado por publicaciones en venta. */
+  browseSales(): void {
+    this.applyChipFilter('sale');
+    this.switchTab('catalog');
   }
 
   getTenantStatusCount(status: 'CONFIRMED' | 'PENDING' | 'REJECTED'): number {
@@ -844,6 +1096,8 @@ export class App implements OnInit {
         }
       }
     });
+
+    this.loadVisits();
   }
 
   updateBookingStatus(bookingId: number, status: 'CONFIRMED' | 'REJECTED'): void {
@@ -868,8 +1122,7 @@ export class App implements OnInit {
       this.showToast('Debes ser propietario para publicar habitaciones', 'error');
       return;
     }
-    this.newRoomImages = [];
-    this.newRoomImageUrlInput = '';
+    this.resetNewRoomPhotos();
     this.manualPropertyTitle = '';
     this.manualPropertyAddress = '';
     this.manualPropertyDistrict = 'Tamburco';
@@ -889,95 +1142,143 @@ export class App implements OnInit {
   }
 
   resetNewRoomForm(): void {
+    this.newRoomOperation = 'RENT';
     this.newRoomTitle = '';
     this.newRoomDescription = '';
     this.newRoomPrice = 320;
     this.newRoomDeposit = 150;
-    this.newRoomType = 'SINGLE';
+    this.newRoomSalePrice = null;
+    this.newRoomBedrooms = null;
+    this.newRoomBathrooms = null;
+    this.newRoomLandArea = null;
+    this.newRoomType = 'ROOM';
     this.newRoomBathroom = true;
     this.newRoomCapacity = 1;
     this.newRoomSize = 18;
     this.newRoomWifi = true;
     this.newRoomPets = false;
-    this.newRoomImages = [];
-    this.newRoomImageUrlInput = '';
+    this.resetNewRoomPhotos();
     this.manualPropertyTitle = '';
     this.manualPropertyAddress = '';
     this.manualPropertyDistrict = 'Tamburco';
     this.newRoomPropertyMode = 'select';
   }
 
-  onSelectRoomPhotos(event: Event): void {
+  private resetNewRoomPhotos(): void {
+    this.newRoomRequiredPhotos = { FACADE: null, ROOM: null, BATHROOM: null };
+    this.newRoomExtraPhotos = [];
+    this.newRoomPhotosProcessing = 0;
+  }
+
+  /** Alquiler o venta. Un cuarto solo se alquila: al pasar a venta se sugiere una casa. */
+  setNewRoomOperation(operation: ListingOperation): void {
+    this.newRoomOperation = operation;
+    if (operation === 'SALE' && this.newRoomType === 'ROOM') this.newRoomType = 'HOUSE';
+  }
+
+  setNewRoomType(type: RoomType): void {
+    if (this.newRoomOperation === 'SALE' && !roomTypeOption(type).allowsSale) return;
+    this.newRoomType = type;
+    if (type === 'ROOM') {
+      this.newRoomBedrooms = null;
+      this.newRoomLandArea = null;
+    }
+  }
+
+  get newRoomPhotoCount(): number {
+    return this.requiredPhotoCategories.filter(c => this.newRoomRequiredPhotos[c]).length + this.newRoomExtraPhotos.length;
+  }
+
+  get newRoomMissingRequired(): string[] {
+    return this.requiredPhotoCategories.filter(c => !this.newRoomRequiredPhotos[c]).map(c => photoCategoryLabel(c).toLowerCase());
+  }
+
+  /** Foto de un espacio obligatorio (fachada, habitación o baño). */
+  onSelectRequiredPhoto(category: 'FACADE' | 'ROOM' | 'BATHROOM', event: Event): void {
     const input = event.target as HTMLInputElement;
-    if (!input.files || input.files.length === 0) return;
-
-    const remainingSlots = 5 - this.newRoomImages.length;
-    if (remainingSlots <= 0) {
-      this.showToast('Ya has alcanzado el límite máximo de 5 fotos', 'error');
-      return;
-    }
-
-    const filesToRead = Array.from(input.files).slice(0, remainingSlots);
-    for (const file of filesToRead) {
-      // Previsualización instantánea en 0 milisegundos con ObjectURL
-      const tempUrl = URL.createObjectURL(file);
-      this.newRoomImages = [...this.newRoomImages, tempUrl];
-      this.cdr.detectChanges();
-
-      // Carga en background a Base64 sin retrasar la interfaz
-      const reader = new FileReader();
-      reader.onload = (e: ProgressEvent<FileReader>) => {
-        this.ngZone.run(() => {
-          if (e.target?.result) {
-            const dataUrl = e.target.result as string;
-            const idx = this.newRoomImages.indexOf(tempUrl);
-            if (idx !== -1) {
-              this.newRoomImages[idx] = dataUrl;
-            }
-            this.cdr.detectChanges();
-          }
-        });
-      };
-      reader.readAsDataURL(file);
-    }
-
-    if (input.files.length > remainingSlots) {
-      this.showToast(`Solo se agregaron ${remainingSlots} fotos (máximo 5 permitidas)`, 'info');
-    }
+    const file = input.files?.[0];
     input.value = '';
-    this.cdr.detectChanges();
+    if (!file) return;
+    this.processPhoto(file, url => { this.newRoomRequiredPhotos = { ...this.newRoomRequiredPhotos, [category]: url }; });
   }
 
-  addPhotoUrl(): void {
-    const url = this.newRoomImageUrlInput.trim();
-    if (!url) return;
-    if (this.newRoomImages.length >= 5) {
-      this.showToast('Máximo 5 fotos permitidas', 'error');
+  removeRequiredPhoto(category: 'FACADE' | 'ROOM' | 'BATHROOM'): void {
+    this.newRoomRequiredPhotos = { ...this.newRoomRequiredPhotos, [category]: null };
+  }
+
+  /** Fotos adicionales: hasta completar el máximo; por defecto «Sala o cocina». */
+  onSelectExtraPhotos(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const files = Array.from(input.files || []);
+    input.value = '';
+    const slots = MAX_PHOTOS - REQUIRED_PHOTO_CATEGORIES.length - this.newRoomExtraPhotos.length - this.newRoomPhotosProcessing;
+    if (slots <= 0) {
+      this.showToast(`Ya tienes el máximo de ${MAX_PHOTOS} fotos`, 'info');
       return;
     }
-    this.newRoomImages = [...this.newRoomImages, url];
-    this.newRoomImageUrlInput = '';
-    this.cdr.detectChanges();
+    if (files.length > slots) {
+      this.showToast(`Solo se agregarán ${slots} ${slots === 1 ? 'foto' : 'fotos'} más (máximo ${MAX_PHOTOS})`, 'info');
+    }
+    for (const file of files.slice(0, slots)) {
+      this.processPhoto(file, url => {
+        this.newRoomExtraPhotos = [...this.newRoomExtraPhotos, { url, category: 'LIVING_KITCHEN' }];
+      });
+    }
   }
 
-  removePhoto(index: number): void {
-    this.newRoomImages.splice(index, 1);
-    this.newRoomImages = [...this.newRoomImages];
-    this.cdr.detectChanges();
+  removeExtraPhoto(index: number): void {
+    this.newRoomExtraPhotos = this.newRoomExtraPhotos.filter((_, i) => i !== index);
+  }
+
+  /** Comprime la foto en segundo plano (core/listings.compressImage) antes de guardarla en el formulario. */
+  private processPhoto(file: File, done: (url: string) => void): void {
+    this.newRoomPhotosProcessing++;
+    compressImage(file)
+      .then(url => this.ngZone.run(() => done(url)))
+      .catch(() => this.ngZone.run(() => this.showToast(`No se pudo leer «${file.name}». Prueba con otra foto (JPG o PNG).`, 'error')))
+      .finally(() => this.ngZone.run(() => {
+        this.newRoomPhotosProcessing--;
+        this.cdr.detectChanges();
+      }));
+  }
+
+  /**
+   * Fotos en el orden en que se mostrarán. La primera es la portada del catálogo:
+   * el cuarto para quien busca un cuarto; la fachada para casas y departamentos.
+   */
+  private buildNewRoomPhotos(): RoomPhoto[] {
+    const order: ('FACADE' | 'ROOM' | 'BATHROOM')[] = this.newRoomType === 'ROOM'
+      ? ['ROOM', 'BATHROOM', 'FACADE']
+      : ['FACADE', 'ROOM', 'BATHROOM'];
+    const required = order
+      .filter(c => this.newRoomRequiredPhotos[c])
+      .map(c => ({ url: this.newRoomRequiredPhotos[c] as string, category: c as PhotoCategory }));
+    return [...required, ...this.newRoomExtraPhotos];
   }
 
   submitRoomWithoutPayment(): void {
     if (this.newRoomSubmitting) return;
     if (!this.newRoomTitle.trim()) {
-      this.showToast('El título de la habitación es obligatorio', 'error');
+      this.showToast('El título de la publicación es obligatorio', 'error');
       return;
     }
-    if (this.newRoomImages.some(image => image.startsWith('blob:'))) {
+    if (this.newRoomPhotosProcessing > 0) {
       this.showToast('Espera a que terminen de cargar las fotografías.', 'info');
       return;
     }
-    const mainImg = this.newRoomImages[0] || this.newRoomImageUrl.trim() ||
-      'https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?auto=format&fit=crop&w=800&q=80';
+    if (this.newRoomMissingRequired.length) {
+      this.showToast(`Faltan fotos obligatorias: ${this.newRoomMissingRequired.join(', ')}.`, 'error');
+      return;
+    }
+    const forSale = this.newRoomOperation === 'SALE';
+    if (forSale && !(this.newRoomSalePrice && this.newRoomSalePrice > 0)) {
+      this.showToast('Indica el precio de venta.', 'error');
+      return;
+    }
+    if (!forSale && !(this.newRoomPrice > 0)) {
+      this.showToast('Indica la renta mensual.', 'error');
+      return;
+    }
     if (this.newRoomPropertyMode === 'manual') {
       if (!this.manualPropertyTitle.trim() || !this.manualPropertyAddress.trim()) {
         this.showToast('Ingresa el nombre del inmueble y la dirección.', 'error');
@@ -999,7 +1300,7 @@ export class App implements OnInit {
           this.newRoomPropertyId = res.data.id;
           this.newRoomPropertyMode = 'select';
           this.loadOwnerData();
-          this.executeCreateRoom(res.data.id, mainImg);
+          this.executeCreateRoom(res.data.id);
         },
         error: err => {
           this.newRoomSubmitting = false;
@@ -1013,40 +1314,45 @@ export class App implements OnInit {
       return;
     }
     this.newRoomSubmitting = true;
-    this.executeCreateRoom(this.newRoomPropertyId, mainImg);
+    this.executeCreateRoom(this.newRoomPropertyId);
   }
 
-  private executeCreateRoom(propertyId: number, mainImg: string): void {
-
+  private executeCreateRoom(propertyId: number): void {
+    const forSale = this.newRoomOperation === 'SALE';
+    const hasRooms = this.newRoomType !== 'ROOM';
     this.api.createRoom({
       propertyId: propertyId,
       title: this.newRoomTitle.trim(),
       description: this.newRoomDescription.trim(),
-      pricePerMonth: this.newRoomPrice,
-      depositPrice: this.newRoomDeposit,
+      operation: this.newRoomOperation,
+      pricePerMonth: forSale ? null : this.newRoomPrice,
+      depositPrice: forSale ? null : this.newRoomDeposit,
+      salePrice: forSale ? this.newRoomSalePrice : null,
       roomType: this.newRoomType,
       privateBathroom: this.newRoomBathroom,
       capacity: this.newRoomCapacity,
-      sizeSqm: this.newRoomSize,
-      offersWifi: this.newRoomWifi,
-      acceptsPets: this.newRoomPets,
-      mainImageUrl: mainImg,
-      imageUrls: this.newRoomImages
+      sizeSqm: this.newRoomSize || null,
+      bedrooms: hasRooms ? this.newRoomBedrooms : null,
+      bathrooms: hasRooms ? this.newRoomBathrooms : null,
+      landAreaSqm: forSale && this.newRoomType === 'HOUSE' ? this.newRoomLandArea : null,
+      offersWifi: !forSale && this.newRoomWifi,
+      acceptsPets: !forSale && this.newRoomPets,
+      photos: this.buildNewRoomPhotos()
     }).subscribe({
       next: res => {
         this.newRoomSubmitting = false;
         if (res.success) {
           this.closeNewRoomModal();
-          this.showToast('Cuarto enviado para revisión del administrador. Aún no aparece publicado.', 'success');
+          this.showToast('Publicación enviada para revisión del administrador. Aún no aparece en el catálogo.', 'success');
           this.loadRooms();
           this.loadOwnerData();
         } else {
-          this.showToast(res.message || 'No se pudo registrar el cuarto.', 'error');
+          this.showToast(res.message || 'No se pudo registrar la publicación.', 'error');
         }
       },
       error: err => {
         this.newRoomSubmitting = false;
-        const msg = err.error?.message || 'Error al publicar habitación';
+        const msg = err.error?.message || 'Error al publicar';
         this.showToast(msg, 'error');
       }
     });
@@ -1155,9 +1461,10 @@ export class App implements OnInit {
     this.ownerEditingRoom = room;
     this.ownerEditTitle = room.title;
     this.ownerEditDescription = room.description || '';
-    this.ownerEditPrice = room.pricePerMonth;
-    this.ownerEditDeposit = room.depositPrice;
-    this.ownerEditType = room.roomType;
+    this.ownerEditPrice = room.pricePerMonth ?? 0;
+    this.ownerEditDeposit = room.depositPrice ?? 0;
+    this.ownerEditSalePrice = room.salePrice ?? null;
+    this.ownerEditType = normalizeRoomType(room.roomType);
     this.ownerEditBathroom = room.privateBathroom;
     this.ownerEditWifi = room.offersWifi;
     this.ownerEditPets = room.acceptsPets;
@@ -1181,7 +1488,12 @@ export class App implements OnInit {
       this.showToast('El título del cuarto es obligatorio', 'error');
       return;
     }
-    if (this.ownerEditPrice <= 0) {
+    const forSale = isForSale(this.ownerEditingRoom);
+    if (forSale && !(this.ownerEditSalePrice && this.ownerEditSalePrice > 0)) {
+      this.showToast('El precio de venta debe ser mayor a 0', 'error');
+      return;
+    }
+    if (!forSale && this.ownerEditPrice <= 0) {
       this.showToast('El precio mensual debe ser mayor a 0', 'error');
       return;
     }
@@ -1190,8 +1502,9 @@ export class App implements OnInit {
     this.api.updateRoom(roomId, {
       title: this.ownerEditTitle.trim(),
       description: this.ownerEditDescription.trim(),
-      pricePerMonth: this.ownerEditPrice,
-      depositPrice: this.ownerEditDeposit,
+      pricePerMonth: forSale ? null : this.ownerEditPrice,
+      depositPrice: forSale ? null : this.ownerEditDeposit,
+      salePrice: forSale ? this.ownerEditSalePrice : null,
       roomType: this.ownerEditType,
       privateBathroom: this.ownerEditBathroom,
       offersWifi: this.ownerEditWifi,
@@ -1389,9 +1702,10 @@ export class App implements OnInit {
   openAdminEditModal(room: Room): void {
     this.adminEditingRoom = room;
     this.adminEditTitle = room.title;
-    this.adminEditPrice = room.pricePerMonth;
-    this.adminEditDeposit = room.depositPrice;
-    this.adminEditType = room.roomType;
+    this.adminEditPrice = room.pricePerMonth ?? 0;
+    this.adminEditDeposit = room.depositPrice ?? 0;
+    this.adminEditSalePrice = room.salePrice ?? null;
+    this.adminEditType = normalizeRoomType(room.roomType);
     this.adminEditStatus = room.status;
     this.adminEditBathroom = room.privateBathroom;
     this.adminEditWifi = room.offersWifi;
@@ -1416,10 +1730,12 @@ export class App implements OnInit {
     }
     this.adminEditSaving = true;
     const roomId = this.adminEditingRoom.id;
+    const forSale = isForSale(this.adminEditingRoom);
     this.api.updateRoomAdmin(roomId, {
       title: this.adminEditTitle.trim(),
-      pricePerMonth: this.adminEditPrice,
-      depositPrice: this.adminEditDeposit,
+      pricePerMonth: forSale ? null : this.adminEditPrice,
+      depositPrice: forSale ? null : this.adminEditDeposit,
+      salePrice: forSale ? this.adminEditSalePrice : null,
       roomType: this.adminEditType,
       status: this.adminEditStatus,
       privateBathroom: this.adminEditBathroom,

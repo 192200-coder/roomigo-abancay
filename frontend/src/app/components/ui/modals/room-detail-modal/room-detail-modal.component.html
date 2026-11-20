@@ -43,8 +43,12 @@
         </div>
 
         <div class="detail-price-box">
-          <span class="price-lg">S/. {{ r.pricePerMonth }}</span>
-          <span class="price-sub">mensual (Garantía: S/. {{ r.depositPrice }})</span>
+                    <span class="price-lg">{{ app.priceText(r) }}</span>
+          @if (app.isForSale(r)) {
+          <span class="price-sub">precio de venta</span>
+          } @else {
+          <span class="price-sub">mensual (Garantía: {{ app.formatPen(r.depositPrice) }})</span>
+          }
         </div>
       </div>
 

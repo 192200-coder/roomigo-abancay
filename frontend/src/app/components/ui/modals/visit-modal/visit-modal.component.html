@@ -1,0 +1,73 @@
+<!-- =========================================================================
+     MODAL: AGENDAR VISITA (publicaciones en venta)
+     ========================================================================= -->
+@if (app.showVisitModal()) {
+@if (app.visitRoom; as r) {
+<div class="modal-backdrop" (click)="app.closeVisitModal()">
+  <div class="modal-dialog vm-dialog animate-scale-up" role="dialog" aria-modal="true" aria-labelledby="vm-title"
+    (click)="$event.stopPropagation()">
+    <button class="modal-close" type="button" (click)="app.closeVisitModal()" aria-label="Cerrar">
+      <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+    </button>
+
+    <header class="vm-header">
+      <span class="vm-header__icon" aria-hidden="true"><i class="fa-regular fa-calendar-check"></i></span>
+      <div>
+        <h3 id="vm-title">Agendar visita</h3>
+        <p>{{ r.title }} · <span class="vm-num">{{ app.priceText(r) }}</span></p>
+      </div>
+    </header>
+
+    <form class="vm-body" (ngSubmit)="app.submitVisitRequest()">
+      <div class="vm-grid">
+        <label class="vm-field">
+          <span>Fecha de la visita</span>
+          <input type="date" class="form-input form-input-compact" name="visitDate" required
+            [min]="app.visitMinDate" [(ngModel)]="app.visitDate">
+        </label>
+        <label class="vm-field">
+          <span>Teléfono de contacto</span>
+          <input type="tel" class="form-input form-input-compact" name="visitPhone" inputmode="tel"
+            placeholder="+51 9XX XXX XXX" maxlength="20" [(ngModel)]="app.visitPhone">
+        </label>
+      </div>
+
+      <div class="vm-field">
+        <span id="vm-time-label">Hora sugerida <small>(opcional)</small></span>
+        <div class="vm-slots" role="radiogroup" aria-labelledby="vm-time-label">
+          @for (slot of timeSlots; track slot) {
+            <button type="button" role="radio" class="vm-slot" [class.is-active]="app.visitTime === slot"
+              [attr.aria-checked]="app.visitTime === slot" (click)="app.visitTime = app.visitTime === slot ? '' : slot">
+              {{ slot }}
+            </button>
+          }
+        </div>
+      </div>
+
+      <label class="vm-field">
+        <span>Mensaje para el propietario <small>(opcional)</small></span>
+        <textarea class="form-textarea form-textarea-compact" name="visitMessage" rows="3" maxlength="1000"
+          [(ngModel)]="app.visitMessage" placeholder="Cuéntale qué te interesa o si vas con tu familia."></textarea>
+      </label>
+
+      <p class="vm-note">
+        <i class="fa-solid fa-circle-info" aria-hidden="true"></i>
+        <span>El propietario recibirá un aviso y confirmará la fecha. Cuando la confirme, verás su teléfono en
+          <strong>Mis visitas</strong>. RoomiGo no cobra por la visita ni por la venta.</span>
+      </p>
+
+      <div class="modal-actions modal-actions-compact">
+        <button class="btn btn-secondary btn-sm" type="button" (click)="app.closeVisitModal()">Cancelar</button>
+        <button class="btn btn-primary btn-sm" type="submit" [disabled]="app.visitSubmitting">
+          @if (app.visitSubmitting) {
+            <i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Enviando…
+          } @else {
+            <i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Enviar pedido
+          }
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+}
+}

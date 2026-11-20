@@ -1,6 +1,17 @@
 export type UserRole = 'ROLE_ADMIN' | 'ROLE_OWNER' | 'ROLE_TENANT';
-export type RoomType = 'SINGLE' | 'DOUBLE' | 'SUITE' | 'SHARED';
-export type RoomStatus = 'PENDING_APPROVAL' | 'AVAILABLE' | 'RENTED' | 'OCCUPIED' | 'MAINTENANCE' | 'REJECTED';
+/** Tipo de inmueble, orientado al público: cuarto (estudiantes), minidepartamento (parejas),
+ * departamento (familias grandes) o casa entera. */
+export type RoomType = 'ROOM' | 'MINI_APARTMENT' | 'APARTMENT' | 'HOUSE';
+/** Alquiler mensual o venta. */
+export type ListingOperation = 'RENT' | 'SALE';
+export type RoomStatus = 'PENDING_APPROVAL' | 'AVAILABLE' | 'RENTED' | 'OCCUPIED' | 'MAINTENANCE' | 'REJECTED' | 'SOLD';
+/** Qué muestra cada foto. Fachada, habitación y baño son obligatorias. */
+export type PhotoCategory = 'FACADE' | 'ROOM' | 'BATHROOM' | 'LIVING_KITCHEN' | 'OTHER';
+
+export interface RoomPhoto {
+  url: string;
+  category: PhotoCategory;
+}
 
 // Traducciones oficiales de estados en español para toda la aplicación
 export const ROOM_STATUS_LABELS: Record<RoomStatus, string> = {
@@ -9,7 +20,8 @@ export const ROOM_STATUS_LABELS: Record<RoomStatus, string> = {
   RENTED: 'Alquilado',
   PENDING_APPROVAL: 'Pendiente de Aprobación',
   MAINTENANCE: 'En Mantenimiento',
-  REJECTED: 'Rechazado'
+  REJECTED: 'Rechazado',
+  SOLD: 'Vendido'
 };
 
 export type RoomStatusEs = 'Disponible' | 'Ocupado' | 'Alquilado' | 'Pendiente de Aprobación' | 'En Mantenimiento' | 'Rechazado';
@@ -66,13 +78,25 @@ export interface Room {
   propertyAddress?: string;
   title: string;
   description: string;
+  /** Alquiler o venta (las publicaciones antiguas llegan como RENT). */
+  operation?: ListingOperation;
+  /** Renta mensual; null en venta. */
   pricePerMonth: number;
+  /** Depósito de garantía; null en venta. */
   depositPrice: number;
+  /** Precio de venta; null en alquiler. */
+  salePrice?: number | null;
   roomType: RoomType;
   status: RoomStatus;
   privateBathroom: boolean;
   capacity: number;
+  /** Área construida (o del cuarto) en m². */
   sizeSqm?: number;
+  landAreaSqm?: number | null;
+  bedrooms?: number | null;
+  bathrooms?: number | null;
+  /** Galería completa con categorías: solo viene en el detalle (GET /rooms/{id}). */
+  photos?: RoomPhoto[] | null;
   offersWifi: boolean;
   acceptsPets: boolean;
   mainImageUrl?: string;
@@ -92,16 +116,22 @@ export interface RoomRequest {
   propertyId: number;
   title: string;
   description: string;
-  pricePerMonth: number;
-  depositPrice: number;
+  operation: ListingOperation;
+  pricePerMonth?: number | null;
+  depositPrice?: number | null;
+  salePrice?: number | null;
   roomType: RoomType;
   privateBathroom: boolean;
   capacity: number;
-  sizeSqm?: number;
+  sizeSqm?: number | null;
+  landAreaSqm?: number | null;
+  bedrooms?: number | null;
+  bathrooms?: number | null;
   offersWifi: boolean;
   acceptsPets: boolean;
   mainImageUrl?: string;
-  imageUrls?: string[];
+  /** Al crear: obligatorio (fachada + habitación + baño). Al editar: omitir conserva las actuales. */
+  photos?: RoomPhoto[];
   paymentMethod?: string;
   paymentReference?: string;
   status?: RoomStatus | string;
@@ -123,7 +153,9 @@ export interface RoomFilter {
   district?: string;
   minPrice?: number;
   maxPrice?: number;
+  operation?: ListingOperation;
   roomType?: RoomType;
+  minBedrooms?: number;
   privateBathroom?: boolean;
   offersWifi?: boolean;
   acceptsPets?: boolean;
@@ -256,7 +288,8 @@ export interface PaymentStatusResult {
 export type NotificationType =
   | 'BOOKING_REQUEST' | 'BOOKING_APPROVED' | 'BOOKING_REJECTED' | 'BOOKING_CANCELLED'
   | 'PAYMENT_CONFIRMED' | 'PAYMENT_RECEIVED' | 'PUBLICATION_PAID'
-  | 'ROOM_APPROVED' | 'ROOM_REJECTED' | 'REVIEW_RECEIVED';
+  | 'ROOM_APPROVED' | 'ROOM_REJECTED' | 'REVIEW_RECEIVED'
+  | 'VISIT_REQUESTED' | 'VISIT_CONFIRMED' | 'VISIT_DECLINED' | 'VISIT_CANCELLED';
 
 /** Aviso para el usuario autenticado (reservas, pagos, publicaciones). */
 export interface AppNotification {
@@ -266,4 +299,40 @@ export interface AppNotification {
   message: string;
   read: boolean;
   createdAt: string;
+}
+
+// ==========================================
+// VISITAS (publicaciones en venta)
+// ==========================================
+export type VisitRequestStatus = 'PENDING' | 'CONFIRMED' | 'DECLINED' | 'CANCELLED';
+
+export interface VisitRequestPayload {
+  roomId: number;
+  /** yyyy-MM-dd */
+  preferredDate: string;
+  /** HH:mm (opcional) */
+  preferredTime?: string | null;
+  contactPhone?: string;
+  message?: string;
+}
+
+export interface VisitRequest {
+  id: number;
+  roomId: number;
+  roomTitle: string;
+  roomAddress?: string;
+  roomMainImageUrl?: string;
+  salePrice?: number;
+  requesterName: string;
+  requesterEmail: string;
+  contactPhone?: string;
+  ownerName: string;
+  /** Solo llega al interesado cuando el propietario confirma. */
+  ownerPhone?: string | null;
+  preferredDate: string;
+  preferredTime?: string | null;
+  message?: string;
+  status: VisitRequestStatus;
+  ownerNote?: string;
+  createdAt?: string;
 }

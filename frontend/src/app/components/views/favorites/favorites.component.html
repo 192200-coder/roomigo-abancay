@@ -48,7 +48,7 @@
                 {{ room.privateBathroom ? 'Baño privado' : 'Baño compartido' }}
                 @if (room.sizeSqm) { <span aria-hidden="true">·</span> {{ room.sizeSqm }} m² }
               </p>
-              <p class="rg-favorite-card__price"><strong>S/ {{ room.pricePerMonth | number:'1.0-0' }}</strong><span> / mes</span></p>
+              <p class="rg-favorite-card__price"><strong>{{ app.priceText(room) }}</strong><span>{{ app.priceSuffix(room) }}</span></p>
             </div>
           </article>
         }

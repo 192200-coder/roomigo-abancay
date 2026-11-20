@@ -28,7 +28,7 @@
                 <img [src]="room.mainImageUrl || '/figma/landing/hero-room.png'" [alt]="room.title" loading="lazy">
                 <div><strong>{{ room.title }}</strong><small>RG-{{ room.id }} · {{ room.propertyAddress || 'Abancay' }}</small></div>
               </div></td>
-              <td class="inventory-price">S/ {{ room.pricePerMonth | number:'1.0-2' }}</td>
+              <td class="inventory-price">{{ app.priceText(room) }}{{ app.priceSuffix(room) }}</td>
               <td><span class="inventory-status" [class.is-pending]="room.status === 'PENDING_APPROVAL'"
                 [class.is-rejected]="room.status === 'REJECTED'">{{ statusLabel(room.status) }}</span>
                 <small class="inventory-fee" [class.is-paid]="room.publicationFeePaid">{{ room.publicationFeePaid ? 'Publicación pagada' : 'Publicación sin pagar' }}</small></td>

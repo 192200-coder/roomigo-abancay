@@ -8,7 +8,7 @@ import { App } from '../../../../app';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './publish-room-modal.component.html',
-  styleUrls: []
+  styleUrls: ['./publish-room-modal.component.css']
 })
 export class PublishRoomModalComponent {
   constructor(@Inject(forwardRef(() => App)) public app: App) {}

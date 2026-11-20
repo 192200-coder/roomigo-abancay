@@ -8,7 +8,7 @@
       </nav>
       <p class="rg-eyebrow">ABANCAY · APURÍMAC</p>
       <h1>Encuentra tu lugar en Abancay.</h1>
-      <p class="rg-catalog-hero__copy">Habitaciones, estudios y departamentos para una nueva etapa.</p>
+      <p class="rg-catalog-hero__copy">Cuartos, minidepartamentos, departamentos y casas, en alquiler o en venta.</p>
       <form class="rg-catalog-search" (submit)="$event.preventDefault(); search()">
         <label for="rg-catalog-location">Ubicación o referencia</label>
         <div class="rg-catalog-search__row">
@@ -30,6 +30,16 @@
         <i class="fa-solid fa-sliders" aria-hidden="true"></i>
       </div>
 
+      <div class="rg-filter-field">
+        <span id="rg-operation-label">Operación</span>
+        <div class="rg-segmented" role="radiogroup" aria-labelledby="rg-operation-label">
+          @for (op of operations; track op.value) {
+            <button type="button" role="radio" [attr.aria-checked]="app.selectedOperation === op.value"
+              [class.is-active]="app.selectedOperation === op.value" (click)="setOperation(op.value)">{{ op.label }}</button>
+          }
+        </div>
+      </div>
+
       <label class="rg-filter-field">
         <span>Zona</span>
         <select [(ngModel)]="app.selectedDistrict">
@@ -46,19 +56,41 @@
         <span>Tipo</span>
         <select [(ngModel)]="app.selectedRoomType">
           <option value="">Todos</option>
-          <option value="SINGLE">Individual</option>
-          <option value="DOUBLE">Doble</option>
-          <option value="SUITE">Suite</option>
-          <option value="SHARED">Compartida</option>
+          @for (type of app.roomTypeOptions; track type.value) {
+            @if (app.selectedOperation !== 'SALE' || type.allowsSale) {
+              <option [value]="type.value">{{ type.label }} · {{ type.audience }}</option>
+            }
+          }
         </select>
       </label>
 
+      @if (app.selectedOperation === 'RENT') {
+        <label class="rg-filter-field">
+          <span>Máximo al mes</span>
+          <div class="rg-price-input">
+            <span>S/</span>
+            <input type="number" min="0" max="10000" step="50" [(ngModel)]="app.maxPrice" aria-label="Precio máximo mensual">
+          </div>
+        </label>
+      } @else if (app.selectedOperation === 'SALE') {
+        <label class="rg-filter-field">
+          <span>Precio máximo de venta</span>
+          <div class="rg-price-input">
+            <span>S/</span>
+            <input type="number" min="0" step="5000" [(ngModel)]="app.maxSalePrice" placeholder="Sin límite" aria-label="Precio máximo de venta">
+          </div>
+        </label>
+      }
+
       <label class="rg-filter-field">
-        <span>Máximo al mes</span>
-        <div class="rg-price-input">
-          <span>S/</span>
-          <input type="number" min="0" max="10000" step="50" [(ngModel)]="app.maxPrice" aria-label="Precio máximo mensual">
-        </div>
+        <span>Dormitorios</span>
+        <select [(ngModel)]="app.minBedrooms">
+          <option [ngValue]="0">Cualquiera</option>
+          <option [ngValue]="1">1 o más</option>
+          <option [ngValue]="2">2 o más</option>
+          <option [ngValue]="3">3 o más</option>
+          <option [ngValue]="4">4 o más</option>
+        </select>
       </label>
 
       <fieldset class="rg-filter-options">
@@ -91,7 +123,9 @@
       <div class="rg-applied-filters">
         <span>Abancay · Apurímac</span>
         @if (app.selectedDistrict) { <span>{{ app.selectedDistrict }}</span> }
-        @if (app.selectedRoomType) { <span>{{ roomTypeLabel(app.selectedRoomType) }}</span> }
+        @if (app.selectedOperation) { <span>{{ app.operationLabel(app.selectedOperation) }}</span> }
+        @if (app.selectedRoomType) { <span>{{ app.getRoomTypeName(app.selectedRoomType) }}</span> }
+        @if (app.minBedrooms) { <span>{{ app.minBedrooms }}+ dormitorios</span> }
         @if (app.filterBathroom) { <span>Baño privado</span> }
         @if (app.filterWifi) { <span>Wifi</span> }
         @if (app.filterPets) { <span>Acepta mascotas</span> }
@@ -120,7 +154,11 @@
                 } @else {
                   <span class="rg-property-card__placeholder"><i class="fa-regular fa-image" aria-hidden="true"></i><span>Imagen no disponible</span></span>
                 }
-                <span class="rg-property-card__status"><i aria-hidden="true"></i>Disponible</span>
+                @if (app.isForSale(room)) {
+                  <span class="rg-property-card__status rg-property-card__status--sale"><i aria-hidden="true"></i>En venta</span>
+                } @else {
+                  <span class="rg-property-card__status"><i aria-hidden="true"></i>En alquiler</span>
+                }
               </button>
               <button type="button" class="rg-property-card__favorite" (click)="app.toggleFavorite(room)"
                 [class.is-favorite]="app.isFavorite(room.id)"
@@ -134,14 +172,23 @@
                   {{ room.propertyAddress || 'Ubicación por confirmar' }} · {{ room.propertyCity || 'Abancay' }}
                 </p>
                 <button class="rg-property-card__title" type="button" (click)="app.openRoomPage(room)">{{ room.title }}</button>
+                <p class="rg-property-card__segment">
+                  <i [class]="app.roomTypeIcon(room.roomType)" aria-hidden="true"></i>
+                  {{ app.getRoomTypeName(room.roomType) }} <span aria-hidden="true">·</span> {{ app.audienceLabel(room.roomType) }}
+                </p>
                 <p class="rg-property-card__features">
-                  {{ room.capacity }} {{ room.capacity === 1 ? 'persona' : 'personas' }}
-                  <span aria-hidden="true">·</span>
-                  {{ room.privateBathroom ? 'Baño privado' : 'Baño compartido' }}
+                  @if (room.bedrooms) {
+                    {{ room.bedrooms }} {{ room.bedrooms === 1 ? 'dormitorio' : 'dormitorios' }}
+                    @if (room.bathrooms) { <span aria-hidden="true">·</span> {{ room.bathrooms }} {{ room.bathrooms === 1 ? 'baño' : 'baños' }} }
+                  } @else {
+                    {{ room.capacity }} {{ room.capacity === 1 ? 'persona' : 'personas' }}
+                    <span aria-hidden="true">·</span>
+                    {{ room.privateBathroom ? 'Baño privado' : 'Baño compartido' }}
+                  }
                   @if (room.sizeSqm) { <span aria-hidden="true">·</span> {{ room.sizeSqm }} m² }
                 </p>
                 <div class="rg-property-card__price">
-                  <p><strong>S/ {{ room.pricePerMonth | number:'1.0-0' }}</strong><span> / mes</span></p>
+                  <p><strong>{{ app.priceText(room) }}</strong><span>{{ app.priceSuffix(room) }}</span></p>
                   <button type="button" (click)="app.openRoomPage(room)" aria-label="Ver detalle del inmueble">
                     <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
                   </button>

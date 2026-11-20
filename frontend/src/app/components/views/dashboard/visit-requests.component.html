@@ -1,0 +1,102 @@
+<section class="vr" [attr.aria-labelledby]="'vr-title-' + role()">
+  <header class="vr__header">
+    <div>
+      <p class="vr__eyebrow">PUBLICACIONES EN VENTA</p>
+      <h3 [id]="'vr-title-' + role()">{{ role() === 'owner' ? 'Pedidos de visita' : 'Mis visitas' }}</h3>
+      <p class="vr__sub">
+        @if (role() === 'owner') {
+          Confirma la fecha o avisa si no puedes recibir a la persona interesada.
+        } @else {
+          Cuando el propietario confirme, verás su teléfono para coordinar.
+        }
+      </p>
+    </div>
+    <button type="button" class="vr__refresh" (click)="app.loadVisits()" aria-label="Actualizar visitas">
+      <i class="fa-solid fa-arrows-rotate" aria-hidden="true"></i>
+    </button>
+  </header>
+
+  @if (visits.length === 0) {
+    <div class="vr__empty">
+      <span class="vr__empty-icon" aria-hidden="true"><i class="fa-regular fa-calendar"></i></span>
+      <p>
+        @if (role() === 'owner') {
+          Aún no tienes pedidos de visita. Llegan cuando publicas un inmueble en venta.
+        } @else {
+          Aún no agendaste visitas. En las casas y departamentos en venta encontrarás «Agendar visita».
+        }
+      </p>
+      @if (role() === 'tenant') {
+        <button type="button" class="vr__btn vr__btn--primary" (click)="app.browseSales()">Ver inmuebles en venta</button>
+      }
+    </div>
+  } @else {
+    <ul class="vr__list">
+      @for (v of visits; track v.id) {
+        <li class="vr-card">
+          @if (v.roomMainImageUrl) {
+            <img class="vr-card__thumb" [src]="v.roomMainImageUrl" alt="" loading="lazy">
+          } @else {
+            <span class="vr-card__thumb vr-card__thumb--empty" aria-hidden="true"><i class="fa-regular fa-image"></i></span>
+          }
+
+          <div class="vr-card__main">
+            <div class="vr-card__top">
+              <strong class="vr-card__title">{{ v.roomTitle }}</strong>
+              <span class="vr-badge" [attr.data-status]="v.status">{{ statusLabel(v.status) }}</span>
+            </div>
+            <p class="vr-card__when">
+              <i class="fa-regular fa-calendar" aria-hidden="true"></i>
+              {{ v.preferredDate | date:'EEEE d MMM y':'':'es-PE' }}
+              @if (v.preferredTime) { · {{ v.preferredTime.substring(0, 5) }} }
+              @if (v.salePrice) { <span class="vr-card__price">{{ app.formatPen(v.salePrice) }}</span> }
+            </p>
+
+            @if (role() === 'owner') {
+              <p class="vr-card__who">
+                <i class="fa-regular fa-user" aria-hidden="true"></i> {{ v.requesterName }}
+                @if (v.contactPhone) { · <a [href]="'tel:' + v.contactPhone">{{ v.contactPhone }}</a> }
+              </p>
+            } @else if (v.ownerPhone) {
+              <p class="vr-card__who">
+                <i class="fa-solid fa-phone" aria-hidden="true"></i> {{ v.ownerName }} ·
+                <a [href]="'tel:' + v.ownerPhone">{{ v.ownerPhone }}</a>
+              </p>
+            }
+
+            @if (v.message) { <p class="vr-card__message">«{{ v.message }}»</p> }
+            @if (v.ownerNote) {
+              <p class="vr-card__note"><i class="fa-regular fa-comment" aria-hidden="true"></i> {{ v.ownerNote }}</p>
+            }
+
+            <div class="vr-card__actions">
+              @if (role() === 'owner' && v.status === 'PENDING') {
+                <input class="vr-card__note-input" type="text" maxlength="300" [(ngModel)]="notes[v.id]"
+                  [name]="'note-' + v.id" placeholder="Nota opcional (p. ej. «toque el timbre del 2.º piso»)"
+                  aria-label="Nota para la persona interesada">
+                <button type="button" class="vr__btn vr__btn--primary" [disabled]="app.isUpdatingVisit(v.id)"
+                  (click)="respond(v, 'CONFIRMED')">
+                  <i class="fa-solid fa-check" aria-hidden="true"></i> Confirmar
+                </button>
+                <button type="button" class="vr__btn" [disabled]="app.isUpdatingVisit(v.id)" (click)="respond(v, 'DECLINED')">
+                  No puedo esa fecha
+                </button>
+              }
+              @if (v.status === 'CONFIRMED') {
+                @if (whatsappUrl(role() === 'owner' ? v.contactPhone : v.ownerPhone, v.roomTitle); as wa) {
+                  <a class="vr__btn vr__btn--whatsapp" [href]="wa" target="_blank" rel="noopener">
+                    <i class="fa-brands fa-whatsapp" aria-hidden="true"></i> WhatsApp
+                  </a>
+                }
+              }
+              @if (role() === 'tenant' && (v.status === 'PENDING' || v.status === 'CONFIRMED')) {
+                <button type="button" class="vr__btn vr__btn--ghost" [disabled]="app.isUpdatingVisit(v.id)"
+                  (click)="respond(v, 'CANCELLED')">Cancelar visita</button>
+              }
+            </div>
+          </div>
+        </li>
+      }
+    </ul>
+  }
+</section>

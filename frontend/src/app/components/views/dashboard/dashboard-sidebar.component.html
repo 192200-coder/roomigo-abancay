@@ -12,6 +12,11 @@
       <button type="button" class="panel-link" (click)="app.switchTab('favorites')">
         <i class="fa-regular fa-heart" aria-hidden="true"></i> Favoritos
       </button>
+      <button type="button" class="panel-link" [class.is-active]="app.tenantFilter() === 'VISITS'"
+        (click)="app.tenantFilter.set('VISITS'); app.loadVisits()">
+        <i class="fa-regular fa-calendar" aria-hidden="true"></i> Mis visitas
+        <span class="panel-count">{{ app.tenantVisits().length }}</span>
+      </button>
       @for (filter of bookingFilters; track filter) {
         <button type="button" class="panel-link" [class.is-active]="app.tenantFilter() === filter"
           (click)="app.tenantFilter.set(filter)">
@@ -31,6 +36,11 @@
       </button>
       <button type="button" class="panel-link" [class.is-active]="app.ownerTab() === 'stats'" (click)="app.ownerTab.set('stats')">
         <i class="fa-solid fa-chart-line" aria-hidden="true"></i> Ingresos
+      </button>
+      <button type="button" class="panel-link" [class.is-active]="app.ownerTab() === 'visits'"
+        (click)="app.ownerTab.set('visits'); app.loadVisits()">
+        <i class="fa-regular fa-calendar" aria-hidden="true"></i> Visitas
+        <span class="panel-count">{{ app.pendingVisitCount() }}</span>
       </button>
       <button type="button" class="panel-link" (click)="app.openNewRoomModal()">
         <i class="fa-regular fa-file-lines" aria-hidden="true"></i> Publicar inmueble

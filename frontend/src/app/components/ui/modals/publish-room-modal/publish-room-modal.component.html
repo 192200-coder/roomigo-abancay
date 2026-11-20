@@ -1,5 +1,5 @@
 <!-- =========================================================================
-     MODAL: PUBLICAR NUEVA HABITACIÓN CON PASARELA DE MERCADO PAGO
+     MODAL: PUBLICAR INMUEBLE (alquiler o venta, fotos obligatorias)
      ========================================================================= -->
 @if (app.showNewRoomModal(); as isOpen) {
 <div class="modal-backdrop" (click)="app.closeNewRoomModal()">
@@ -7,8 +7,8 @@
     <button class="modal-close" (click)="app.closeNewRoomModal()"><i class="fa-solid fa-xmark"></i></button>
 
     <div class="modal-header">
-      <h2><i class="fa-solid fa-cloud-arrow-up text-indigo"></i> Publicar Cuarto en Abancay</h2>
-      <p>Publicación inmediata y segura procesada por la pasarela oficial de <strong>Mercado Pago Perú</strong></p>
+      <h2><i class="fa-solid fa-cloud-arrow-up text-indigo"></i> Publicar inmueble en Abancay</h2>
+      <p>Cuartos, minidepartamentos, departamentos y casas, en alquiler o en venta. El administrador revisa cada publicación.</p>
     </div>
 
     <div class="modal-body">
@@ -80,122 +80,198 @@
         }
       </div>
 
+      <!-- Operación y tipo de inmueble -->
       <div class="form-group">
-        <label class="form-label">Título del Anuncio</label>
-        <input type="text" class="form-input" [(ngModel)]="app.newRoomTitle"
-          placeholder="Ej. Habitación Amoblada frente a la UNAMBA con Baño Privado">
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Descripción Detallada</label>
-        <textarea class="form-textarea" rows="3" [(ngModel)]="app.newRoomDescription"
-          placeholder="Detalles de la habitación, servicios incluidos (agua caliente, wifi), reglas de convivencia..."></textarea>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Precio Mensual (S/.)</label>
-          <input type="number" class="form-input" [(ngModel)]="app.newRoomPrice">
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Depósito de Garantía (S/.)</label>
-          <input type="number" class="form-input" [(ngModel)]="app.newRoomDeposit">
-        </div>
-
-        <div class="form-group">
-          <label class="form-label">Tipo de Habitación</label>
-          <select class="form-select" [(ngModel)]="app.newRoomType">
-            <option value="SINGLE">Individual</option>
-            <option value="DOUBLE">Doble (Minidepartamento)</option>
-            <option value="SUITE">Suite con Baño</option>
-            <option value="SHARED">Compartida</option>
-          </select>
-        </div>
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Área (m²)</label>
-          <input type="number" class="form-input" [(ngModel)]="app.newRoomSize">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Capacidad (Personas)</label>
-          <input type="number" class="form-input" [(ngModel)]="app.newRoomCapacity">
-        </div>
-      </div>
-
-      <!-- Fotos de la Habitación (Máximo 5 fotos) -->
-      <div class="form-group photos-upload-section">
-        <div class="photos-header">
-          <label class="form-label">
-            <i class="fa-solid fa-camera text-primary"></i> Fotos de la Habitación (Máximo 5 fotos)
-          </label>
-          <span class="photos-counter" [class.counter-full]="app.newRoomImages.length >= 5">
-            {{ app.newRoomImages.length }} / 5 fotos agregadas
-          </span>
-        </div>
-
-        <!-- Upload Controls -->
-        <div class="photo-controls-row">
-          <input type="file" #roomFileInput multiple accept="image/*" (change)="app.onSelectRoomPhotos($event)"
-            style="display: none;">
-
-          <button type="button" class="btn btn-sm btn-white btn-upload" (click)="roomFileInput.click()"
-            [disabled]="app.newRoomImages.length >= 5">
-            <i class="fa-solid fa-cloud-arrow-up text-primary"></i> Subir Fotos desde tu Equipo o Celular
+        <span class="form-label" id="pr-operation-label">¿Qué quieres publicar?</span>
+        <div class="pr-segmented" role="radiogroup" aria-labelledby="pr-operation-label">
+          <button type="button" role="radio" [class.is-active]="app.newRoomOperation === 'RENT'"
+            [attr.aria-checked]="app.newRoomOperation === 'RENT'" (click)="app.setNewRoomOperation('RENT')">
+            <i class="fa-solid fa-key" aria-hidden="true"></i> Alquiler mensual
+          </button>
+          <button type="button" role="radio" [class.is-active]="app.newRoomOperation === 'SALE'"
+            [attr.aria-checked]="app.newRoomOperation === 'SALE'" (click)="app.setNewRoomOperation('SALE')">
+            <i class="fa-solid fa-sign-hanging" aria-hidden="true"></i> Venta
           </button>
         </div>
+      </div>
 
-        <!-- Previsualización de Galería de Fotos -->
-        @if (app.newRoomImages.length > 0) {
-        <div class="photos-preview-grid animate-fade-in">
-          @for (img of app.newRoomImages; track $index) {
-          <div class="photo-thumb-card">
-            <img [src]="img" alt="Foto habitación {{ $index + 1 }}">
-            <span class="photo-order-badge" [class.order-main]="$index === 0">
-              {{ $index === 0 ? '★ Principal' : '#' + ($index + 1) }}
-            </span>
-            <button type="button" class="btn-remove-thumb" title="Eliminar foto" (click)="app.removePhoto($index)">
-              <i class="fa-solid fa-trash-can"></i>
+      <div class="form-group">
+        <span class="form-label" id="pr-type-label">Tipo de inmueble</span>
+        <div class="pr-types" role="radiogroup" aria-labelledby="pr-type-label">
+          @for (type of app.roomTypeOptions; track type.value) {
+            <button type="button" role="radio" class="pr-type" [class.is-active]="app.newRoomType === type.value"
+              [attr.aria-checked]="app.newRoomType === type.value"
+              [disabled]="app.newRoomOperation === 'SALE' && !type.allowsSale"
+              [title]="app.newRoomOperation === 'SALE' && !type.allowsSale ? 'Un cuarto solo se publica en alquiler' : ''"
+              (click)="app.setNewRoomType(type.value)">
+              <i [class]="type.icon" aria-hidden="true"></i>
+              <strong>{{ type.label }}</strong>
+              <span>{{ type.audience }}</span>
             </button>
-          </div>
           }
         </div>
-        } @else {
-        <div class="photo-empty-dropzone" (click)="roomFileInput.click()">
-          <i class="fa-solid fa-images text-primary photo-empty-icon"></i>
-          <p>Haz clic para subir de 1 a 5 fotos de tu habitación (o pega los enlaces URL arriba)</p>
-          <small>Formatos JPG, PNG, WebP aceptados</small>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="pr-title">Título del anuncio</label>
+        <input id="pr-title" type="text" class="form-input" maxlength="120" [(ngModel)]="app.newRoomTitle"
+          [placeholder]="app.newRoomOperation === 'SALE' ? 'Ej. Casa de 2 pisos con huerto en Villa Ampay' : 'Ej. Cuarto amoblado frente a la UNAMBA con baño privado'">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="pr-description">Descripción detallada</label>
+        <textarea id="pr-description" class="form-textarea" rows="3" [(ngModel)]="app.newRoomDescription"
+          [placeholder]="app.newRoomOperation === 'SALE' ? 'Estado del inmueble, documentos (título, partida registral), servicios, accesos…' : 'Servicios incluidos (agua caliente, wifi), reglas de convivencia…'"></textarea>
+      </div>
+
+      <!-- Precios: dependen de la operación -->
+      @if (app.newRoomOperation === 'RENT') {
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="pr-price">Renta mensual (S/)</label>
+            <input id="pr-price" type="number" min="1" class="form-input pr-num" [(ngModel)]="app.newRoomPrice">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="pr-deposit">Depósito de garantía (S/)</label>
+            <input id="pr-deposit" type="number" min="0" class="form-input pr-num" [(ngModel)]="app.newRoomDeposit">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="pr-capacity">Capacidad (personas)</label>
+            <input id="pr-capacity" type="number" min="1" class="form-input pr-num" [(ngModel)]="app.newRoomCapacity">
+          </div>
         </div>
+      } @else {
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label" for="pr-sale-price">Precio de venta (S/)</label>
+            <input id="pr-sale-price" type="number" min="1" step="1000" class="form-input pr-num"
+              [(ngModel)]="app.newRoomSalePrice" placeholder="Ej. 280000">
+          </div>
+          @if (app.newRoomType === 'HOUSE') {
+            <div class="form-group">
+              <label class="form-label" for="pr-land">Área de terreno (m²)</label>
+              <input id="pr-land" type="number" min="1" class="form-input pr-num" [(ngModel)]="app.newRoomLandArea" placeholder="Opcional">
+            </div>
+          }
+        </div>
+      }
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="pr-size">{{ app.newRoomOperation === 'SALE' ? 'Área construida (m²)' : 'Área (m²)' }}</label>
+          <input id="pr-size" type="number" min="1" class="form-input pr-num" [(ngModel)]="app.newRoomSize">
+        </div>
+        @if (app.newRoomType !== 'ROOM') {
+          <div class="form-group">
+            <label class="form-label" for="pr-bedrooms">Dormitorios</label>
+            <input id="pr-bedrooms" type="number" min="0" class="form-input pr-num" [(ngModel)]="app.newRoomBedrooms">
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="pr-bathrooms">Baños</label>
+            <input id="pr-bathrooms" type="number" min="0" class="form-input pr-num" [(ngModel)]="app.newRoomBathrooms">
+          </div>
         }
       </div>
 
-      <div class="checkbox-row">
-        <label class="checkbox-label">
-          <input type="checkbox" [(ngModel)]="app.newRoomBathroom">
-          <span>Baño Privado</span>
-        </label>
+      <!-- Fotos: 3 obligatorias + adicionales -->
+      <div class="form-group pr-photos">
+        <div class="pr-photos__header">
+          <div>
+            <span class="form-label"><i class="fa-solid fa-camera text-primary" aria-hidden="true"></i> Fotos del inmueble</span>
+            <p class="pr-photos__hint">Obligatorias: la fachada, la habitación y el baño. Puedes sumar hasta {{ app.maxPhotos - 3 }} más.</p>
+          </div>
+          <span class="pr-photos__counter" [class.is-complete]="app.newRoomMissingRequired.length === 0">
+            {{ 3 - app.newRoomMissingRequired.length }}/3 obligatorias · {{ app.newRoomPhotoCount }}/{{ app.maxPhotos }}
+          </span>
+        </div>
 
-        <label class="checkbox-label">
-          <input type="checkbox" [(ngModel)]="app.newRoomWifi">
-          <span>WiFi Fibra Óptica</span>
-        </label>
+        <div class="pr-slots">
+          @for (category of app.requiredPhotoCategories; track category) {
+            @let option = app.photoCategoryOptions[$index];
+            <div class="pr-slot" [class.is-filled]="app.newRoomRequiredPhotos[category]">
+              <input type="file" accept="image/*" #slotInput hidden (change)="app.onSelectRequiredPhoto(category, $event)">
+              @if (app.newRoomRequiredPhotos[category]; as url) {
+                <img [src]="url" [alt]="option.label">
+                <span class="pr-slot__tag"><i class="fa-solid fa-check" aria-hidden="true"></i> {{ option.label }}</span>
+                <div class="pr-slot__tools">
+                  <button type="button" (click)="slotInput.click()" [attr.aria-label]="'Cambiar foto: ' + option.label">
+                    <i class="fa-solid fa-rotate" aria-hidden="true"></i>
+                  </button>
+                  <button type="button" (click)="app.removeRequiredPhoto(category)" [attr.aria-label]="'Quitar foto: ' + option.label">
+                    <i class="fa-solid fa-trash-can" aria-hidden="true"></i>
+                  </button>
+                </div>
+              } @else {
+                <button type="button" class="pr-slot__empty" (click)="slotInput.click()">
+                  <i [class]="option.icon" aria-hidden="true"></i>
+                  <strong>{{ option.label }}</strong>
+                  <span>{{ option.hint }}</span>
+                  <em>Obligatoria</em>
+                </button>
+              }
+            </div>
+          }
+        </div>
 
-        <label class="checkbox-label">
-          <input type="checkbox" [(ngModel)]="app.newRoomPets">
-          <span>Acepta Mascotas</span>
-        </label>
+        @if (app.newRoomExtraPhotos.length > 0) {
+          <div class="pr-extras">
+            @for (photo of app.newRoomExtraPhotos; track $index) {
+              <div class="pr-extra">
+                <img [src]="photo.url" alt="Foto adicional {{ $index + 1 }}">
+                <select class="pr-extra__category" [(ngModel)]="photo.category" [attr.aria-label]="'Qué muestra la foto ' + ($index + 1)">
+                  @for (option of app.photoCategoryOptions; track option.value) {
+                    <option [ngValue]="option.value">{{ option.label }}</option>
+                  }
+                </select>
+                <button type="button" class="pr-extra__remove" (click)="app.removeExtraPhoto($index)" aria-label="Quitar foto adicional">
+                  <i class="fa-solid fa-xmark" aria-hidden="true"></i>
+                </button>
+              </div>
+            }
+          </div>
+        }
+
+        <input type="file" #extraInput multiple accept="image/*" hidden (change)="app.onSelectExtraPhotos($event)">
+        <button type="button" class="pr-add-more" (click)="extraInput.click()"
+          [disabled]="app.newRoomExtraPhotos.length >= app.maxPhotos - 3">
+          <i class="fa-solid fa-plus" aria-hidden="true"></i> Agregar fotos adicionales (sala, cocina, patio…)
+        </button>
+        @if (app.newRoomPhotosProcessing > 0) {
+          <p class="pr-photos__processing" role="status"><i class="fa-solid fa-spinner fa-spin" aria-hidden="true"></i> Optimizando fotos…</p>
+        }
       </div>
 
-      <p>El cuarto se enviará al administrador para su revisión. Por ahora no se requiere ningún pago.</p>
+      @if (app.newRoomOperation === 'RENT') {
+        <div class="checkbox-row">
+          <label class="checkbox-label">
+            <input type="checkbox" [(ngModel)]="app.newRoomBathroom">
+            <span>Baño privado</span>
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" [(ngModel)]="app.newRoomWifi">
+            <span>Wifi incluido</span>
+          </label>
+          <label class="checkbox-label">
+            <input type="checkbox" [(ngModel)]="app.newRoomPets">
+            <span>Acepta mascotas</span>
+          </label>
+        </div>
+      }
+
+      <p class="pr-footnote">
+        @if (app.newRoomOperation === 'SALE') {
+          La publicación se enviará al administrador para su revisión. En venta no se reserva ni se cobra por la plataforma: los interesados te pedirán una visita.
+        } @else {
+          La publicación se enviará al administrador para su revisión. Por ahora no se requiere ningún pago.
+        }
+      </p>
 <div class="modal-actions">
         <button class="btn btn-secondary" (click)="app.closeNewRoomModal()">Cancelar</button>
         <button class="btn btn-primary" [disabled]="app.newRoomSubmitting" (click)="app.submitRoomWithoutPayment()">
           @if (app.newRoomSubmitting) {
-          <i class="fa-solid fa-spinner fa-spin"></i> Registrando habitación...
+          <i class="fa-solid fa-spinner fa-spin"></i> Enviando publicación…
           } @else {
-          <i class="fa-solid fa-circle-check"></i> Enviar cuarto para revisión
+          <i class="fa-solid fa-circle-check"></i> Enviar para revisión
           }
         </button>
       </div>

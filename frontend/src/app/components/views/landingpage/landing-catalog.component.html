@@ -71,7 +71,7 @@
               @if (room.sizeSqm) { <span>{{ room.sizeSqm }} m²</span> }
             </p>
             <div class="rg-room-price-row">
-              <p><strong>S/ {{ room.pricePerMonth | number:'1.0-0' }}</strong><span>/ mes</span></p>
+              <p><strong>{{ app.priceText(room) }}</strong><span>{{ app.priceSuffix(room) }}</span></p>
               <button
                 class="rg-room-open"
                 type="button"

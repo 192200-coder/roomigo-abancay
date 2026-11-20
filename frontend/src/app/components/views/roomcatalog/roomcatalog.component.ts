@@ -2,7 +2,8 @@ import { Component, Inject, forwardRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { App } from '../../../app';
-import { Room, RoomType } from '../../../core/models';
+import { ListingOperation, Room } from '../../../core/models';
+import { mainPrice } from '../../../core/listings';
 
 @Component({
   selector: 'app-room-catalog',
@@ -16,12 +17,27 @@ export class RoomCatalogComponent {
   page = 1;
   sortOrder: 'newest' | 'price-low' | 'price-high' = 'newest';
 
+  readonly operations: { value: ListingOperation | ''; label: string }[] = [
+    { value: '', label: 'Todo' },
+    { value: 'RENT', label: 'Alquiler' },
+    { value: 'SALE', label: 'Venta' }
+  ];
+
   constructor(@Inject(forwardRef(() => App)) public app: App) {}
+
+  /** Cambia la operación y busca de inmediato; un cuarto no se vende, así que se limpia ese tipo. */
+  setOperation(operation: ListingOperation | ''): void {
+    this.app.selectedOperation = operation;
+    if (operation === 'SALE' && this.app.selectedRoomType === 'ROOM') this.app.selectedRoomType = '';
+    this.search();
+  }
 
   get sortedRooms(): Room[] {
     const rooms = [...this.app.rooms()];
-    if (this.sortOrder === 'price-low') return rooms.sort((a, b) => a.pricePerMonth - b.pricePerMonth);
-    if (this.sortOrder === 'price-high') return rooms.sort((a, b) => b.pricePerMonth - a.pricePerMonth);
+    // Con «Todo», ordenar por precio mezclaría rentas y ventas: se ordena dentro de cada operación.
+    const byOperation = (a: Room, b: Room) => Number(a.operation === 'SALE') - Number(b.operation === 'SALE');
+    if (this.sortOrder === 'price-low') return rooms.sort((a, b) => byOperation(a, b) || mainPrice(a) - mainPrice(b));
+    if (this.sortOrder === 'price-high') return rooms.sort((a, b) => byOperation(a, b) || mainPrice(b) - mainPrice(a));
     return rooms.sort((a, b) => new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime());
   }
 
@@ -48,6 +64,9 @@ export class RoomCatalogComponent {
     this.app.selectedCity = '';
     this.app.selectedDistrict = '';
     this.app.selectedRoomType = '';
+    this.app.selectedOperation = '';
+    this.app.maxSalePrice = null;
+    this.app.minBedrooms = 0;
     this.app.maxPrice = 1200;
     this.app.filterBathroom = false;
     this.app.filterWifi = false;
@@ -69,12 +88,4 @@ export class RoomCatalogComponent {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
-  roomTypeLabel(type: RoomType): string {
-    return {
-      SINGLE: 'Individual',
-      DOUBLE: 'Doble',
-      SUITE: 'Suite',
-      SHARED: 'Compartida'
-    }[type];
-  }
 }

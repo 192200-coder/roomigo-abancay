@@ -60,8 +60,8 @@
 
                 <div class="rg-hero-badge rg-hero-badge--price">
                   <span class="rg-badge-currency">S/</span>
-                  <span class="rg-badge-amount">{{ room.pricePerMonth | number:'1.0-0' }}</span>
-                  <span class="rg-badge-period">/ mes</span>
+                  <span class="rg-badge-amount">{{ (app.isForSale(room) ? room.salePrice : room.pricePerMonth) | number:'1.0-0' }}</span>
+                  <span class="rg-badge-period">{{ app.isForSale(room) ? 'venta' : '/ mes' }}</span>
                 </div>
               </div>
 
@@ -159,11 +159,10 @@
           <span class="rg-input-wrap">
             <img src="/figma/landing/house-outline.svg" alt="">
             <select [(ngModel)]="app.selectedRoomType" (change)="app.loadRooms()" aria-label="Tipo de inmueble">
-              <option value="">Habitación o departamento</option>
-              <option value="SINGLE">Habitación individual</option>
-              <option value="DOUBLE">Habitación doble</option>
-              <option value="SUITE">Suite con baño privado</option>
-              <option value="SHARED">Habitación compartida</option>
+              <option value="">Cuarto, departamento o casa</option>
+              @for (type of app.roomTypeOptions; track type.value) {
+                <option [value]="type.value">{{ type.label }} · {{ type.audience }}</option>
+              }
             </select>
           </span>
         </label>

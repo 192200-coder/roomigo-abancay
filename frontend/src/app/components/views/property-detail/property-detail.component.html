@@ -10,8 +10,12 @@
       <header class="rg-detail-heading">
         <div>
           <div class="rg-detail-heading__meta">
-            <span class="rg-detail-status"><i aria-hidden="true"></i> Disponible</span>
-            <span>{{ roomTypeLabel(room.roomType) }}</span>
+            @if (app.isForSale(room)) {
+              <span class="rg-detail-status rg-detail-status--sale"><i aria-hidden="true"></i> En venta</span>
+            } @else {
+              <span class="rg-detail-status"><i aria-hidden="true"></i> En alquiler</span>
+            }
+            <span>{{ app.getRoomTypeName(room.roomType) }} · {{ app.audienceLabel(room.roomType) }}</span>
           </div>
           <h1>{{ room.title }}</h1>
           <p><i class="fa-solid fa-location-dot" aria-hidden="true"></i> {{ room.propertyAddress || 'Ubicación por confirmar' }}, {{ room.propertyCity || 'Abancay' }}</p>
@@ -27,16 +31,41 @@
         }
       </header>
 
-      <div class="rg-detail-photo">
-        @if (room.mainImageUrl) {
-          <img [src]="room.mainImageUrl" [alt]="room.title">
-        } @else {
-          <div class="rg-detail-photo__empty">
-            <i class="fa-regular fa-image" aria-hidden="true"></i>
-            <span>El propietario aún no ha agregado una imagen</span>
+      <div class="rg-detail-gallery">
+        <div class="rg-detail-photo">
+          @if (activePhoto(room); as photo) {
+            <img [src]="photo.url" [alt]="room.title + (photo.category ? ' · ' + app.photoCategoryLabel(photo.category) : '')">
+            @if (gallery(room).length > 1) {
+              <button type="button" class="rg-detail-photo__nav rg-detail-photo__nav--prev" (click)="step(room, -1)" aria-label="Foto anterior">
+                <i class="fa-solid fa-chevron-left" aria-hidden="true"></i>
+              </button>
+              <button type="button" class="rg-detail-photo__nav rg-detail-photo__nav--next" (click)="step(room, 1)" aria-label="Foto siguiente">
+                <i class="fa-solid fa-chevron-right" aria-hidden="true"></i>
+              </button>
+            }
+            <span class="rg-detail-photo__caption">
+              {{ photo.category ? app.photoCategoryLabel(photo.category) : 'Imagen publicada por el propietario' }}
+              @if (gallery(room).length > 1) { · {{ gallery(room).indexOf(photo) + 1 }} de {{ gallery(room).length }} }
+            </span>
+          } @else {
+            <div class="rg-detail-photo__empty">
+              <i class="fa-regular fa-image" aria-hidden="true"></i>
+              <span>El propietario aún no ha agregado una imagen</span>
+            </div>
+          }
+        </div>
+        @if (gallery(room).length > 1) {
+          <div class="rg-detail-thumbs" role="list" aria-label="Fotos de la publicación">
+            @for (photo of gallery(room); track $index) {
+              <button type="button" role="listitem" class="rg-detail-thumb" [class.is-active]="isActive($index)"
+                (click)="selectPhoto($index)" [attr.aria-current]="isActive($index) ? 'true' : null"
+                [attr.aria-label]="'Ver foto: ' + (photo.category ? app.photoCategoryLabel(photo.category) : 'foto ' + ($index + 1))">
+                <img [src]="photo.url" alt="" loading="lazy">
+                @if (photo.category) { <span>{{ app.photoCategoryLabel(photo.category) }}</span> }
+              </button>
+            }
           </div>
         }
-        <span class="rg-detail-photo__caption">Imagen publicada por el propietario</span>
       </div>
 
       <div class="rg-detail-columns">
@@ -45,17 +74,32 @@
             <div class="rg-detail-overview__title">
               <span class="rg-detail-icon"><i class="fa-solid fa-house" aria-hidden="true"></i></span>
               <div>
-                <h2>{{ roomTypeLabel(room.roomType) }} en {{ room.propertyCity || 'Abancay' }}</h2>
-                <p>Hasta {{ room.capacity }} {{ room.capacity === 1 ? 'persona' : 'personas' }}</p>
+                <h2>{{ app.getRoomTypeName(room.roomType) }} en {{ room.propertyCity || 'Abancay' }}</h2>
+                @if (app.isForSale(room)) {
+                  <p>{{ app.audienceLabel(room.roomType) }} · Venta directa del propietario</p>
+                } @else {
+                  <p>{{ app.audienceLabel(room.roomType) }} · Hasta {{ room.capacity }} {{ room.capacity === 1 ? 'persona' : 'personas' }}</p>
+                }
               </div>
             </div>
             <div class="rg-detail-facts">
-              @if (room.sizeSqm) {
-                <div><i class="fa-solid fa-ruler-combined" aria-hidden="true"></i><span>{{ room.sizeSqm }} m²</span></div>
+              @if (room.bedrooms) {
+                <div><i class="fa-solid fa-bed" aria-hidden="true"></i><span>{{ room.bedrooms }} {{ room.bedrooms === 1 ? 'dormitorio' : 'dormitorios' }}</span></div>
               }
-              <div><i class="fa-solid fa-bath" aria-hidden="true"></i><span>{{ room.privateBathroom ? 'Baño privado' : 'Baño compartido' }}</span></div>
-              <div><i class="fa-solid fa-wifi" aria-hidden="true"></i><span>{{ room.offersWifi ? 'Wifi incluido' : 'Sin wifi incluido' }}</span></div>
-              <div><i class="fa-solid fa-paw" aria-hidden="true"></i><span>{{ room.acceptsPets ? 'Acepta mascotas' : 'No acepta mascotas' }}</span></div>
+              @if (room.bathrooms) {
+                <div><i class="fa-solid fa-toilet" aria-hidden="true"></i><span>{{ room.bathrooms }} {{ room.bathrooms === 1 ? 'baño' : 'baños' }}</span></div>
+              }
+              @if (room.sizeSqm) {
+                <div><i class="fa-solid fa-ruler-combined" aria-hidden="true"></i><span>{{ room.sizeSqm }} m²{{ app.isForSale(room) ? ' construidos' : '' }}</span></div>
+              }
+              @if (room.landAreaSqm) {
+                <div><i class="fa-solid fa-vector-square" aria-hidden="true"></i><span>{{ room.landAreaSqm }} m² de terreno</span></div>
+              }
+              @if (!app.isForSale(room)) {
+                <div><i class="fa-solid fa-bath" aria-hidden="true"></i><span>{{ room.privateBathroom ? 'Baño privado' : 'Baño compartido' }}</span></div>
+                <div><i class="fa-solid fa-wifi" aria-hidden="true"></i><span>{{ room.offersWifi ? 'Wifi incluido' : 'Sin wifi incluido' }}</span></div>
+                <div><i class="fa-solid fa-paw" aria-hidden="true"></i><span>{{ room.acceptsPets ? 'Acepta mascotas' : 'No acepta mascotas' }}</span></div>
+              }
             </div>
           </section>
 
@@ -78,7 +122,11 @@
               <h2>{{ room.ownerName || 'Propietario' }}</h2>
               <p>Publica en RoomiGo</p>
             </div>
-            @if (room.ownerPhone) {
+            @if (app.isForSale(room)) {
+              <button type="button" class="rg-detail-owner__contact" (click)="app.openVisitModal(room)">
+                <i class="fa-regular fa-calendar-check" aria-hidden="true"></i> Agendar visita
+              </button>
+            } @else if (room.ownerPhone) {
               <a class="rg-detail-owner__contact" [href]="'tel:' + room.ownerPhone">
                 <i class="fa-solid fa-phone" aria-hidden="true"></i> Contactar
               </a>
@@ -114,16 +162,32 @@
         </main>
 
         <aside class="rg-detail-booking">
-          <div class="rg-detail-booking__price">
-            <strong>S/ {{ room.pricePerMonth | number:'1.0-0' }}</strong>
-            <span>/ mes</span>
-          </div>
-          <p class="rg-detail-booking__deposit">Depósito: S/ {{ room.depositPrice | number:'1.0-0' }}</p>
-          <button type="button" (click)="app.openBookingModal(room)">Consultar disponibilidad</button>
-          <p class="rg-detail-booking__note"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Tu reserva se confirma desde RoomiGo.</p>
+          @if (app.isForSale(room)) {
+            <p class="rg-detail-kicker">PRECIO DE VENTA</p>
+            <div class="rg-detail-booking__price">
+              <strong>{{ app.priceText(room) }}</strong>
+            </div>
+            @if (room.sizeSqm && room.salePrice) {
+              <p class="rg-detail-booking__deposit">{{ app.formatPen(room.salePrice / room.sizeSqm) }} por m² construido</p>
+            } @else {
+              <p class="rg-detail-booking__deposit">Precio publicado por el propietario</p>
+            }
+            <button type="button" (click)="app.openVisitModal(room)">
+              <i class="fa-regular fa-calendar-check" aria-hidden="true"></i> Agendar visita
+            </button>
+            <p class="rg-detail-booking__note"><i class="fa-solid fa-handshake" aria-hidden="true"></i> La compra se coordina directamente con el propietario. RoomiGo no cobra comisión por la venta.</p>
+          } @else {
+            <div class="rg-detail-booking__price">
+              <strong>{{ app.priceText(room) }}</strong>
+              <span>/ mes</span>
+            </div>
+            <p class="rg-detail-booking__deposit">Depósito: {{ app.formatPen(room.depositPrice) }}</p>
+            <button type="button" (click)="app.openBookingModal(room)">Consultar disponibilidad</button>
+            <p class="rg-detail-booking__note"><i class="fa-solid fa-shield-halved" aria-hidden="true"></i> Tu reserva se confirma desde RoomiGo.</p>
+          }
           <div class="rg-detail-booking__divider"></div>
           <p class="rg-detail-booking__facts"><i class="fa-solid fa-location-dot" aria-hidden="true"></i>{{ room.propertyCity || 'Abancay' }}, Apurímac</p>
-          @if (room.ownerPhone) {
+          @if (room.ownerPhone && !app.isForSale(room)) {
             <p class="rg-detail-booking__facts"><i class="fa-solid fa-phone" aria-hidden="true"></i>{{ room.ownerPhone }}</p>
           }
         </aside>

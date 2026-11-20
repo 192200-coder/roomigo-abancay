@@ -253,3 +253,108 @@
     margin-left: 58px;
   }
 }
+
+/* ---------------------------------------------------------------- Fase 5: galería y venta */
+.rg-detail-gallery {
+  display: grid;
+  gap: 8px;
+}
+.rg-detail-photo__nav {
+  position: absolute;
+  top: 50%;
+  display: grid;
+  width: 36px;
+  height: 36px;
+  place-items: center;
+  color: #142b49;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(20, 43, 73, 0.08), 0 4px 12px rgba(20, 43, 73, 0.12);
+  cursor: pointer;
+  transform: translateY(-50%);
+  transition: transform 150ms cubic-bezier(0.16, 1, 0.3, 1), background-color 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.rg-detail-photo__nav:hover {
+  background: #fff;
+}
+.rg-detail-photo__nav:active {
+  transform: translateY(-50%) scale(0.97);
+}
+.rg-detail-photo__nav--prev {
+  left: 12px;
+}
+.rg-detail-photo__nav--next {
+  right: 12px;
+}
+.rg-detail-thumbs {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: thin;
+}
+.rg-detail-thumb {
+  position: relative;
+  flex: 0 0 104px;
+  height: 72px;
+  padding: 0;
+  overflow: hidden;
+  background: #e9eef5;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  opacity: 0.78;
+  transition: opacity 180ms cubic-bezier(0.16, 1, 0.3, 1), border-color 180ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 150ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+.rg-detail-thumb:hover {
+  opacity: 1;
+}
+.rg-detail-thumb:active {
+  transform: scale(0.97);
+}
+.rg-detail-thumb.is-active {
+  border-color: #1264e8;
+  opacity: 1;
+}
+.rg-detail-thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.rg-detail-thumb span {
+  position: absolute;
+  right: 4px;
+  bottom: 4px;
+  left: 4px;
+  overflow: hidden;
+  padding: 2px 5px;
+  color: #fff;
+  background: rgba(15, 35, 62, 0.72);
+  border-radius: 5px;
+  font-size: 9px;
+  font-weight: 600;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.rg-detail-status--sale {
+  color: #8a4b00;
+  background: #fff5e6;
+  border-color: rgba(176, 98, 0, 0.16);
+}
+.rg-detail-status--sale i {
+  background: #e08a00;
+}
+button.rg-detail-owner__contact {
+  font: inherit;
+  cursor: pointer;
+}
+@media (max-width: 700px) {
+  .rg-detail-thumb {
+    flex-basis: 84px;
+    height: 60px;
+  }
+}

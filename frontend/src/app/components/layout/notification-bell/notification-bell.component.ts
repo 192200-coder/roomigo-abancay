@@ -4,7 +4,7 @@ import { App } from '../../../app';
 import { NotificationService } from '../../../core/notification.service';
 import { AppNotification, NotificationType } from '../../../core/models';
 
-type Destination = { tab: 'my-bookings' | 'owner-panel'; ownerTab?: 'requests' | 'properties' };
+type Destination = { tab: 'my-bookings' | 'owner-panel' | 'visits'; ownerTab?: 'requests' | 'properties' };
 
 const ICONS: Record<NotificationType, string> = {
   BOOKING_REQUEST: 'fa-envelope-open-text',
@@ -16,7 +16,11 @@ const ICONS: Record<NotificationType, string> = {
   PUBLICATION_PAID: 'fa-receipt',
   ROOM_APPROVED: 'fa-house-circle-check',
   ROOM_REJECTED: 'fa-triangle-exclamation',
-  REVIEW_RECEIVED: 'fa-star'
+  REVIEW_RECEIVED: 'fa-star',
+  VISIT_REQUESTED: 'fa-calendar-plus',
+  VISIT_CONFIRMED: 'fa-calendar-check',
+  VISIT_DECLINED: 'fa-calendar-xmark',
+  VISIT_CANCELLED: 'fa-calendar-minus'
 };
 
 /** A qué sección lleva cada aviso al hacer clic. */
@@ -30,14 +34,20 @@ const DESTINATIONS: Record<NotificationType, Destination> = {
   REVIEW_RECEIVED: { tab: 'owner-panel', ownerTab: 'properties' },
   BOOKING_APPROVED: { tab: 'my-bookings' },
   BOOKING_REJECTED: { tab: 'my-bookings' },
-  PAYMENT_CONFIRMED: { tab: 'my-bookings' }
+  PAYMENT_CONFIRMED: { tab: 'my-bookings' },
+  // Las visitas llevan a la sección de visitas del rol actual (propietario o interesado).
+  VISIT_REQUESTED: { tab: 'visits' },
+  VISIT_CONFIRMED: { tab: 'visits' },
+  VISIT_DECLINED: { tab: 'visits' },
+  VISIT_CANCELLED: { tab: 'visits' }
 };
 
 const TONES: Partial<Record<NotificationType, 'success' | 'danger' | 'warning'>> = {
   BOOKING_APPROVED: 'success', PAYMENT_CONFIRMED: 'success', PAYMENT_RECEIVED: 'success',
   PUBLICATION_PAID: 'success', ROOM_APPROVED: 'success',
   BOOKING_REJECTED: 'danger', ROOM_REJECTED: 'danger', BOOKING_CANCELLED: 'danger',
-  REVIEW_RECEIVED: 'warning'
+  REVIEW_RECEIVED: 'warning',
+  VISIT_REQUESTED: 'warning', VISIT_CONFIRMED: 'success', VISIT_DECLINED: 'danger', VISIT_CANCELLED: 'danger'
 };
 
 @Component({
@@ -82,6 +92,14 @@ export class NotificationBellComponent {
     this.notifications.closePanel();
     const dest = DESTINATIONS[item.type];
     if (!dest) return;
+    if (dest.tab === 'visits') {
+      const owner = this.app.auth.isOwner();
+      this.app.switchTab(owner ? 'owner-panel' : 'my-bookings');
+      if (owner) this.app.ownerTab.set('visits');
+      else this.app.tenantFilter.set('VISITS');
+      this.app.loadVisits();
+      return;
+    }
     this.app.switchTab(dest.tab);
     if (dest.tab === 'owner-panel' && dest.ownerTab) {
       this.app.ownerTab.set(dest.ownerTab);

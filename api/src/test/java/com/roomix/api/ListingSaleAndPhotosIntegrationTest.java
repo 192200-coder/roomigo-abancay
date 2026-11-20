@@ -93,6 +93,18 @@ class ListingSaleAndPhotosIntegrationTest {
         mockMvc.perform(post("/api/v1/rooms").with(as(owner, "OWNER")).contentType(MediaType.APPLICATION_JSON).content(badFormat))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Formato de foto no válido"));
+
+        // Rutas locales del sitio: solo archivos de imagen, sin salir de la raíz
+        String traversal = rentBody("ROOM", """
+                [{"url":"/images/../secreto.jpg","category":"FACADE"},{"url":"https://fotos.test/b.jpg","category":"ROOM"},
+                 {"url":"https://fotos.test/c.jpg","category":"BATHROOM"}]""");
+        mockMvc.perform(post("/api/v1/rooms").with(as(owner, "OWNER")).contentType(MediaType.APPLICATION_JSON).content(traversal))
+                .andExpect(status().isBadRequest());
+        String localAssets = rentBody("ROOM", """
+                [{"url":"/images/demo/fachada-1.jpg","category":"FACADE"},{"url":"/images/landing/room-a.jpg","category":"ROOM"},
+                 {"url":"/images/demo/bano-1.jpg","category":"BATHROOM"}]""");
+        mockMvc.perform(post("/api/v1/rooms").with(as(owner, "OWNER")).contentType(MediaType.APPLICATION_JSON).content(localAssets))
+                .andExpect(status().isCreated());
     }
 
     @Test

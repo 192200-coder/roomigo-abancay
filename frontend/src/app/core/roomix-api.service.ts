@@ -13,7 +13,10 @@ import {
   BookingRequest,
   Review,
   ReviewRequest,
-  AdminStats
+  AdminStats,
+  VisitRequest,
+  VisitRequestPayload,
+  VisitRequestStatus
 } from './models';
 import { AuthService } from './auth.service';
 import {
@@ -62,7 +65,9 @@ export class RoomixApiService {
       if (filter.district) params = params.set('district', filter.district);
       if (filter.minPrice != null) params = params.set('minPrice', filter.minPrice.toString());
       if (filter.maxPrice != null) params = params.set('maxPrice', filter.maxPrice.toString());
+      if (filter.operation) params = params.set('operation', filter.operation);
       if (filter.roomType) params = params.set('roomType', filter.roomType);
+      if (filter.minBedrooms != null) params = params.set('minBedrooms', filter.minBedrooms.toString());
       if (filter.privateBathroom != null) params = params.set('privateBathroom', filter.privateBathroom.toString());
       if (filter.offersWifi != null) params = params.set('offersWifi', filter.offersWifi.toString());
       if (filter.acceptsPets != null) params = params.set('acceptsPets', filter.acceptsPets.toString());
@@ -374,5 +379,32 @@ export class RoomixApiService {
         });
       })
     );
+  }
+
+  // ==========================================
+  // VISITAS (publicaciones en venta)
+  // Sin datos simulados: si falla, el error debe verse.
+  // ==========================================
+  createVisitRequest(payload: VisitRequestPayload): Observable<ApiResponse<VisitRequest>> {
+    return this.http.post<ApiResponse<VisitRequest>>(`${this.baseUrl}/visit-requests`, payload, {
+      headers: this.auth.getAuthHeaders()
+    });
+  }
+
+  getMyVisitRequests(): Observable<ApiResponse<VisitRequest[]>> {
+    return this.http.get<ApiResponse<VisitRequest[]>>(`${this.baseUrl}/visit-requests/mine`, {
+      headers: this.auth.getAuthHeaders()
+    });
+  }
+
+  getOwnerVisitRequests(): Observable<ApiResponse<VisitRequest[]>> {
+    return this.http.get<ApiResponse<VisitRequest[]>>(`${this.baseUrl}/visit-requests/owner`, {
+      headers: this.auth.getAuthHeaders()
+    });
+  }
+
+  updateVisitRequestStatus(id: number, status: VisitRequestStatus, note?: string): Observable<ApiResponse<VisitRequest>> {
+    return this.http.patch<ApiResponse<VisitRequest>>(`${this.baseUrl}/visit-requests/${id}/status`,
+      { status, note: note?.trim() || null }, { headers: this.auth.getAuthHeaders() });
   }
 }

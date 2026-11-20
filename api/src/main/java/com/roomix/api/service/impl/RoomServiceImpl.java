@@ -57,6 +57,9 @@ public class RoomServiceImpl implements RoomService {
     static final int MAX_PHOTOS = 8;
     /** Tope por foto en base64 (~2,2 MB de imagen). El frontend las comprime antes de enviarlas. */
     static final int MAX_PHOTO_CHARS = 3_000_000;
+    /** Imagen estática del propio sitio (datos demo), p. ej. /images/demo/bano-1.jpg. Sin "..", sin "//". */
+    private static final java.util.regex.Pattern LOCAL_ASSET =
+            java.util.regex.Pattern.compile("^/(?!/)(?!.*\\.\\.)[A-Za-z0-9_\\-/]+\\.(jpe?g|png|webp)$");
 
     @Override
     @Transactional
@@ -146,7 +149,8 @@ public class RoomServiceImpl implements RoomService {
                 throw new BadRequestException("Cada foto necesita una imagen y una categoría");
             }
             String url = photo.getUrl().trim();
-            boolean validFormat = url.startsWith("data:image/") || url.startsWith("https://") || url.startsWith("http://");
+            boolean validFormat = url.startsWith("data:image/") || url.startsWith("https://") || url.startsWith("http://")
+                    || LOCAL_ASSET.matcher(url).matches();
             if (!validFormat) {
                 throw new BadRequestException("Formato de foto no válido");
             }
